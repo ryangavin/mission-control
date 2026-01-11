@@ -2,6 +2,12 @@
 /**
  * Interactive Test Harness for AbletonOSC Protocol
  * Connects to the bridge and allows experimenting with the live Ableton session
+ *
+ * Usage:
+ *   bun test-harness.ts              # Interactive REPL mode
+ *   bun test-harness.ts info         # Run single command
+ *   bun test-harness.ts play         # Start playback
+ *   bun test-harness.ts fire 0 0     # Fire clip at track 0, scene 0
  */
 
 import {
@@ -14,9 +20,7 @@ import {
 const WS_URL = 'ws://localhost:8080';
 let ws: WebSocket | null = null;
 let connected = false;
-
-// Response tracking
-const pendingResponses = new Map<string, (args: unknown[]) => void>();
+let abletonConnected = false;
 
 // =============================================================================
 // WebSocket Connection
@@ -24,13 +28,13 @@ const pendingResponses = new Map<string, (args: unknown[]) => void>();
 
 function connect(): Promise<void> {
   return new Promise((resolve, reject) => {
-    console.log(`\n🔌 Connecting to bridge at ${WS_URL}...`);
+    console.log(`🔌 Connecting to bridge at ${WS_URL}...`);
 
     ws = new WebSocket(WS_URL);
 
     ws.onopen = () => {
       connected = true;
-      console.log('✅ Connected to bridge\n');
+      console.log('✅ Connected to bridge');
       resolve();
     };
 
@@ -57,6 +61,7 @@ function connect(): Promise<void> {
 
 function handleServerMessage(msg: any) {
   if (msg.type === 'connected') {
+    abletonConnected = msg.abletonConnected;
     console.log(`📡 Ableton connected: ${msg.abletonConnected}`);
     return;
   }
@@ -67,16 +72,9 @@ function handleServerMessage(msg: any) {
 
     // Pretty print the response
     if (parsed.type !== 'unknown') {
-      console.log(`\n📥 ${parsed.type}:`, JSON.stringify(parsed, null, 2));
+      console.log(`📥 ${parsed.type}:`, JSON.stringify(parsed, null, 2));
     } else {
-      console.log(`\n📥 OSC: ${osc.address}`, osc.args);
-    }
-
-    // Resolve any pending response
-    const resolver = pendingResponses.get(osc.address);
-    if (resolver) {
-      resolver(osc.args);
-      pendingResponses.delete(osc.address);
+      console.log(`📥 OSC: ${osc.address}`, osc.args);
     }
   }
 }
@@ -94,18 +92,16 @@ function send(msg: OSCMessage): void {
   // Convert to client message format expected by bridge
   const clientMsg = oscToClientMessage(msg);
   if (clientMsg) {
-    console.log(`\n📤 Sending: ${msg.address}`, msg.args);
+    console.log(`📤 ${msg.address}`, msg.args);
     ws.send(JSON.stringify(clientMsg));
   } else {
     // Send raw OSC for messages not in ClientMessage type
-    console.log(`\n📤 Raw OSC: ${msg.address}`, msg.args);
-    // The bridge needs to handle raw OSC - for now just log
+    console.log(`📤 Raw: ${msg.address}`, msg.args);
     ws.send(JSON.stringify({ type: 'osc', address: msg.address, args: msg.args }));
   }
 }
 
 function oscToClientMessage(msg: OSCMessage): any {
-  // Map OSC messages to ClientMessage types that bridge understands
   const { address, args } = msg;
 
   // Transport
@@ -138,16 +134,13 @@ function oscToClientMessage(msg: OSCMessage): any {
 }
 
 // =============================================================================
-// Test Functions
+// Command Functions
 // =============================================================================
 
-async function wait(ms: number): Promise<void> {
-  return new Promise(r => setTimeout(r, ms));
-}
+const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
 
-// Get session info
-async function getSessionInfo() {
-  console.log('\n📋 Getting session info...');
+// Session info
+function getInfo() {
   send(song.getTempo());
   send(song.getIsPlaying());
   send(song.getMetronome());
@@ -155,24 +148,116 @@ async function getSessionInfo() {
   send(song.getNumScenes());
 }
 
-// Transport controls
-function play() { send(song.play()); }
-function stop() { send(song.stop()); }
-function toggleMetronome(on: boolean) { send(song.setMetronome(on)); }
-function setTempo(bpm: number) { send(song.setTempo(bpm)); }
+// Transport
+const play = () => send(song.play());
+const stopPlayback = () => send(song.stop());
+const setTempo = (bpm: number) => send(song.setTempo(bpm));
+const metro = (on: boolean) => send(song.setMetronome(on));
 
-// Clip controls
-function fireClip(trackId: number, sceneId: number) { send(clipSlot.fire(trackId, sceneId)); }
-function stopClip(trackId: number, sceneId: number) { send(clipSlot.stop(trackId, sceneId)); }
-function fireScene(sceneId: number) { send(scene.fire(sceneId)); }
+// Clips
+const fire = (t: number, s: number) => send(clipSlot.fire(t, s));
+const stopClip = (t: number, s: number) => send(clipSlot.stop(t, s));
+const fireScene = (s: number) => send(scene.fire(s));
 
-// Track controls
-function setVolume(trackId: number, vol: number) { send(track.setVolume(trackId, vol)); }
-function setPan(trackId: number, pan: number) { send(track.setPan(trackId, pan)); }
-function mute(trackId: number, muted: boolean) { send(track.setMute(trackId, muted)); }
-function solo(trackId: number, soloed: boolean) { send(track.setSolo(trackId, soloed)); }
-function arm(trackId: number, armed: boolean) { send(track.setArm(trackId, armed)); }
-function stopTrack(trackId: number) { send(track.stop(trackId)); }
+// Mixer
+const setVol = (t: number, v: number) => send(track.setVolume(t, v));
+const setPan = (t: number, p: number) => send(track.setPan(t, p));
+const setMute = (t: number, m: boolean) => send(track.setMute(t, m));
+const setSolo = (t: number, s: boolean) => send(track.setSolo(t, s));
+const setArm = (t: number, a: boolean) => send(track.setArm(t, a));
+const stopTrack = (t: number) => send(track.stop(t));
+
+// =============================================================================
+// Command Parser
+// =============================================================================
+
+async function runCommand(cmd: string, args: string[]): Promise<void> {
+  switch (cmd.toLowerCase()) {
+    case 'info':
+      getInfo();
+      break;
+    case 'play':
+      play();
+      break;
+    case 'stop':
+      stopPlayback();
+      break;
+    case 'tempo':
+      if (args[0]) setTempo(parseFloat(args[0]));
+      else console.log('Usage: tempo <bpm>');
+      break;
+    case 'metro':
+      metro(args[0] === 'on' || args[0] === '1');
+      break;
+    case 'fire':
+      if (args.length >= 2) fire(parseInt(args[0]), parseInt(args[1]));
+      else console.log('Usage: fire <track> <scene>');
+      break;
+    case 'stopclip':
+      if (args.length >= 2) stopClip(parseInt(args[0]), parseInt(args[1]));
+      else console.log('Usage: stopclip <track> <scene>');
+      break;
+    case 'scene':
+      if (args[0]) fireScene(parseInt(args[0]));
+      else console.log('Usage: scene <scene>');
+      break;
+    case 'vol':
+      if (args.length >= 2) setVol(parseInt(args[0]), parseFloat(args[1]));
+      else console.log('Usage: vol <track> <value 0-1>');
+      break;
+    case 'pan':
+      if (args.length >= 2) setPan(parseInt(args[0]), parseFloat(args[1]));
+      else console.log('Usage: pan <track> <value -1 to 1>');
+      break;
+    case 'mute':
+      if (args.length >= 2) setMute(parseInt(args[0]), args[1] === 'on' || args[1] === '1');
+      else console.log('Usage: mute <track> on|off');
+      break;
+    case 'solo':
+      if (args.length >= 2) setSolo(parseInt(args[0]), args[1] === 'on' || args[1] === '1');
+      else console.log('Usage: solo <track> on|off');
+      break;
+    case 'arm':
+      if (args.length >= 2) setArm(parseInt(args[0]), args[1] === 'on' || args[1] === '1');
+      else console.log('Usage: arm <track> on|off');
+      break;
+    case 'stoptrack':
+      if (args[0]) stopTrack(parseInt(args[0]));
+      else console.log('Usage: stoptrack <track>');
+      break;
+    case 'help':
+      printHelp();
+      break;
+    default:
+      console.log(`Unknown command: ${cmd}. Try 'help'`);
+  }
+}
+
+function printHelp() {
+  console.log(`
+🎹 Test Harness Commands:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  info              Get session info (tempo, playing, tracks, scenes)
+  play / stop       Transport controls
+  tempo <bpm>       Set tempo (e.g., tempo 128)
+  metro on|off      Toggle metronome
+
+  fire <t> <s>      Fire clip at track t, scene s
+  stopclip <t> <s>  Stop clip at track t, scene s
+  scene <s>         Fire scene s
+  stoptrack <t>     Stop all clips on track t
+
+  vol <t> <v>       Set track t volume (0-1, 0.85 = 0dB)
+  pan <t> <p>       Set track t pan (-1 to 1)
+  mute <t> on|off   Mute/unmute track t
+  solo <t> on|off   Solo/unsolo track t
+  arm <t> on|off    Arm/unarm track t
+
+  help              Show this help
+  quit              Exit (REPL mode only)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`);
+}
 
 // =============================================================================
 // Interactive REPL
@@ -182,28 +267,8 @@ async function repl() {
   const reader = Bun.stdin.stream().getReader();
   const decoder = new TextDecoder();
 
-  console.log('\n🎹 Test Harness Ready!');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('Commands:');
-  console.log('  info          - Get session info');
-  console.log('  play / stop   - Transport controls');
-  console.log('  tempo <bpm>   - Set tempo (e.g., tempo 128)');
-  console.log('  metro on/off  - Toggle metronome');
-  console.log('  fire <t> <s>  - Fire clip at track t, scene s');
-  console.log('  scene <s>     - Fire scene s');
-  console.log('  vol <t> <v>   - Set track t volume (0-1)');
-  console.log('  pan <t> <p>   - Set track t pan (-1 to 1)');
-  console.log('  mute <t>      - Toggle mute on track t');
-  console.log('  solo <t>      - Toggle solo on track t');
-  console.log('  arm <t>       - Toggle arm on track t');
-  console.log('  stoptrack <t> - Stop all clips on track t');
-  console.log('  quit          - Exit');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-
-  // Track toggle states
-  const toggleState = { mute: new Set<number>(), solo: new Set<number>(), arm: new Set<number>() };
-
-  process.stdout.write('> ');
+  printHelp();
+  process.stdout.write('\n> ');
 
   let buffer = '';
   while (true) {
@@ -218,80 +283,13 @@ async function repl() {
       buffer = buffer.slice(newlineIdx + 1);
 
       if (line) {
-        const [cmd, ...args] = line.split(/\s+/);
-
-        switch (cmd.toLowerCase()) {
-          case 'info':
-            await getSessionInfo();
-            break;
-          case 'play':
-            play();
-            break;
-          case 'stop':
-            stop();
-            break;
-          case 'tempo':
-            if (args[0]) setTempo(parseFloat(args[0]));
-            else console.log('Usage: tempo <bpm>');
-            break;
-          case 'metro':
-            toggleMetronome(args[0] === 'on');
-            break;
-          case 'fire':
-            if (args.length >= 2) fireClip(parseInt(args[0]), parseInt(args[1]));
-            else console.log('Usage: fire <track> <scene>');
-            break;
-          case 'scene':
-            if (args[0]) fireScene(parseInt(args[0]));
-            else console.log('Usage: scene <scene>');
-            break;
-          case 'vol':
-            if (args.length >= 2) setVolume(parseInt(args[0]), parseFloat(args[1]));
-            else console.log('Usage: vol <track> <value 0-1>');
-            break;
-          case 'pan':
-            if (args.length >= 2) setPan(parseInt(args[0]), parseFloat(args[1]));
-            else console.log('Usage: pan <track> <value -1 to 1>');
-            break;
-          case 'mute':
-            if (args[0]) {
-              const t = parseInt(args[0]);
-              const isMuted = toggleState.mute.has(t);
-              if (isMuted) toggleState.mute.delete(t);
-              else toggleState.mute.add(t);
-              mute(t, !isMuted);
-            } else console.log('Usage: mute <track>');
-            break;
-          case 'solo':
-            if (args[0]) {
-              const t = parseInt(args[0]);
-              const isSoloed = toggleState.solo.has(t);
-              if (isSoloed) toggleState.solo.delete(t);
-              else toggleState.solo.add(t);
-              solo(t, !isSoloed);
-            } else console.log('Usage: solo <track>');
-            break;
-          case 'arm':
-            if (args[0]) {
-              const t = parseInt(args[0]);
-              const isArmed = toggleState.arm.has(t);
-              if (isArmed) toggleState.arm.delete(t);
-              else toggleState.arm.add(t);
-              arm(t, !isArmed);
-            } else console.log('Usage: arm <track>');
-            break;
-          case 'stoptrack':
-            if (args[0]) stopTrack(parseInt(args[0]));
-            else console.log('Usage: stoptrack <track>');
-            break;
-          case 'quit':
-          case 'exit':
-          case 'q':
-            console.log('👋 Bye!');
-            process.exit(0);
-          default:
-            console.log(`Unknown command: ${cmd}`);
+        if (line === 'quit' || line === 'exit' || line === 'q') {
+          console.log('👋 Bye!');
+          process.exit(0);
         }
+
+        const [cmd, ...args] = line.split(/\s+/);
+        await runCommand(cmd, args);
       }
 
       process.stdout.write('> ');
@@ -310,8 +308,20 @@ async function main() {
 
   try {
     await connect();
-    await wait(500); // Give bridge time to send initial state
-    await repl();
+    await wait(300); // Give bridge time to send initial state
+
+    // Check for command-line args
+    const cliArgs = process.argv.slice(2);
+    if (cliArgs.length > 0) {
+      // Single command mode
+      const [cmd, ...args] = cliArgs;
+      await runCommand(cmd, args);
+      await wait(500); // Wait for responses
+      process.exit(0);
+    } else {
+      // Interactive REPL mode
+      await repl();
+    }
   } catch (err) {
     console.error('Failed to connect:', err);
     console.log('\n💡 Make sure the bridge is running: bun run bridge');

@@ -168,10 +168,16 @@ export class Bridge {
    */
   private handleClientMessage(ws: ServerWebSocket<unknown>, data: string | Buffer): void {
     try {
-      const message = JSON.parse(data.toString()) as ClientMessage;
+      const message = JSON.parse(data.toString());
+
+      // Handle raw OSC messages (for testing and queries)
+      if (message.type === 'osc' && message.address) {
+        this.sendOSC({ address: message.address, args: message.args || [] });
+        return;
+      }
 
       // Convert client message to OSC and send to Ableton
-      const oscMessage = this.clientMessageToOSC(message);
+      const oscMessage = this.clientMessageToOSC(message as ClientMessage);
       if (oscMessage) {
         this.sendOSC(oscMessage);
       }

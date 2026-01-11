@@ -1,61 +1,47 @@
 <script lang="ts">
-  import { connection, connect, disconnect } from './lib/stores/connection.svelte';
-  import SessionGrid from './lib/components/SessionGrid/Grid.svelte';
-  import Transport from './lib/components/Transport/Transport.svelte';
-  import ConnectionStatus from './lib/components/ui/ConnectionStatus.svelte';
-
-  // Auto-connect on mount
-  $effect(() => {
-    connect();
-    return () => disconnect();
-  });
+  import svelteLogo from './assets/svelte.svg'
+  import viteLogo from '/vite.svg'
+  import Counter from './lib/Counter.svelte'
 </script>
 
-<div class="app">
-  <header class="header">
-    <h1 class="title">Mission Control</h1>
-    <ConnectionStatus />
-  </header>
+<main>
+  <div>
+    <a href="https://vite.dev" target="_blank" rel="noreferrer">
+      <img src={viteLogo} class="logo" alt="Vite Logo" />
+    </a>
+    <a href="https://svelte.dev" target="_blank" rel="noreferrer">
+      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
+    </a>
+  </div>
+  <h1>Vite + Svelte</h1>
 
-  <main class="main">
-    <SessionGrid />
-  </main>
+  <div class="card">
+    <Counter />
+  </div>
 
-  <footer class="footer">
-    <Transport />
-  </footer>
-</div>
+  <p>
+    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the official Svelte app framework powered by Vite!
+  </p>
+
+  <p class="read-the-docs">
+    Click on the Vite and Svelte logos to learn more
+  </p>
+</main>
 
 <style>
-  .app {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+  .logo {
+    height: 6em;
+    padding: 1.5em;
+    will-change: filter;
+    transition: filter 300ms;
   }
-
-  .header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--space-3) var(--space-4);
-    background: var(--color-bg-secondary);
-    border-bottom: 1px solid var(--color-bg-elevated);
+  .logo:hover {
+    filter: drop-shadow(0 0 2em #646cffaa);
   }
-
-  .title {
-    font-size: var(--font-lg);
-    font-weight: 600;
-    color: var(--color-text-primary);
+  .logo.svelte:hover {
+    filter: drop-shadow(0 0 2em #ff3e00aa);
   }
-
-  .main {
-    flex: 1;
-    overflow: auto;
-    padding: var(--space-3);
-  }
-
-  .footer {
-    background: var(--color-bg-secondary);
-    border-top: 1px solid var(--color-bg-elevated);
+  .read-the-docs {
+    color: #888;
   }
 </style>
