@@ -1,0 +1,394 @@
+/**
+ * Initial Sync and Listener Management
+ * Handles querying Ableton for session state and setting up real-time listeners
+ */
+
+import {
+  song, view, track, clip, clipSlot, scene,
+  type OSCMessage,
+} from '@mission-control/protocol';
+import type { SessionManager } from './session.js';
+
+export interface SyncCallbacks {
+  sendOSC: (message: OSCMessage) => void;
+  onLog: (message: string) => void;
+}
+
+/**
+ * Manages initial sync and listener subscriptions
+ */
+export class SyncManager {
+  private session: SessionManager;
+  private callbacks: SyncCallbacks;
+  private pendingQueries = new Map<string, { resolve: (value: any) => void; timeout: NodeJS.Timeout }>();
+  private queryTimeout = 5000; // 5 second timeout for queries
+  private numTracks = 0;
+  private numScenes = 0;
+  private listenersActive = false;
+
+  constructor(session: SessionManager, callbacks: SyncCallbacks) {
+    this.session = session;
+    this.callbacks = callbacks;
+  }
+
+  /**
+   * Perform initial sync with Ableton
+   * Queries all session data and populates state
+   */
+  async performInitialSync(): Promise<void> {
+    this.callbacks.onLog('Starting initial sync...');
+
+    try {
+      // Phase 1: Get song structure
+      const [tempo, isPlaying, metronome, numTracks, numScenes] = await Promise.all([
+        this.queryOSC(song.getTempo()),
+        this.queryOSC(song.getIsPlaying()),
+        this.queryOSC(song.getMetronome()),
+        this.queryOSC(song.getNumTracks()),
+        this.queryOSC(song.getNumScenes()),
+      ]);
+
+      this.numTracks = numTracks;
+      this.numScenes = numScenes;
+
+      this.callbacks.onLog(`Found ${numTracks} tracks, ${numScenes} scenes`);
+
+      // Initialize transport state first, then structure (order matters!)
+      this.session.initialize({
+        tempo,
+        isPlaying: !!isPlaying,
+        isRecording: false,
+        metronome: !!metronome,
+      });
+      // setStructure must come AFTER initialize to not be overwritten
+      this.session.setStructure(numTracks, numScenes);
+
+      // Phase 2: Get view selection
+      const [selectedTrack, selectedScene] = await Promise.all([
+        this.queryOSC(view.getSelectedTrack()),
+        this.queryOSC(view.getSelectedScene()),
+      ]);
+      this.session.setSelectedTrack(selectedTrack);
+      this.session.setSelectedScene(selectedScene);
+
+      // Phase 3: Query all tracks in parallel
+      const trackPromises: Promise<void>[] = [];
+      for (let t = 0; t < numTracks; t++) {
+        trackPromises.push(this.syncTrack(t));
+      }
+      await Promise.all(trackPromises);
+
+      // Phase 4: Query all scenes
+      const scenePromises: Promise<void>[] = [];
+      for (let s = 0; s < numScenes; s++) {
+        scenePromises.push(this.syncScene(s));
+      }
+      await Promise.all(scenePromises);
+
+      // Phase 5: Query clip slots (has_clip status)
+      await this.syncClipSlots();
+
+      this.callbacks.onLog('Initial sync complete');
+    } catch (error) {
+      this.callbacks.onLog(`Sync error: ${error}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Sync a single track's properties
+   */
+  private async syncTrack(trackIndex: number): Promise<void> {
+    const [name, color, volume, pan, mute, solo, arm, playingSlot, firedSlot] = await Promise.all([
+      this.queryOSC(track.getName(trackIndex)),
+      this.queryOSC(track.getColor(trackIndex)),
+      this.queryOSC(track.getVolume(trackIndex)),
+      this.queryOSC(track.getPan(trackIndex)),
+      this.queryOSC(track.getMute(trackIndex)),
+      this.queryOSC(track.getSolo(trackIndex)),
+      this.queryOSC(track.getArm(trackIndex)),
+      this.queryOSC(track.getPlayingSlotIndex(trackIndex)),
+      this.queryOSC(track.getFiredSlotIndex(trackIndex)),
+    ]);
+
+    this.session.updateTrack(trackIndex, {
+      name: name || `Track ${trackIndex + 1}`,
+      color: color || 0,
+      volume: volume ?? 0.85,
+      pan: pan ?? 0,
+      mute: !!mute,
+      solo: !!solo,
+      arm: !!arm,
+      playingSlotIndex: playingSlot ?? -1,
+      firedSlotIndex: firedSlot ?? -1,
+    });
+  }
+
+  /**
+   * Sync a single scene's properties
+   */
+  private async syncScene(sceneIndex: number): Promise<void> {
+    const [name, color] = await Promise.all([
+      this.queryOSC(scene.getName(sceneIndex)),
+      this.queryOSC(scene.getColor(sceneIndex)),
+    ]);
+
+    this.session.updateScene(sceneIndex, {
+      name: name || `Scene ${sceneIndex + 1}`,
+      color: color || 0,
+    });
+  }
+
+  /**
+   * Sync all clip slots (check which have clips)
+   */
+  private async syncClipSlots(): Promise<void> {
+    // Query has_clip for all slots in parallel batches
+    const batchSize = 32; // Limit concurrent queries
+    for (let t = 0; t < this.numTracks; t++) {
+      const scenePromises: Promise<void>[] = [];
+      for (let s = 0; s < this.numScenes; s++) {
+        scenePromises.push(this.syncClipSlot(t, s));
+        if (scenePromises.length >= batchSize) {
+          await Promise.all(scenePromises);
+          scenePromises.length = 0;
+        }
+      }
+      if (scenePromises.length > 0) {
+        await Promise.all(scenePromises);
+      }
+    }
+  }
+
+  /**
+   * Sync a single clip slot
+   */
+  private async syncClipSlot(trackIndex: number, sceneIndex: number): Promise<void> {
+    const hasClipVal = await this.queryOSC(clipSlot.hasClip(trackIndex, sceneIndex));
+    const hasClip = !!hasClipVal;
+
+    this.session.setHasClip(trackIndex, sceneIndex, hasClip);
+
+    // If there's a clip, get its properties
+    if (hasClip) {
+      const [name, color, length] = await Promise.all([
+        this.queryOSC(clip.getName(trackIndex, sceneIndex)),
+        this.queryOSC(clip.getColor(trackIndex, sceneIndex)),
+        this.queryOSC(clip.getLength(trackIndex, sceneIndex)),
+      ]);
+
+      this.session.updateClip(trackIndex, sceneIndex, {
+        name: name || '',
+        color: color || 0,
+        length: length || 0,
+        isPlaying: false,
+        isTriggered: false,
+        isRecording: false,
+      });
+    }
+  }
+
+  /**
+   * Set up real-time listeners for state changes
+   */
+  setupListeners(): void {
+    if (this.listenersActive) return;
+    this.listenersActive = true;
+
+    this.callbacks.onLog('Setting up listeners...');
+
+    // Song-level listeners
+    this.callbacks.sendOSC(song.startListenTempo());
+    this.callbacks.sendOSC(song.startListenIsPlaying());
+    this.callbacks.sendOSC(song.startListenMetronome());
+
+    // View listeners
+    this.callbacks.sendOSC(view.startListenSelectedTrack());
+    this.callbacks.sendOSC(view.startListenSelectedScene());
+
+    // Track-level listeners
+    for (let t = 0; t < this.numTracks; t++) {
+      this.callbacks.sendOSC(track.startListenVolume(t));
+      this.callbacks.sendOSC(track.startListenMute(t));
+      this.callbacks.sendOSC(track.startListenSolo(t));
+      this.callbacks.sendOSC(track.startListenArm(t));
+      this.callbacks.sendOSC(track.startListenPlayingSlot(t));
+      this.callbacks.sendOSC(track.startListenFiredSlot(t));
+    }
+
+    // Clip-level listeners (only for slots with clips - to avoid flooding)
+    const state = this.session.getState();
+    for (let t = 0; t < this.numTracks; t++) {
+      const trackData = state.tracks[t];
+      if (!trackData) continue;
+      for (let s = 0; s < trackData.clips.length; s++) {
+        const clipSlotData = trackData.clips[s];
+        if (clipSlotData?.hasClip) {
+          this.callbacks.sendOSC(clip.startListenPlayingStatus(t, s));
+        }
+      }
+    }
+
+    this.callbacks.onLog('Listeners active');
+  }
+
+  /**
+   * Stop all listeners
+   */
+  stopListeners(): void {
+    if (!this.listenersActive) return;
+    this.listenersActive = false;
+
+    this.callbacks.onLog('Stopping listeners...');
+
+    // Song-level
+    this.callbacks.sendOSC(song.stopListenTempo());
+    this.callbacks.sendOSC(song.stopListenIsPlaying());
+    this.callbacks.sendOSC(song.stopListenMetronome());
+
+    // View
+    this.callbacks.sendOSC(view.stopListenSelectedTrack());
+    this.callbacks.sendOSC(view.stopListenSelectedScene());
+
+    // Tracks
+    for (let t = 0; t < this.numTracks; t++) {
+      this.callbacks.sendOSC(track.stopListenVolume(t));
+      this.callbacks.sendOSC(track.stopListenMute(t));
+      this.callbacks.sendOSC(track.stopListenSolo(t));
+      this.callbacks.sendOSC(track.stopListenArm(t));
+      this.callbacks.sendOSC(track.stopListenPlayingSlot(t));
+      this.callbacks.sendOSC(track.stopListenFiredSlot(t));
+    }
+
+    // Clips
+    const state = this.session.getState();
+    for (let t = 0; t < this.numTracks; t++) {
+      const trackData = state.tracks[t];
+      if (!trackData) continue;
+      for (let s = 0; s < trackData.clips.length; s++) {
+        const clipSlotData = trackData.clips[s];
+        if (clipSlotData?.hasClip) {
+          this.callbacks.sendOSC(clip.stopListenPlayingStatus(t, s));
+        }
+      }
+    }
+
+    this.callbacks.onLog('Listeners stopped');
+  }
+
+  /**
+   * Send an OSC query and wait for response
+   */
+  private queryOSC(message: OSCMessage): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const key = this.getQueryKey(message);
+
+      // Set up timeout
+      const timeout = setTimeout(() => {
+        this.pendingQueries.delete(key);
+        // Resolve with undefined instead of rejecting to allow partial sync
+        resolve(undefined);
+      }, this.queryTimeout);
+
+      this.pendingQueries.set(key, { resolve, timeout });
+      this.callbacks.sendOSC(message);
+    });
+  }
+
+  /**
+   * Handle an OSC response (called by bridge when receiving messages)
+   */
+  handleOSCResponse(address: string, args: unknown[]): boolean {
+    const key = this.getResponseKey(address, args);
+    const pending = this.pendingQueries.get(key);
+
+    if (pending) {
+      clearTimeout(pending.timeout);
+      this.pendingQueries.delete(key);
+      // Return the value based on response type
+      const value = this.extractResponseValue(address, args);
+      pending.resolve(value);
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Extract the actual value from an OSC response
+   */
+  private extractResponseValue(address: string, args: unknown[]): unknown {
+    // For clip_slot responses: [trackId, sceneId, value]
+    if (address.includes('/clip_slot/')) {
+      return args.length >= 3 ? args[2] : args[0];
+    }
+    // For clip responses: [trackId, sceneId, value]
+    if (address.includes('/clip/')) {
+      return args.length >= 3 ? args[2] : args[0];
+    }
+    // For track responses: [trackId, value]
+    if (address.includes('/track/')) {
+      return args.length >= 2 ? args[1] : args[0];
+    }
+    // For scene responses: [sceneId, value]
+    if (address.includes('/scene/')) {
+      return args.length >= 2 ? args[1] : args[0];
+    }
+    // For view responses: just the value
+    if (address.includes('/view/')) {
+      return args[0];
+    }
+    // For song responses: just the value
+    return args[0];
+  }
+
+  /**
+   * Generate a key for tracking pending queries
+   */
+  private getQueryKey(message: OSCMessage): string {
+    // Convert /live/song/get/tempo to tempo query key
+    // Convert /live/track/get/volume [0] to track_0_volume
+    const parts = message.address.split('/').filter(Boolean);
+    const args = message.args.map(a => String(a)).join('_');
+    return args ? `${parts.join('_')}_${args}` : parts.join('_');
+  }
+
+  /**
+   * Generate a key from response address to match pending query
+   */
+  private getResponseKey(address: string, args: unknown[]): string {
+    // Response addresses mirror query addresses
+    const parts = address.split('/').filter(Boolean);
+
+    // For track/clip queries, args include the track/scene ID followed by the value
+    // We need to extract just the ID portion for matching
+    if (address.includes('/track/') && args.length > 1) {
+      // /live/track/get/volume returns [trackId, value]
+      return `${parts.join('_')}_${args[0]}`;
+    }
+    if (address.includes('/clip_slot/') && args.length > 2) {
+      // /live/clip_slot/get/has_clip returns [trackId, sceneId, value]
+      return `${parts.join('_')}_${args[0]}_${args[1]}`;
+    }
+    if (address.includes('/clip/') && args.length > 2) {
+      // /live/clip/get/name returns [trackId, sceneId, value]
+      return `${parts.join('_')}_${args[0]}_${args[1]}`;
+    }
+    if (address.includes('/scene/') && args.length > 1) {
+      // /live/scene/get/name returns [sceneId, value]
+      return `${parts.join('_')}_${args[0]}`;
+    }
+    if (address.includes('/view/') && args.length >= 1) {
+      return parts.join('_');
+    }
+
+    return parts.join('_');
+  }
+
+  /**
+   * Get track and scene counts for external use
+   */
+  getStructure(): { numTracks: number; numScenes: number } {
+    return { numTracks: this.numTracks, numScenes: this.numScenes };
+  }
+}

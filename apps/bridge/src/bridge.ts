@@ -1,6 +1,7 @@
 import OSC from 'osc-js';
 import type { Config } from './config.js';
-import type { OSCMessage, ClientMessage, ServerMessage } from '@mission-control/protocol';
+import type { OSCMessage, ClientMessage, ServerMessage, PatchPayload } from '@mission-control/protocol';
+import { SessionManager, SyncManager } from './state/index.js';
 
 export interface BridgeOptions {
   config: Config;
@@ -15,9 +16,23 @@ export class Bridge {
   private log: (message: string) => void;
   private abletonConnected = false;
 
+  // State management
+  private session: SessionManager;
+  private sync: SyncManager;
+  private syncInProgress = false;
+  private synced = false;
+  private beatTimeInterval: ReturnType<typeof setInterval> | null = null;
+
   constructor(options: BridgeOptions) {
     this.config = options.config;
     this.log = options.onLog || console.log;
+
+    // Initialize state managers
+    this.session = new SessionManager();
+    this.sync = new SyncManager(this.session, {
+      sendOSC: (msg) => this.sendOSC(msg),
+      onLog: (msg) => this.log(msg),
+    });
   }
 
   /**
@@ -44,6 +59,12 @@ export class Bridge {
    */
   async stop(): Promise<void> {
     this.log('Stopping bridge...');
+
+    // Stop beat time polling
+    this.stopBeatTimePolling();
+
+    // Stop listeners
+    this.sync.stopListeners();
 
     // Close all WebSocket connections
     for (const client of this.clients) {
@@ -105,6 +126,7 @@ export class Bridge {
         this.osc.on('close', () => {
           this.log('OSC connection closed');
           this.abletonConnected = false;
+          this.synced = false;
           this.broadcastToClients({ type: 'connected', abletonConnected: false });
         });
 
@@ -161,6 +183,11 @@ export class Bridge {
 
     // Send current connection status
     this.sendToClient(ws, { type: 'connected', abletonConnected: this.abletonConnected });
+
+    // If already synced, send current session state
+    if (this.synced) {
+      this.sendToClient(ws, { type: 'session', payload: this.session.getState() });
+    }
   }
 
   /**
@@ -169,6 +196,12 @@ export class Bridge {
   private handleClientMessage(ws: ServerWebSocket<unknown>, data: string | Buffer): void {
     try {
       const message = JSON.parse(data.toString());
+
+      // Handle session request
+      if (message.type === 'session/request') {
+        this.handleSessionRequest(ws);
+        return;
+      }
 
       // Handle raw OSC messages (for testing and queries)
       if (message.type === 'osc' && message.address) {
@@ -183,6 +216,39 @@ export class Bridge {
       }
     } catch (error) {
       this.log(`Invalid message from client: ${error}`);
+    }
+  }
+
+  /**
+   * Handle session request from client
+   */
+  private async handleSessionRequest(ws: ServerWebSocket<unknown>): Promise<void> {
+    // If already synced, send current state
+    if (this.synced) {
+      this.sendToClient(ws, { type: 'session', payload: this.session.getState() });
+      return;
+    }
+
+    // If sync in progress, wait for it
+    if (this.syncInProgress) {
+      this.log('Sync already in progress, waiting...');
+      return;
+    }
+
+    // Perform initial sync
+    this.syncInProgress = true;
+    try {
+      await this.sync.performInitialSync();
+      this.sync.setupListeners();
+      this.synced = true;
+
+      // Broadcast session to all clients
+      this.broadcastToClients({ type: 'session', payload: this.session.getState() });
+    } catch (error) {
+      this.log(`Sync failed: ${error}`);
+      this.sendToClient(ws, { type: 'error', message: `Sync failed: ${error}` });
+    } finally {
+      this.syncInProgress = false;
     }
   }
 
@@ -212,7 +278,7 @@ export class Bridge {
       case 'mixer/volume':
         return { address: '/live/track/set/volume', args: [message.trackId, message.value] };
       case 'mixer/pan':
-        return { address: '/live/track/set/pan', args: [message.trackId, message.value] };
+        return { address: '/live/track/set/panning', args: [message.trackId, message.value] };
       case 'mixer/mute':
         return { address: '/live/track/set/mute', args: [message.trackId, message.muted ? 1 : 0] };
       case 'mixer/solo':
@@ -224,8 +290,11 @@ export class Bridge {
           address: '/live/device/set/parameter/value',
           args: [message.trackId, message.deviceId, message.parameterId, message.value]
         };
+      case 'session/request':
+        // Handled separately
+        return null;
       default:
-        this.log(`Unknown message type: ${(message as ClientMessage).type}`);
+        this.log(`Unknown message type: ${(message as any).type}`);
         return null;
     }
   }
@@ -235,17 +304,100 @@ export class Bridge {
    */
   private handleOSCMessage(message: { address: string; args: unknown[] }): void {
     // Log the message for debugging
-    this.log(`OSC ← ${message.address} ${JSON.stringify(message.args)}`);
+    this.log(`OSC <- ${message.address} ${JSON.stringify(message.args)}`);
 
-    // Forward to all connected clients as raw OSC for now
-    // TODO: Parse and convert to typed state updates
-    this.broadcastToClients({
-      type: 'patch',
-      payload: {
-        // Raw OSC data - will be parsed properly later
-        _osc: { address: message.address, args: message.args }
-      } as any
-    });
+    // First, check if this is a response to a sync query
+    const wasQueryResponse = this.sync.handleOSCResponse(message.address, message.args);
+    if (wasQueryResponse) {
+      return; // Don't broadcast query responses
+    }
+
+    // Parse listener updates and update state
+    const patch = this.parseListenerUpdate(message.address, message.args);
+    if (patch) {
+      this.broadcastToClients({ type: 'patch', payload: patch });
+    }
+  }
+
+  /**
+   * Parse a listener update from Ableton and update session state
+   */
+  private parseListenerUpdate(address: string, args: unknown[]): PatchPayload | null {
+    // Transport updates
+    if (address === '/live/song/get/tempo') {
+      const patch = this.session.setTempo(args[0] as number);
+      // Update polling interval if tempo changed while playing
+      this.updateBeatTimePollingInterval();
+      return patch;
+    }
+    if (address === '/live/song/get/is_playing') {
+      const isPlaying = !!args[0];
+      // Start/stop beat time polling based on play state
+      if (isPlaying) {
+        this.startBeatTimePolling();
+      } else {
+        this.stopBeatTimePolling();
+      }
+      return this.session.setIsPlaying(isPlaying);
+    }
+    if (address === '/live/song/get/current_song_time') {
+      return this.session.setBeatTime(args[0] as number);
+    }
+    if (address === '/live/song/get/metronome') {
+      return this.session.setMetronome(!!args[0]);
+    }
+
+    // View selection updates
+    if (address === '/live/view/get/selected_track') {
+      return this.session.setSelectedTrack(args[0] as number);
+    }
+    if (address === '/live/view/get/selected_scene') {
+      return this.session.setSelectedScene(args[0] as number);
+    }
+
+    // Track updates - format: [trackId, value]
+    if (address === '/live/track/get/volume' && args.length >= 2) {
+      return this.session.setTrackVolume(args[0] as number, args[1] as number);
+    }
+    if (address === '/live/track/get/panning' && args.length >= 2) {
+      return this.session.setTrackPan(args[0] as number, args[1] as number);
+    }
+    if (address === '/live/track/get/mute' && args.length >= 2) {
+      return this.session.setTrackMute(args[0] as number, !!args[1]);
+    }
+    if (address === '/live/track/get/solo' && args.length >= 2) {
+      return this.session.setTrackSolo(args[0] as number, !!args[1]);
+    }
+    if (address === '/live/track/get/arm' && args.length >= 2) {
+      return this.session.setTrackArm(args[0] as number, !!args[1]);
+    }
+    if (address === '/live/track/get/playing_slot_index' && args.length >= 2) {
+      return this.session.setTrackPlayingSlot(args[0] as number, args[1] as number);
+    }
+    if (address === '/live/track/get/fired_slot_index' && args.length >= 2) {
+      return this.session.setTrackFiredSlot(args[0] as number, args[1] as number);
+    }
+
+    // Clip updates - format: [trackId, sceneId, value]
+    if (address === '/live/clip/get/playing_status' && args.length >= 3) {
+      const trackId = args[0] as number;
+      const sceneId = args[1] as number;
+      const status = args[2] as number;
+      // playing_status: 0=stopped, 1=playing, 2=triggered
+      const isPlaying = status === 1;
+      const isTriggered = status === 2;
+      return this.session.setClipPlayingStatus(trackId, sceneId, isPlaying, isTriggered);
+    }
+
+    // Clip slot updates
+    if (address === '/live/clip_slot/get/has_clip' && args.length >= 3) {
+      const trackId = args[0] as number;
+      const sceneId = args[1] as number;
+      const hasClip = !!args[2];
+      return this.session.setHasClip(trackId, sceneId, hasClip);
+    }
+
+    return null;
   }
 
   /**
@@ -257,7 +409,7 @@ export class Bridge {
       return;
     }
 
-    this.log(`OSC → ${message.address} ${JSON.stringify(message.args)}`);
+    this.log(`OSC -> ${message.address} ${JSON.stringify(message.args)}`);
     this.osc.send(new OSC.Message(message.address, ...message.args));
   }
 
@@ -283,6 +435,66 @@ export class Bridge {
    */
   sendRawOSC(address: string, ...args: unknown[]): void {
     this.sendOSC({ address, args });
+  }
+
+  /**
+   * Get current session state (for testing)
+   */
+  getSessionState() {
+    return this.session.getState();
+  }
+
+  /**
+   * Calculate polling interval based on tempo (poll ~2x per sixteenth note for smooth display)
+   */
+  private getBeatTimePollingInterval(): number {
+    const tempo = this.session.getState().tempo || 120;
+    // ms per sixteenth note = 60000 / tempo / 4
+    // Poll twice per sixteenth for smooth display, with min 50ms and max 200ms
+    const msPerSixteenth = 60000 / tempo / 4;
+    const interval = Math.max(50, Math.min(200, msPerSixteenth / 2));
+    return Math.round(interval);
+  }
+
+  /**
+   * Start polling for beat time (called when playback starts)
+   */
+  private startBeatTimePolling(): void {
+    if (this.beatTimeInterval) return; // Already polling
+
+    const poll = () => {
+      this.sendOSC({ address: '/live/song/get/current_song_time', args: [] });
+    };
+
+    // Initial poll
+    poll();
+
+    // Set up interval based on current tempo
+    const interval = this.getBeatTimePollingInterval();
+    this.beatTimeInterval = setInterval(poll, interval);
+    this.log(`Beat time polling started (${interval}ms interval at ${this.session.getState().tempo} BPM)`);
+  }
+
+  /**
+   * Stop polling for beat time (called when playback stops)
+   */
+  private stopBeatTimePolling(): void {
+    if (this.beatTimeInterval) {
+      clearInterval(this.beatTimeInterval);
+      this.beatTimeInterval = null;
+      this.log('Beat time polling stopped');
+    }
+  }
+
+  /**
+   * Update polling interval when tempo changes (while playing)
+   */
+  private updateBeatTimePollingInterval(): void {
+    if (!this.beatTimeInterval) return; // Not currently polling
+
+    // Restart polling with new interval
+    this.stopBeatTimePolling();
+    this.startBeatTimePolling();
   }
 }
 

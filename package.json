@@ -7,6 +7,7 @@
     "packages/*"
   ],
   "scripts": {
+    "dev": "bun run --filter '*' dev",
     "bridge": "bun run --filter @mission-control/bridge start",
     "bridge:dev": "bun run --filter @mission-control/bridge dev",
     "web": "bun run --filter @mission-control/web dev",

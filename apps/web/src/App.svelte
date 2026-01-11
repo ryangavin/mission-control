@@ -2,31 +2,57 @@
   import { onMount } from 'svelte';
   import { connect, disconnect, send, onMessage, onStateChange } from './lib/connection';
 
+  // Types from protocol
+  interface ClipSlot {
+    trackIndex: number;
+    sceneIndex: number;
+    hasClip: boolean;
+    clip?: {
+      name: string;
+      color: number;
+      isPlaying: boolean;
+      isTriggered: boolean;
+      isRecording: boolean;
+    };
+  }
+
+  interface Track {
+    id: number;
+    name: string;
+    color: number;
+    volume: number;
+    pan: number;
+    mute: boolean;
+    solo: boolean;
+    arm: boolean;
+    playingSlotIndex: number;
+    firedSlotIndex: number;
+    clips: ClipSlot[];
+  }
+
+  interface Scene {
+    id: number;
+    name: string;
+    color: number;
+  }
+
+  interface SessionState {
+    tempo: number;
+    isPlaying: boolean;
+    isRecording: boolean;
+    metronome: boolean;
+    tracks: Track[];
+    scenes: Scene[];
+    selectedTrack: number;
+    selectedScene: number;
+  }
+
   // Connection state
   let connectionState = $state<'disconnected' | 'connecting' | 'connected'>('disconnected');
   let abletonConnected = $state(false);
 
-  // Session data from bridge
-  let tempo = $state(120);
-  let isPlaying = $state(false);
-  let isRecording = $state(false);
-
-  // Track and scene data - mock data for testing
-  let tracks = $state<Array<{ id: number; name: string; color: string; mute: boolean; solo: boolean }>>([
-    { id: 0, name: 'Drums', color: '#ff94a2', mute: false, solo: false },
-    { id: 1, name: 'Bass', color: '#ffa529', mute: false, solo: false },
-    { id: 2, name: 'Synth', color: '#50e3c2', mute: false, solo: false },
-    { id: 3, name: 'Vocals', color: '#b8e986', mute: false, solo: false },
-    { id: 4, name: 'Guitar', color: '#9b59b6', mute: false, solo: false },
-    { id: 5, name: 'Keys', color: '#3498db', mute: false, solo: false },
-  ]);
-  let scenes = $state<Array<{ id: number; name: string }>>([
-    { id: 0, name: 'Intro' },
-    { id: 1, name: 'Verse' },
-    { id: 2, name: 'Chorus' },
-    { id: 3, name: 'Bridge' },
-    { id: 4, name: 'Outro' },
-  ]);
+  // Full session state
+  let session = $state<SessionState | null>(null);
 
   // Convert Ableton int color to hex
   function intToHex(color: number): string {
@@ -37,6 +63,46 @@
     return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
   }
 
+  // Apply patches using the kind discriminator
+  function applyPatch(patch: any) {
+    if (!session) return;
+
+    switch (patch.kind) {
+      case 'transport':
+        if (patch.tempo !== undefined) session.tempo = patch.tempo;
+        if (patch.isPlaying !== undefined) session.isPlaying = patch.isPlaying;
+        if (patch.isRecording !== undefined) session.isRecording = patch.isRecording;
+        if (patch.metronome !== undefined) session.metronome = patch.metronome;
+        if (patch.beatTime !== undefined) session.beatTime = patch.beatTime;
+        break;
+
+      case 'track':
+        session.tracks[patch.trackIndex] = patch.track;
+        break;
+
+      case 'clip':
+        if (session.tracks[patch.trackIndex]?.clips) {
+          session.tracks[patch.trackIndex].clips[patch.sceneIndex] = patch.clipSlot;
+        }
+        break;
+
+      case 'scene':
+        session.scenes[patch.sceneIndex] = patch.scene;
+        break;
+
+      case 'selection':
+        if (patch.selectedTrack !== undefined) session.selectedTrack = patch.selectedTrack;
+        if (patch.selectedScene !== undefined) session.selectedScene = patch.selectedScene;
+        break;
+
+      case 'structure':
+        // Structure changed - request full session refresh
+        console.log('[app] Structure changed, requesting new session');
+        send({ type: 'session/request' });
+        break;
+    }
+  }
+
   onMount(() => {
     // Set up connection state handler
     onStateChange((state) => {
@@ -45,35 +111,23 @@
 
     // Set up message handler
     onMessage((msg) => {
-      if (msg.type === 'connected') {
-        abletonConnected = msg.abletonConnected;
-      } else if (msg.type === 'session') {
-        // Full session state
-        const session = msg.payload;
-        if (session.tempo) tempo = session.tempo;
-        if (session.isPlaying !== undefined) isPlaying = session.isPlaying;
-        if (session.isRecording !== undefined) isRecording = session.isRecording;
-        if (session.tracks) {
-          tracks = session.tracks.map((t: any) => ({
-            id: t.id,
-            name: t.name,
-            color: intToHex(t.color),
-            mute: t.mute ?? false,
-            solo: t.solo ?? false,
-          }));
-        }
-        if (session.scenes) {
-          scenes = session.scenes.map((s: any) => ({
-            id: s.id,
-            name: s.name || `Scene ${s.id + 1}`,
-          }));
-        }
-      } else if (msg.type === 'patch') {
-        // Partial update
-        const patch = msg.payload;
-        if (patch.tempo) tempo = patch.tempo;
-        if (patch.isPlaying !== undefined) isPlaying = patch.isPlaying;
-        if (patch.isRecording !== undefined) isRecording = patch.isRecording;
+      switch (msg.type) {
+        case 'connected':
+          abletonConnected = msg.abletonConnected;
+          break;
+
+        case 'session':
+          console.log('[app] Session received:', msg.payload.tracks?.length, 'tracks,', msg.payload.scenes?.length, 'scenes');
+          session = msg.payload;
+          break;
+
+        case 'patch':
+          applyPatch(msg.payload);
+          break;
+
+        case 'error':
+          console.error('[app] Bridge error:', msg.message);
+          break;
       }
     });
 
@@ -84,6 +138,58 @@
       disconnect();
     };
   });
+
+  // Derived values for easier template access
+  let tempo = $derived(session?.tempo ?? 120);
+  let isPlaying = $derived(session?.isPlaying ?? false);
+  let isRecording = $derived(session?.isRecording ?? false);
+  let beatTime = $derived(session?.beatTime ?? 0);
+  let tracks = $derived(session?.tracks ?? []);
+  let scenes = $derived(session?.scenes ?? []);
+
+  // Format beat time as bar.beat.sixteenth (e.g., "1.1.1")
+  function formatBeatTime(beats: number): string {
+    // Ableton uses 4/4 time signature by default
+    // 1 bar = 4 beats, 1 beat = 4 sixteenths
+    const bar = Math.floor(beats / 4) + 1;
+    const beat = Math.floor(beats % 4) + 1;
+    const sixteenth = Math.floor((beats % 1) * 4) + 1;
+    return `${bar}.${beat}.${sixteenth}`;
+  }
+
+  // Get clip for a specific cell
+  function getClip(trackIndex: number, sceneIndex: number): ClipSlot | null {
+    const track = session?.tracks[trackIndex];
+    if (!track?.clips) return null;
+    return track.clips[sceneIndex] ?? null;
+  }
+
+  // Determine clip state for styling
+  function getClipState(trackIndex: number, sceneIndex: number): 'empty' | 'has-clip' | 'playing' | 'triggered' | 'recording' {
+    const clipSlot = getClip(trackIndex, sceneIndex);
+    if (!clipSlot?.hasClip) return 'empty';
+    if (clipSlot.clip?.isRecording) return 'recording';
+    if (clipSlot.clip?.isTriggered) return 'triggered';
+    if (clipSlot.clip?.isPlaying) return 'playing';
+    return 'has-clip';
+  }
+
+  // Get clip name for display
+  function getClipName(trackIndex: number, sceneIndex: number): string {
+    const clipSlot = getClip(trackIndex, sceneIndex);
+    if (!clipSlot?.hasClip || !clipSlot.clip) return '';
+    return clipSlot.clip.name || '';
+  }
+
+  // Get clip color (uses clip color if available, otherwise track color)
+  function getClipColor(trackIndex: number, sceneIndex: number): string {
+    const clipSlot = getClip(trackIndex, sceneIndex);
+    if (clipSlot?.clip?.color) {
+      return intToHex(clipSlot.clip.color);
+    }
+    const track = session?.tracks[trackIndex];
+    return track ? intToHex(track.color) : '#666666';
+  }
 
   // Status text
   let statusText = $derived(
@@ -130,16 +236,24 @@
   function handleMute(trackId: number) {
     const track = tracks.find(t => t.id === trackId);
     if (track) {
-      track.mute = !track.mute;
-      send({ type: 'mixer/mute', trackId, muted: track.mute });
+      // Toggle - bridge will send patch with updated state
+      send({ type: 'mixer/mute', trackId, muted: !track.mute });
     }
   }
 
   function handleSolo(trackId: number) {
     const track = tracks.find(t => t.id === trackId);
     if (track) {
-      track.solo = !track.solo;
-      send({ type: 'mixer/solo', trackId, soloed: track.solo });
+      // Toggle - bridge will send patch with updated state
+      send({ type: 'mixer/solo', trackId, soloed: !track.solo });
+    }
+  }
+
+  function handleArm(trackId: number) {
+    const track = tracks.find(t => t.id === trackId);
+    if (track) {
+      // Toggle - bridge will send patch with updated state
+      send({ type: 'mixer/arm', trackId, armed: !track.arm });
     }
   }
 </script>
@@ -156,6 +270,9 @@
       <button class="transport-btn record" class:active={isRecording} title="Record" onclick={handleRecord}>
         <span class="icon">●</span>
       </button>
+    </div>
+    <div class="playhead-section">
+      <span class="playhead-value">{formatBeatTime(beatTime)}</span>
     </div>
     <div class="tempo-section">
       <span class="tempo-value">{tempo.toFixed(2)}</span>
@@ -193,8 +310,8 @@
       <div class="grid-wrapper">
         <div class="grid" style="--cols: {tracks.length + 1}">
           <!-- Track headers -->
-          {#each tracks as track}
-            <div class="track-header" style="--color: {track.color}">
+          {#each tracks as track, trackIndex}
+            <div class="track-header" style="--color: {intToHex(track.color)}">
               <span class="track-name">{track.name}</span>
               <div class="track-controls">
                 <button
@@ -209,53 +326,68 @@
                   onclick={() => handleSolo(track.id)}
                   title="Solo"
                 >S</button>
+                <button
+                  class="track-btn arm"
+                  class:active={track.arm}
+                  onclick={() => handleArm(track.id)}
+                  title="Arm"
+                >●</button>
               </div>
             </div>
           {/each}
           <div class="scene-header">Scene</div>
 
+          <!-- Stop buttons row (sticky) -->
+          {#each tracks as track, trackIndex}
+            <button
+              class="clip-stop"
+              style="--color: {intToHex(track.color)}"
+              onclick={() => handleTrackStop(track.id)}
+              title="Stop {track.name}"
+            >■</button>
+          {/each}
+          <button class="clip-stop stop-all" onclick={handleStopAll} title="Stop All Clips">
+            ■ All
+          </button>
+
           <!-- Clip grid -->
-          {#each scenes as scene}
-            {#each tracks as track}
+          {#each scenes as scene, sceneIndex}
+            {@const sceneColor = intToHex(scene.color)}
+            {#each tracks as track, trackIndex}
+              {@const clipState = getClipState(trackIndex, sceneIndex)}
+              {@const clipName = getClipName(trackIndex, sceneIndex)}
+              {@const clipColor = getClipColor(trackIndex, sceneIndex)}
               <button
-                class="clip"
-                style="--color: {track.color}"
+                class="clip {clipState}"
+                style="--color: {clipColor}; --scene-color: {sceneColor}"
                 onclick={() => handleClipClick(track.id, scene.id)}
               >
-                {track.name} {scene.name}
+                {#if clipState !== 'empty'}
+                  <span class="clip-name">{clipName || track.name}</span>
+                {/if}
               </button>
             {/each}
             <button
               class="scene-btn"
+              style="--scene-color: {sceneColor}"
               onclick={() => handleSceneLaunch(scene.id)}
             >
-              <span class="scene-name">{scene.name}</span>
+              <span class="scene-color-indicator"></span>
+              <span class="scene-name">{scene.name || `Scene ${sceneIndex + 1}`}</span>
               <span class="scene-play">▶</span>
             </button>
           {/each}
-
-          <!-- Stop row -->
-          {#each tracks as track}
-            <button
-              class="stop-btn"
-              onclick={() => handleTrackStop(track.id)}
-              title="Stop {track.name}"
-            >
-              ■
-            </button>
-          {/each}
-          <button class="stop-all-btn" onclick={handleStopAll}>
-            Stop All
-          </button>
         </div>
       </div>
+
     {/if}
   </main>
 </div>
 
 <style>
-  :global(body) {
+  :global(html, body) {
     margin: 0;
+    padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: #1e1e1e;
     color: #fff;
@@ -272,8 +404,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 16px;
-    padding: 8px 16px;
+    gap: 8px;
+    padding: 4px 8px;
     background: #2d2d2d;
     border-bottom: 1px solid #3d3d3d;
     flex-shrink: 0;
@@ -325,24 +457,26 @@
   .grid-wrapper {
     flex: 1;
     overflow: auto;
-    padding: 12px;
+    padding: 0;
   }
 
   .grid {
     display: grid;
-    grid-template-columns: repeat(var(--cols), minmax(90px, 1fr));
-    gap: 4px;
-    min-width: max-content;
+    grid-template-columns: repeat(var(--cols), minmax(70px, 1fr));
+    gap: 3px;
+    min-width: 100%;
+    background: #1a1a1a;
+    padding: 0 3px 3px 3px;
   }
 
   .track-header {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding: 8px 12px;
+    padding: 6px 8px;
     background: #2d2d2d;
     border-left: 3px solid var(--color);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 500;
     position: sticky;
     top: 0;
@@ -357,12 +491,17 @@
 
   .track-controls {
     display: flex;
-    gap: 4px;
+    gap: 2px;
+    width: 100%;
+  }
+
+  .track-controls .track-btn {
+    flex: 1;
   }
 
   .track-btn {
-    padding: 2px 6px;
-    font-size: 10px;
+    padding: 6px 8px;
+    font-size: 12px;
     font-weight: 600;
     border: 1px solid #555;
     border-radius: 3px;
@@ -370,6 +509,8 @@
     color: #888;
     cursor: pointer;
     transition: all 0.1s;
+    min-width: 28px;
+    min-height: 28px;
   }
 
   .track-btn:hover {
@@ -389,6 +530,18 @@
     color: #fff;
   }
 
+  .track-btn.arm.active {
+    background: #b33;
+    border-color: #d44;
+    color: #fff;
+  }
+
+  .track-btn.stop:hover {
+    background: #4d3d3d;
+    border-color: #888;
+    color: #fff;
+  }
+
   .scene-header {
     padding: 8px;
     background: #2d2d2d;
@@ -400,19 +553,60 @@
     z-index: 10;
   }
 
+  .clip-stop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    background: #2a2a2a;
+    border: 1px solid #3d3d3d;
+    border-radius: 3px;
+    color: #888;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.1s;
+    position: sticky;
+    top: 58px; /* Below track header */
+    z-index: 9;
+  }
+
+  .clip-stop:hover {
+    background: #3d2d2d;
+    border-color: #664444;
+    color: #ff8888;
+  }
+
+  .clip-stop:active {
+    transform: scale(0.97);
+  }
+
+  .clip-stop.stop-all {
+    background: #3d2d2d;
+    border-color: #5d3d3d;
+    color: #ff8888;
+    font-size: 11px;
+  }
+
+  .clip-stop.stop-all:hover {
+    background: #4d3d3d;
+    border-color: #ff6666;
+    color: #ffaaaa;
+  }
+
   .clip {
-    padding: 12px 8px;
-    min-height: 56px;
-    background: color-mix(in srgb, var(--color) 20%, #3d3d3d);
-    border: 1px solid var(--color);
-    border-radius: 4px;
+    padding: 8px 6px;
+    min-height: 44px;
+    background: color-mix(in srgb, var(--color) 20%, #2d2d2d);
+    border: 1px solid color-mix(in srgb, var(--color) 30%, #111);
+    border-radius: 3px;
     color: #fff;
-    font-size: 10px;
+    font-size: 9px;
     cursor: pointer;
     transition: background 0.1s, transform 0.1s;
     text-align: left;
     overflow: hidden;
     text-overflow: ellipsis;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color) 15%, rgba(255,255,255,0.08));
   }
 
   .clip:hover {
@@ -423,70 +617,119 @@
     transform: scale(0.97);
   }
 
+  /* Clip state styles */
+  .clip.empty {
+    background: color-mix(in srgb, var(--scene-color, #666) 8%, #2a2a2a);
+    border-color: color-mix(in srgb, var(--scene-color, #666) 20%, #222);
+    box-shadow: none;
+    opacity: 0.7;
+  }
+
+  .clip.empty:hover {
+    background: color-mix(in srgb, var(--scene-color, #666) 15%, #3a3a3a);
+    border-color: color-mix(in srgb, var(--scene-color, #666) 30%, #333);
+    opacity: 1;
+  }
+
+  .clip.has-clip {
+    /* Default styles from .clip */
+  }
+
+  .clip.playing {
+    background: color-mix(in srgb, #00ff00 25%, #2d2d2d);
+    border-color: #00ff00;
+    box-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
+  }
+
+  .clip.playing:hover {
+    background: color-mix(in srgb, #00ff00 35%, #2d2d2d);
+  }
+
+  .clip.triggered {
+    background: color-mix(in srgb, #ffff00 25%, #2d2d2d);
+    border-color: #ffff00;
+    animation: blink 0.3s ease-in-out infinite;
+  }
+
+  .clip.recording {
+    background: color-mix(in srgb, #ff0000 25%, #2d2d2d);
+    border-color: #ff0000;
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.4);
+    animation: pulse 0.5s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(255, 0, 0, 0.4); }
+    50% { box-shadow: 0 0 16px rgba(255, 0, 0, 0.8); }
+  }
+
+  .clip-name {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .scene-btn {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 8px 12px;
-    min-height: 56px;
-    background: #2d2d2d;
+    gap: 6px;
+    padding: 6px 8px;
+    min-height: 44px;
+    background: color-mix(in srgb, var(--scene-color, #666) 10%, #2d2d2d);
     border: none;
-    border-radius: 4px;
+    border-left: 3px solid var(--scene-color, #666);
+    border-radius: 0 3px 3px 0;
     color: #fff;
-    font-size: 12px;
+    font-size: 10px;
     cursor: pointer;
     transition: background 0.1s;
   }
 
   .scene-btn:hover {
-    background: #3d3d3d;
+    background: color-mix(in srgb, var(--scene-color, #666) 20%, #3d3d3d);
   }
 
   .scene-btn:active {
     transform: scale(0.98);
   }
 
+  .scene-color-indicator {
+    display: none;
+  }
+
   .scene-name {
+    flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    text-align: left;
   }
 
   .scene-play {
     opacity: 0.5;
     font-size: 10px;
+    flex-shrink: 0;
   }
 
   .scene-btn:hover .scene-play {
     opacity: 1;
   }
 
-  .stop-btn {
-    padding: 8px;
-    min-height: 44px;
-    background: #2a2a2a;
-    border: 1px solid #3d3d3d;
-    border-radius: 4px;
-    color: #888;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.1s;
-  }
-
-  .stop-btn:hover {
-    background: #3d3d3d;
-    color: #fff;
-    border-color: #666;
-  }
-
   .stop-all-btn {
-    padding: 8px;
-    min-height: 44px;
+    padding: 0 10px;
+    height: 44px;
     background: #3d2d2d;
     border: 1px solid #5d3d3d;
     border-radius: 4px;
     color: #ff8888;
     font-size: 11px;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.1s;
   }
@@ -496,17 +739,21 @@
     border-color: #ff6666;
   }
 
+  .stop-all-btn:active {
+    transform: scale(0.95);
+  }
+
   .transport {
     display: flex;
-    gap: 8px;
+    gap: 4px;
   }
 
   .transport-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
+    width: 32px;
+    height: 32px;
     background: #3d3d3d;
     border: none;
     border-radius: 4px;
@@ -524,7 +771,7 @@
   }
 
   .transport-btn .icon {
-    font-size: 18px;
+    font-size: 14px;
   }
 
   .transport-btn.play:hover {
@@ -560,20 +807,35 @@
     font-size: 14px;
   }
 
+  .playhead-section {
+    display: flex;
+    align-items: center;
+  }
+
+  .playhead-value {
+    font-size: 16px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    font-family: 'SF Mono', 'Menlo', monospace;
+    color: #aaa;
+    letter-spacing: 1px;
+  }
+
   .tempo-section {
     display: flex;
     align-items: baseline;
-    gap: 6px;
+    gap: 4px;
   }
 
   .tempo-value {
-    font-size: 24px;
+    font-size: 16px;
     font-weight: 500;
     font-variant-numeric: tabular-nums;
+    font-family: 'SF Mono', 'Menlo', monospace;
   }
 
   .tempo-label {
-    font-size: 12px;
+    font-size: 10px;
     color: #888;
   }
 

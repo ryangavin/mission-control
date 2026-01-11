@@ -35,7 +35,7 @@ export function connect() {
     clearReconnect();
 
     // Request current session state
-    send({ type: 'session/get' });
+    send({ type: 'session/request' });
   };
 
   ws.onclose = () => {

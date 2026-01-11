@@ -5,6 +5,7 @@ export interface SessionState {
   isPlaying: boolean;
   isRecording: boolean;
   metronome: boolean;
+  beatTime: number;  // Current song time in beats
   tracks: Track[];
   scenes: Scene[];
   selectedTrack: number;
@@ -99,7 +100,7 @@ export type ClientMessage =
 
 // Patch payloads for granular state updates
 export type PatchPayload =
-  | { kind: 'transport'; tempo?: number; isPlaying?: boolean; isRecording?: boolean; metronome?: boolean }
+  | { kind: 'transport'; tempo?: number; isPlaying?: boolean; isRecording?: boolean; metronome?: boolean; beatTime?: number }
   | { kind: 'track'; trackIndex: number; track: Track }
   | { kind: 'clip'; trackIndex: number; sceneIndex: number; clipSlot: ClipSlot }
   | { kind: 'scene'; sceneIndex: number; scene: Scene }
