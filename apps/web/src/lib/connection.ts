@@ -33,6 +33,9 @@ export function connect() {
     console.log('[connection] Connected');
     setState('connected');
     clearReconnect();
+
+    // Request current session state
+    send({ type: 'session/get' });
   };
 
   ws.onclose = () => {

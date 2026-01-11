@@ -11,9 +11,22 @@
   let isPlaying = $state(false);
   let isRecording = $state(false);
 
-  // Track and scene data
-  let tracks = $state<Array<{ id: number; name: string; color: string }>>([]);
-  let scenes = $state<Array<{ id: number; name: string }>>([]);
+  // Track and scene data - mock data for testing
+  let tracks = $state<Array<{ id: number; name: string; color: string; mute: boolean; solo: boolean }>>([
+    { id: 0, name: 'Drums', color: '#ff94a2', mute: false, solo: false },
+    { id: 1, name: 'Bass', color: '#ffa529', mute: false, solo: false },
+    { id: 2, name: 'Synth', color: '#50e3c2', mute: false, solo: false },
+    { id: 3, name: 'Vocals', color: '#b8e986', mute: false, solo: false },
+    { id: 4, name: 'Guitar', color: '#9b59b6', mute: false, solo: false },
+    { id: 5, name: 'Keys', color: '#3498db', mute: false, solo: false },
+  ]);
+  let scenes = $state<Array<{ id: number; name: string }>>([
+    { id: 0, name: 'Intro' },
+    { id: 1, name: 'Verse' },
+    { id: 2, name: 'Chorus' },
+    { id: 3, name: 'Bridge' },
+    { id: 4, name: 'Outro' },
+  ]);
 
   // Convert Ableton int color to hex
   function intToHex(color: number): string {
@@ -45,6 +58,8 @@
             id: t.id,
             name: t.name,
             color: intToHex(t.color),
+            mute: t.mute ?? false,
+            solo: t.solo ?? false,
           }));
         }
         if (session.scenes) {
@@ -111,6 +126,22 @@
   function handleRecord() {
     send({ type: 'transport/record' });
   }
+
+  function handleMute(trackId: number) {
+    const track = tracks.find(t => t.id === trackId);
+    if (track) {
+      track.mute = !track.mute;
+      send({ type: 'mixer/mute', trackId, muted: track.mute });
+    }
+  }
+
+  function handleSolo(trackId: number) {
+    const track = tracks.find(t => t.id === trackId);
+    if (track) {
+      track.solo = !track.solo;
+      send({ type: 'mixer/solo', trackId, soloed: track.solo });
+    }
+  }
 </script>
 
 <div class="app">
@@ -164,7 +195,21 @@
           <!-- Track headers -->
           {#each tracks as track}
             <div class="track-header" style="--color: {track.color}">
-              {track.name}
+              <span class="track-name">{track.name}</span>
+              <div class="track-controls">
+                <button
+                  class="track-btn mute"
+                  class:active={track.mute}
+                  onclick={() => handleMute(track.id)}
+                  title="Mute"
+                >M</button>
+                <button
+                  class="track-btn solo"
+                  class:active={track.solo}
+                  onclick={() => handleSolo(track.id)}
+                  title="Solo"
+                >S</button>
+              </div>
             </div>
           {/each}
           <div class="scene-header">Scene</div>
@@ -291,15 +336,57 @@
   }
 
   .track-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     padding: 8px 12px;
     background: #2d2d2d;
     border-left: 3px solid var(--color);
     font-size: 12px;
     font-weight: 500;
-    white-space: nowrap;
     position: sticky;
     top: 0;
     z-index: 10;
+  }
+
+  .track-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .track-controls {
+    display: flex;
+    gap: 4px;
+  }
+
+  .track-btn {
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 600;
+    border: 1px solid #555;
+    border-radius: 3px;
+    background: #3d3d3d;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+
+  .track-btn:hover {
+    background: #4d4d4d;
+    color: #fff;
+  }
+
+  .track-btn.mute.active {
+    background: #b54;
+    border-color: #d65;
+    color: #fff;
+  }
+
+  .track-btn.solo.active {
+    background: #54b;
+    border-color: #65d;
+    color: #fff;
   }
 
   .scene-header {

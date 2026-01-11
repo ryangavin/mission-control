@@ -20,6 +20,8 @@ export interface Track {
   mute: boolean;
   solo: boolean;
   arm: boolean;
+  playingSlotIndex: number;  // -1 if no slot playing
+  firedSlotIndex: number;    // -1 if no slot triggered
   clips: ClipSlot[];
 }
 
@@ -91,11 +93,22 @@ export type ClientMessage =
   | { type: 'mixer/mute'; trackId: number; muted: boolean }
   | { type: 'mixer/solo'; trackId: number; soloed: boolean }
   | { type: 'mixer/arm'; trackId: number; armed: boolean }
-  | { type: 'device/parameter'; trackId: number; deviceId: number; parameterId: number; value: number };
+  | { type: 'device/parameter'; trackId: number; deviceId: number; parameterId: number; value: number }
+  | { type: 'session/request' }
+  | { type: 'osc'; address: string; args: OSCValue[] };
+
+// Patch payloads for granular state updates
+export type PatchPayload =
+  | { kind: 'transport'; tempo?: number; isPlaying?: boolean; isRecording?: boolean; metronome?: boolean }
+  | { kind: 'track'; trackIndex: number; track: Track }
+  | { kind: 'clip'; trackIndex: number; sceneIndex: number; clipSlot: ClipSlot }
+  | { kind: 'scene'; sceneIndex: number; scene: Scene }
+  | { kind: 'selection'; selectedTrack?: number; selectedScene?: number }
+  | { kind: 'structure'; numTracks: number; numScenes: number };
 
 export type ServerMessage =
   | { type: 'session'; payload: SessionState }
-  | { type: 'patch'; payload: Partial<SessionState> }
+  | { type: 'patch'; payload: PatchPayload }
   | { type: 'connected'; abletonConnected: boolean }
   | { type: 'error'; message: string };
 
