@@ -42,8 +42,27 @@
 
 <div class="app">
   <header class="header">
-    <h1>Mission Control</h1>
-    <span class="status">Disconnected</span>
+    <div class="transport">
+      <button class="transport-btn stop" title="Stop">
+        <span class="icon">■</span>
+      </button>
+      <button class="transport-btn play" title="Play">
+        <span class="icon">▶</span>
+      </button>
+      <button class="transport-btn record" title="Record">
+        <span class="icon">●</span>
+      </button>
+    </div>
+    <div class="tempo-section">
+      <span class="tempo-value">120.00</span>
+      <span class="tempo-label">BPM</span>
+    </div>
+    <div class="header-right">
+      <button class="transport-btn small" title="Metronome">
+        <span class="icon">🔔</span>
+      </button>
+      <span class="status">Disconnected</span>
+    </div>
   </header>
 
   <main class="main">
@@ -93,29 +112,6 @@
       </div>
     </div>
   </main>
-
-  <footer class="footer">
-    <div class="transport">
-      <button class="transport-btn stop" title="Stop">
-        <span class="icon">■</span>
-      </button>
-      <button class="transport-btn play" title="Play">
-        <span class="icon">▶</span>
-      </button>
-      <button class="transport-btn record" title="Record">
-        <span class="icon">●</span>
-      </button>
-    </div>
-    <div class="tempo-section">
-      <span class="tempo-value">120.00</span>
-      <span class="tempo-label">BPM</span>
-    </div>
-    <div class="transport-extras">
-      <button class="transport-btn small" title="Metronome">
-        <span class="icon">🔔</span>
-      </button>
-    </div>
-  </footer>
 </div>
 
 <style>
@@ -137,15 +133,17 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 16px;
+    gap: 16px;
+    padding: 8px 16px;
     background: #2d2d2d;
     border-bottom: 1px solid #3d3d3d;
     flex-shrink: 0;
   }
 
-  .header h1 {
-    margin: 0;
-    font-size: 18px;
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
 
   .status {
@@ -292,16 +290,6 @@
     border-color: #ff6666;
   }
 
-  .footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    background: #2d2d2d;
-    border-top: 1px solid #3d3d3d;
-    flex-shrink: 0;
-  }
-
   .transport {
     display: flex;
     gap: 8px;
@@ -373,8 +361,4 @@
     color: #888;
   }
 
-  .transport-extras {
-    display: flex;
-    gap: 8px;
-  }
 </style>
