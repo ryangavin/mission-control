@@ -1,0 +1,19 @@
+{
+  "name": "mission-control",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "bridge": "bun run --filter @mission-control/bridge start",
+    "bridge:dev": "bun run --filter @mission-control/bridge dev",
+    "web": "bun run --filter @mission-control/web dev",
+    "install-script": "bun run --filter @mission-control/bridge start install"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.3.0"
+  }
+}
