@@ -1,116 +1,210 @@
 <script lang="ts">
-  // Mock data - will be replaced with live data from bridge
-  // Testing with larger set to verify scrolling
-  const tracks = [
-    { id: 0, name: 'Drums', color: '#ff94a2' },
-    { id: 1, name: 'Bass', color: '#ffa529' },
-    { id: 2, name: 'Synth', color: '#50e3c2' },
-    { id: 3, name: 'Vocals', color: '#b8e986' },
-    { id: 4, name: 'Guitar', color: '#9b59b6' },
-    { id: 5, name: 'Keys', color: '#3498db' },
-    { id: 6, name: 'FX', color: '#e74c3c' },
-    { id: 7, name: 'Strings', color: '#1abc9c' },
-  ];
+  import { onMount } from 'svelte';
+  import { connect, disconnect, send, onMessage, onStateChange } from './lib/connection';
 
-  const scenes = [
-    { id: 0, name: 'Intro' },
-    { id: 1, name: 'Verse 1' },
-    { id: 2, name: 'Chorus' },
-    { id: 3, name: 'Verse 2' },
-    { id: 4, name: 'Bridge' },
-    { id: 5, name: 'Chorus 2' },
-    { id: 6, name: 'Outro' },
-    { id: 7, name: 'End' },
-  ];
+  // Connection state
+  let connectionState = $state<'disconnected' | 'connecting' | 'connected'>('disconnected');
+  let abletonConnected = $state(false);
 
+  // Session data from bridge
+  let tempo = $state(120);
+  let isPlaying = $state(false);
+  let isRecording = $state(false);
+
+  // Track and scene data
+  let tracks = $state<Array<{ id: number; name: string; color: string }>>([]);
+  let scenes = $state<Array<{ id: number; name: string }>>([]);
+
+  // Convert Ableton int color to hex
+  function intToHex(color: number): string {
+    if (!color) return '#666666';
+    const r = (color >> 16) & 0xff;
+    const g = (color >> 8) & 0xff;
+    const b = color & 0xff;
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  }
+
+  onMount(() => {
+    // Set up connection state handler
+    onStateChange((state) => {
+      connectionState = state;
+    });
+
+    // Set up message handler
+    onMessage((msg) => {
+      if (msg.type === 'connected') {
+        abletonConnected = msg.abletonConnected;
+      } else if (msg.type === 'session') {
+        // Full session state
+        const session = msg.payload;
+        if (session.tempo) tempo = session.tempo;
+        if (session.isPlaying !== undefined) isPlaying = session.isPlaying;
+        if (session.isRecording !== undefined) isRecording = session.isRecording;
+        if (session.tracks) {
+          tracks = session.tracks.map((t: any) => ({
+            id: t.id,
+            name: t.name,
+            color: intToHex(t.color),
+          }));
+        }
+        if (session.scenes) {
+          scenes = session.scenes.map((s: any) => ({
+            id: s.id,
+            name: s.name || `Scene ${s.id + 1}`,
+          }));
+        }
+      } else if (msg.type === 'patch') {
+        // Partial update
+        const patch = msg.payload;
+        if (patch.tempo) tempo = patch.tempo;
+        if (patch.isPlaying !== undefined) isPlaying = patch.isPlaying;
+        if (patch.isRecording !== undefined) isRecording = patch.isRecording;
+      }
+    });
+
+    // Connect
+    connect();
+
+    return () => {
+      disconnect();
+    };
+  });
+
+  // Status text
+  let statusText = $derived(
+    connectionState === 'connected'
+      ? (abletonConnected ? 'Connected' : 'Waiting for Ableton')
+      : connectionState === 'connecting'
+        ? 'Connecting...'
+        : 'Disconnected'
+  );
+
+  let statusClass = $derived(
+    connectionState === 'connected' && abletonConnected ? 'connected' : ''
+  );
+
+  // Actions
   function handleClipClick(trackId: number, sceneId: number) {
-    console.log(`Clip fire: track ${trackId}, scene ${sceneId}`);
+    send({ type: 'clip/fire', trackId, sceneId });
   }
 
   function handleSceneLaunch(sceneId: number) {
-    console.log(`Scene launch: ${sceneId}`);
+    send({ type: 'scene/fire', sceneId });
   }
 
   function handleTrackStop(trackId: number) {
-    console.log(`Track stop: ${trackId}`);
+    send({ type: 'track/stop', trackId });
   }
 
   function handleStopAll() {
-    console.log('Stop all clips');
+    tracks.forEach(t => send({ type: 'track/stop', trackId: t.id }));
+  }
+
+  function handlePlay() {
+    send({ type: 'transport/play' });
+  }
+
+  function handleStop() {
+    send({ type: 'transport/stop' });
+  }
+
+  function handleRecord() {
+    send({ type: 'transport/record' });
   }
 </script>
 
 <div class="app">
   <header class="header">
     <div class="transport">
-      <button class="transport-btn stop" title="Stop">
+      <button class="transport-btn stop" title="Stop" onclick={handleStop}>
         <span class="icon">■</span>
       </button>
-      <button class="transport-btn play" title="Play">
+      <button class="transport-btn play" class:active={isPlaying} title="Play" onclick={handlePlay}>
         <span class="icon">▶</span>
       </button>
-      <button class="transport-btn record" title="Record">
+      <button class="transport-btn record" class:active={isRecording} title="Record" onclick={handleRecord}>
         <span class="icon">●</span>
       </button>
     </div>
     <div class="tempo-section">
-      <span class="tempo-value">120.00</span>
+      <span class="tempo-value">{tempo.toFixed(2)}</span>
       <span class="tempo-label">BPM</span>
     </div>
     <div class="header-right">
       <button class="transport-btn small" title="Metronome">
         <span class="icon">🔔</span>
       </button>
-      <span class="status">Disconnected</span>
+      <span class="status {statusClass}">{statusText}</span>
     </div>
   </header>
 
   <main class="main">
-    <div class="grid-wrapper">
-      <div class="grid" style="--cols: {tracks.length + 1}">
-        <!-- Track headers -->
-        {#each tracks as track}
-          <div class="track-header" style="--color: {track.color}">
-            {track.name}
-          </div>
-        {/each}
-        <div class="scene-header">Scene</div>
-
-        <!-- Clip grid -->
-        {#each scenes as scene}
+    {#if tracks.length === 0}
+      <div class="empty-state">
+        <p class="empty-title">
+          {#if connectionState !== 'connected'}
+            Connecting to bridge...
+          {:else if !abletonConnected}
+            Waiting for Ableton Live
+          {:else}
+            Loading session...
+          {/if}
+        </p>
+        <p class="empty-hint">
+          {#if connectionState !== 'connected'}
+            Bridge server: ws://localhost:8080
+          {:else if !abletonConnected}
+            Make sure Ableton is running with AbletonOSC
+          {/if}
+        </p>
+      </div>
+    {:else}
+      <div class="grid-wrapper">
+        <div class="grid" style="--cols: {tracks.length + 1}">
+          <!-- Track headers -->
           {#each tracks as track}
+            <div class="track-header" style="--color: {track.color}">
+              {track.name}
+            </div>
+          {/each}
+          <div class="scene-header">Scene</div>
+
+          <!-- Clip grid -->
+          {#each scenes as scene}
+            {#each tracks as track}
+              <button
+                class="clip"
+                style="--color: {track.color}"
+                onclick={() => handleClipClick(track.id, scene.id)}
+              >
+                {track.name} {scene.name}
+              </button>
+            {/each}
             <button
-              class="clip"
-              style="--color: {track.color}"
-              onclick={() => handleClipClick(track.id, scene.id)}
+              class="scene-btn"
+              onclick={() => handleSceneLaunch(scene.id)}
             >
-              {track.name} {scene.name}
+              <span class="scene-name">{scene.name}</span>
+              <span class="scene-play">▶</span>
             </button>
           {/each}
-          <button
-            class="scene-btn"
-            onclick={() => handleSceneLaunch(scene.id)}
-          >
-            <span class="scene-name">{scene.name}</span>
-            <span class="scene-play">▶</span>
-          </button>
-        {/each}
 
-        <!-- Stop row -->
-        {#each tracks as track}
-          <button
-            class="stop-btn"
-            onclick={() => handleTrackStop(track.id)}
-            title="Stop {track.name}"
-          >
-            ■
+          <!-- Stop row -->
+          {#each tracks as track}
+            <button
+              class="stop-btn"
+              onclick={() => handleTrackStop(track.id)}
+              title="Stop {track.name}"
+            >
+              ■
+            </button>
+          {/each}
+          <button class="stop-all-btn" onclick={handleStopAll}>
+            Stop All
           </button>
-        {/each}
-        <button class="stop-all-btn" onclick={handleStopAll}>
-          Stop All
-        </button>
+        </div>
       </div>
-    </div>
+    {/if}
   </main>
 </div>
 
@@ -151,11 +245,36 @@
     font-size: 12px;
   }
 
+  .status.connected {
+    color: #4f4;
+  }
+
   .main {
     flex: 1;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+  }
+
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .empty-title {
+    font-size: 18px;
+    color: #888;
+    margin: 0;
+  }
+
+  .empty-hint {
+    font-size: 12px;
+    color: #555;
+    margin: 0;
   }
 
   .grid-wrapper {
@@ -326,11 +445,21 @@
     color: #4f4;
   }
 
+  .transport-btn.play.active {
+    background: #2d4d2d;
+    color: #4f4;
+  }
+
   .transport-btn.stop:hover {
     background: #3d3d3d;
   }
 
   .transport-btn.record:hover {
+    background: #4d2d2d;
+    color: #f44;
+  }
+
+  .transport-btn.record.active {
     background: #4d2d2d;
     color: #f44;
   }
