@@ -453,4 +453,86 @@ export class SyncManager {
   getStructure(): { numTracks: number; numScenes: number } {
     return { numTracks: this.numTracks, numScenes: this.numScenes };
   }
+
+  /**
+   * Check for structure changes and sync new tracks/scenes
+   * Returns true if structure changed
+   */
+  async checkStructureChanges(): Promise<boolean> {
+    const [newNumTracks, newNumScenes] = await Promise.all([
+      this.queryOSC(song.getNumTracks()),
+      this.queryOSC(song.getNumScenes()),
+    ]);
+
+    const tracksChanged = newNumTracks !== this.numTracks;
+    const scenesChanged = newNumScenes !== this.numScenes;
+
+    if (!tracksChanged && !scenesChanged) {
+      return false;
+    }
+
+    this.callbacks.onLog(`Structure changed: ${this.numTracks} -> ${newNumTracks} tracks, ${this.numScenes} -> ${newNumScenes} scenes`);
+
+    // Sync new tracks
+    if (newNumTracks > this.numTracks) {
+      // Update structure first to create empty tracks
+      this.session.setStructure(newNumTracks, this.numScenes);
+
+      // Sync each new track
+      for (let t = this.numTracks; t < newNumTracks; t++) {
+        await this.syncTrack(t);
+        // Set up listeners for new track
+        this.setupTrackListeners(t);
+      }
+    } else if (newNumTracks < this.numTracks) {
+      // Tracks were deleted - just update structure
+      this.session.setStructure(newNumTracks, this.numScenes);
+    }
+
+    // Sync new scenes
+    if (newNumScenes > this.numScenes) {
+      // Update structure to create empty scenes
+      this.session.setStructure(newNumTracks, newNumScenes);
+
+      // Sync each new scene
+      for (let s = this.numScenes; s < newNumScenes; s++) {
+        await this.syncScene(s);
+      }
+
+      // Sync clip slots for new scenes across all tracks
+      for (let t = 0; t < newNumTracks; t++) {
+        for (let s = this.numScenes; s < newNumScenes; s++) {
+          await this.syncClipSlot(t, s);
+          // Set up has_clip listener for new slot
+          this.callbacks.sendOSC(clipSlot.startListenHasClip(t, s));
+        }
+      }
+    } else if (newNumScenes < this.numScenes) {
+      // Scenes were deleted - just update structure
+      this.session.setStructure(newNumTracks, newNumScenes);
+    }
+
+    // Update stored counts
+    this.numTracks = newNumTracks;
+    this.numScenes = newNumScenes;
+
+    return true;
+  }
+
+  /**
+   * Set up listeners for a single track
+   */
+  private setupTrackListeners(trackIndex: number): void {
+    this.callbacks.sendOSC(track.startListenVolume(trackIndex));
+    this.callbacks.sendOSC(track.startListenMute(trackIndex));
+    this.callbacks.sendOSC(track.startListenSolo(trackIndex));
+    this.callbacks.sendOSC(track.startListenArm(trackIndex));
+    this.callbacks.sendOSC(track.startListenPlayingSlot(trackIndex));
+    this.callbacks.sendOSC(track.startListenFiredSlot(trackIndex));
+
+    // Set up clip slot listeners for this track
+    for (let s = 0; s < this.numScenes; s++) {
+      this.callbacks.sendOSC(clipSlot.startListenHasClip(trackIndex, s));
+    }
+  }
 }

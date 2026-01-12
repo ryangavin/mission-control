@@ -5,83 +5,139 @@ You are continuing development on **Mission Control**, a touch controller for Ab
 ## Project Location
 `/Users/ryan/The Source/mission-control`
 
-## Your Focus
-`apps/web/`
+## Required Reading
+
+Read these files first:
+1. `CLAUDE.md` - Project conventions
+2. `docs/PROTOCOL.md` - **WebSocket protocol reference (NEW from Track A)**
+3. `SHARED_LOG.md` - Inter-track communication
+4. `apps/web/src/App.svelte` - Current UI
+5. `apps/web/src/lib/connection.ts` - Current connection handling
 
 ## Current State
-- **B1-B4 SCAFFOLDED**: Basic UI structure exists
+
+**Track A (Server) - A1-A3 Complete:**
+- Bridge server on `ws://localhost:8080`
+- Full session sync + real-time patches implemented
+- Protocol documented in `docs/PROTOCOL.md`
+
+**Track B (UI) - B1-B3 Scaffolded:**
 - Svelte 5 + Vite + PWA configured
-- Design tokens in `src/app.css`
-- Connection store with WebSocket to bridge
-- Mock SessionGrid, Transport, ClipCell components
+- Components exist but use OLD protocol
+- Need to integrate NEW protocol from Track A
 
-## Your Tasks
+## Immediate Task: Protocol Integration
 
-### Wire to Live Data
-The connection store (`src/lib/stores/connection.svelte.ts`) connects to the bridge but uses mock data. Update components to use live session state from the bridge.
+The connection handling needs to be updated for the new protocol:
 
-### B3: Session Grid Module (Polish)
-`src/lib/components/SessionGrid/`:
-- Replace mock data with live track/clip data from bridge
-- Show real clip names, colors from Ableton
-- Playing/triggered/recording states with visual feedback
-- Smooth animations for state changes
-- Responsive grid that adapts to screen size
+### Old Protocol (broken)
+```typescript
+// UI waited for bridge to send data automatically
+// Used { type: 'session', payload } and { type: 'patch', payload: Partial<SessionState> }
+```
 
-### B4: Transport Module (Polish)
-`src/lib/components/Transport/`:
-- Live tempo display (updates in real-time)
-- Play/stop/record with proper state reflection
-- Tap tempo (tap BPM display multiple times)
-- Quantization selector
+### New Protocol (implement this)
+```typescript
+// 1. After connect, request session
+ws.send(JSON.stringify({ type: 'session/request' }));
 
-### B5: Mixer Module (New)
-`src/lib/components/Mixer/`:
-- Channel strips with vertical faders
-- Volume, pan per track
-- Mute/Solo/Arm buttons
-- Peak meters (if data available)
+// 2. Handle full session
+{ type: 'session', payload: SessionState }
+
+// 3. Handle patches with `kind` discriminator
+{ type: 'patch', payload: { kind: 'transport', isPlaying: true } }
+{ type: 'patch', payload: { kind: 'track', trackIndex: 0, track: Track } }
+{ type: 'patch', payload: { kind: 'clip', trackIndex: 0, sceneIndex: 1, clipSlot: ClipSlot } }
+{ type: 'patch', payload: { kind: 'selection', selectedTrack: 2 } }
+```
+
+### Patch Application
+```typescript
+function applyPatch(session: SessionState, patch: PatchPayload) {
+  switch (patch.kind) {
+    case 'transport':
+      if (patch.tempo !== undefined) session.tempo = patch.tempo;
+      if (patch.isPlaying !== undefined) session.isPlaying = patch.isPlaying;
+      // etc.
+      break;
+    case 'track':
+      session.tracks[patch.trackIndex] = patch.track;
+      break;
+    case 'clip':
+      session.tracks[patch.trackIndex].clips[patch.sceneIndex] = patch.clipSlot;
+      break;
+    case 'selection':
+      if (patch.selectedTrack !== undefined) session.selectedTrack = patch.selectedTrack;
+      if (patch.selectedScene !== undefined) session.selectedScene = patch.selectedScene;
+      break;
+  }
+}
+```
+
+### Loading States
+Initial sync takes ~10s. Show:
+- "Connecting to bridge..." - WebSocket disconnected
+- "Waiting for Ableton..." - Connected but `abletonConnected: false`
+- "Loading session..." - Waiting for session data
+- Grid visible - Session received
+
+## Testing
+
+```bash
+# Terminal 1: Start bridge
+cd apps/bridge && bun src/index.ts start
+
+# Terminal 2: Start web app
+cd apps/web && bun run dev
+```
+
+Verify:
+1. Session loads (track names, scenes, tempo visible)
+2. Play/stop buttons work
+3. Real-time updates (change tempo in Ableton, see it update)
+
+## After Protocol Integration
+
+### B4: Transport Module
+- Live tempo display
+- Play/stop/record buttons
+- Tap tempo, metronome toggle
+
+### B5: Mixer Module
+- Channel strips with faders
+- Volume, pan, mute/solo/arm
 - Master channel
 
-### B6: Device Control Module (New)
-`src/lib/components/DeviceControl/`:
-- Show current device name
-- 8 parameter knobs (auto-mapped)
-- Prev/Next device navigation
-- Device on/off toggle
+### B6: Device Control Module
+- Parameter knobs
+- Device navigation
 
 ### B7: Touch & Performance
-- Optimize touch gestures (tap, long-press, drag)
-- Ensure 44px minimum touch targets
-- Test on iPad Safari
-- Add haptic feedback hints (CSS)
+- 44px minimum touch targets
+- iPad Safari optimization
 
-## Commands
-- `bun run web` - Start dev server (http://localhost:5173)
-- Network URL shown in terminal for iPad testing
+## Type Imports
 
-## Communication
-Update `SHARED_LOG.md` with progress. Check it for questions from Track A.
-
-## Key Files to Read First
-1. `apps/web/src/App.svelte` - Main app structure
-2. `apps/web/src/lib/stores/connection.svelte.ts` - WebSocket connection
-3. `apps/web/src/lib/components/SessionGrid/Grid.svelte` - Current grid
-4. `apps/web/src/app.css` - Design tokens
-5. `docs/TRACK-B-UI.md` - Detailed UI track plan
-6. `packages/protocol/src/types.ts` - Data types from server
+```typescript
+import type {
+  SessionState,
+  PatchPayload,
+  Track,
+  ClipSlot,
+  ServerMessage
+} from '@mission-control/protocol';
+```
 
 ## Design Guidelines
 - Dark theme (Ableton-inspired)
-- Accent color: `#ff764d` (orange)
+- Accent: `#ff764d` (orange)
 - Playing: `#00ff00` (green)
 - Triggered: `#ffff00` (yellow, blinking)
 - Recording: `#ff0000` (red)
-- Touch targets: minimum 44px, comfortable 56px
-- Use CSS variables from `app.css`
 
-## Notes
-- Bridge server runs on `ws://localhost:8080`
-- Use Chrome DevTools device emulation for iPad testing
-- PWA should work offline (show "disconnected" state gracefully)
-- Primary target: iPad in landscape orientation
+## Commands
+- `bun run dev` from `apps/web/` - Start dev server
+- Bridge must be running for live data
+
+## Communication
+Update `SHARED_LOG.md` with progress.

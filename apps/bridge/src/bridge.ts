@@ -22,6 +22,8 @@ export class Bridge {
   private syncInProgress = false;
   private synced = false;
   private beatTimeInterval: ReturnType<typeof setInterval> | null = null;
+  private structurePollingInterval: ReturnType<typeof setInterval> | null = null;
+  private structurePollingMs = 2000; // Check for new tracks/scenes every 2 seconds
 
   constructor(options: BridgeOptions) {
     this.config = options.config;
