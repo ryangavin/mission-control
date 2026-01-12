@@ -228,8 +228,8 @@ export class SessionManager {
     return { kind: 'clip', trackIndex, sceneIndex, clipSlot };
   }
 
-  setClipPlayingStatus(trackIndex: number, sceneIndex: number, isPlaying: boolean, isTriggered: boolean): PatchPayload | null {
-    return this.updateClip(trackIndex, sceneIndex, { isPlaying, isTriggered });
+  setClipPlayingStatus(trackIndex: number, sceneIndex: number, isPlaying: boolean, isTriggered: boolean, isRecording: boolean): PatchPayload | null {
+    return this.updateClip(trackIndex, sceneIndex, { isPlaying, isTriggered, isRecording });
   }
 
   // ==========================================================================

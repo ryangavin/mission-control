@@ -88,6 +88,9 @@ export class SyncManager {
       // Phase 5: Query clip slots (has_clip status)
       await this.syncClipSlots();
 
+      // Phase 6: Mark playing/triggered clips based on track slot indices
+      this.updateClipPlayingStates();
+
       this.callbacks.onLog('Initial sync complete');
     } catch (error) {
       this.callbacks.onLog(`Sync error: ${error}`);
@@ -170,6 +173,7 @@ export class SyncManager {
     this.session.setHasClip(trackIndex, sceneIndex, hasClip);
 
     // If there's a clip, get its properties
+    // Note: playing_status can only be obtained via listeners, not direct query
     if (hasClip) {
       const [name, color, length] = await Promise.all([
         this.queryOSC(clip.getName(trackIndex, sceneIndex)),
@@ -185,6 +189,36 @@ export class SyncManager {
         isTriggered: false,
         isRecording: false,
       });
+    }
+  }
+
+  /**
+   * Update clip playing/triggered states based on track slot indices
+   * Called after initial sync to mark clips that are currently playing
+   */
+  private updateClipPlayingStates(): void {
+    const state = this.session.getState();
+
+    for (let t = 0; t < state.tracks.length; t++) {
+      const track = state.tracks[t];
+
+      // Mark playing clip
+      if (track.playingSlotIndex >= 0) {
+        const clipSlot = track.clips[track.playingSlotIndex];
+        if (clipSlot?.hasClip && clipSlot.clip) {
+          this.session.updateClip(t, track.playingSlotIndex, { isPlaying: true });
+          this.callbacks.onLog(`Track ${t} clip ${track.playingSlotIndex} is playing`);
+        }
+      }
+
+      // Mark triggered clip (if different from playing)
+      if (track.firedSlotIndex >= 0 && track.firedSlotIndex !== track.playingSlotIndex) {
+        const clipSlot = track.clips[track.firedSlotIndex];
+        if (clipSlot?.hasClip && clipSlot.clip) {
+          this.session.updateClip(t, track.firedSlotIndex, { isTriggered: true });
+          this.callbacks.onLog(`Track ${t} clip ${track.firedSlotIndex} is triggered`);
+        }
+      }
     }
   }
 
@@ -216,12 +250,15 @@ export class SyncManager {
       this.callbacks.sendOSC(track.startListenFiredSlot(t));
     }
 
-    // Clip-level listeners (only for slots with clips - to avoid flooding)
+    // Clip slot listeners - listen to has_clip changes on ALL slots for live looping
     const state = this.session.getState();
     for (let t = 0; t < this.numTracks; t++) {
       const trackData = state.tracks[t];
       if (!trackData) continue;
       for (let s = 0; s < trackData.clips.length; s++) {
+        // Listen for clip creation/deletion
+        this.callbacks.sendOSC(clipSlot.startListenHasClip(t, s));
+        // If clip exists, also listen to its playing status
         const clipSlotData = trackData.clips[s];
         if (clipSlotData?.hasClip) {
           this.callbacks.sendOSC(clip.startListenPlayingStatus(t, s));
@@ -230,6 +267,20 @@ export class SyncManager {
     }
 
     this.callbacks.onLog('Listeners active');
+  }
+
+  /**
+   * Start listening to a specific clip's playing status (called when clip is created)
+   */
+  startClipListener(trackIndex: number, sceneIndex: number): void {
+    this.callbacks.sendOSC(clip.startListenPlayingStatus(trackIndex, sceneIndex));
+  }
+
+  /**
+   * Stop listening to a specific clip's playing status (called when clip is deleted)
+   */
+  stopClipListener(trackIndex: number, sceneIndex: number): void {
+    this.callbacks.sendOSC(clip.stopListenPlayingStatus(trackIndex, sceneIndex));
   }
 
   /**
@@ -260,12 +311,15 @@ export class SyncManager {
       this.callbacks.sendOSC(track.stopListenFiredSlot(t));
     }
 
-    // Clips
+    // Clip slots and clips
     const state = this.session.getState();
     for (let t = 0; t < this.numTracks; t++) {
       const trackData = state.tracks[t];
       if (!trackData) continue;
       for (let s = 0; s < trackData.clips.length; s++) {
+        // Stop listening to has_clip changes
+        this.callbacks.sendOSC(clipSlot.stopListenHasClip(t, s));
+        // Stop listening to clip status if clip exists
         const clipSlotData = trackData.clips[s];
         if (clipSlotData?.hasClip) {
           this.callbacks.sendOSC(clip.stopListenPlayingStatus(t, s));
@@ -321,6 +375,14 @@ export class SyncManager {
     // For clip_slot responses: [trackId, sceneId, value]
     if (address.includes('/clip_slot/')) {
       return args.length >= 3 ? args[2] : args[0];
+    }
+    // For clip playing_status: [trackId, sceneId, isPlaying, isTriggered, isRecording]
+    // Return all status values as array, or single status number
+    if (address.includes('/clip/') && address.includes('playing_status')) {
+      if (args.length >= 5) {
+        return [args[2], args[3], args[4]]; // [isPlaying, isTriggered, isRecording]
+      }
+      return args.length >= 3 ? args[2] : args[0]; // Single status value
     }
     // For clip responses: [trackId, sceneId, value]
     if (address.includes('/clip/')) {

@@ -181,6 +181,16 @@
     return clipSlot.clip.name || '';
   }
 
+  // Get clip playback progress (0-1) for playing clips
+  function getClipProgress(trackIndex: number, sceneIndex: number): number {
+    const clipSlot = getClip(trackIndex, sceneIndex);
+    if (!clipSlot?.clip?.isPlaying || !clipSlot.clip.length) return 0;
+    // Calculate position within clip loop using song beat time
+    const clipLength = clipSlot.clip.length;
+    const position = beatTime % clipLength;
+    return position / clipLength;
+  }
+
   // Get clip color (uses clip color if available, otherwise track color)
   function getClipColor(trackIndex: number, sceneIndex: number): string {
     const clipSlot = getClip(trackIndex, sceneIndex);
@@ -357,11 +367,23 @@
               {@const clipState = getClipState(trackIndex, sceneIndex)}
               {@const clipName = getClipName(trackIndex, sceneIndex)}
               {@const clipColor = getClipColor(trackIndex, sceneIndex)}
+              {@const clipProgress = getClipProgress(trackIndex, sceneIndex)}
               <button
                 class="clip {clipState}"
-                style="--color: {clipColor}; --scene-color: {sceneColor}"
+                class:armed={track.arm && clipState === 'empty'}
+                style="--color: {clipColor}; --scene-color: {sceneColor}; --progress: {clipProgress}"
                 onclick={() => handleClipClick(track.id, scene.id)}
               >
+                {#if clipState === 'playing' || clipState === 'recording'}
+                  <div class="clip-progress"></div>
+                {/if}
+                {#if clipState === 'empty'}
+                  {#if track.arm}
+                    <span class="clip-icon record-ready">●</span>
+                  {:else}
+                    <span class="clip-icon stop-ready">■</span>
+                  {/if}
+                {/if}
                 {#if clipState !== 'empty'}
                   <span class="clip-name">{clipName || track.name}</span>
                 {/if}
@@ -668,11 +690,78 @@
     50% { box-shadow: 0 0 16px rgba(255, 0, 0, 0.8); }
   }
 
+  .clip-icon {
+    font-size: 12px;
+    position: relative;
+    z-index: 2;
+  }
+
   .clip-name {
+    position: relative;
+    z-index: 2;
     display: block;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  /* Progress bar - Grid-style sweep */
+  .clip-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: calc(var(--progress) * 100%);
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 2px 0 0 2px;
+    transition: width 0.15s linear;
+  }
+
+  .clip.playing .clip-progress {
+    background: rgba(100, 255, 100, 0.7);
+  }
+
+  .clip.recording .clip-progress {
+    background: rgba(255, 100, 100, 0.8);
+  }
+
+  /* Center icons in empty slots */
+  .clip.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Make clip position relative for progress bar */
+  .clip {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .clip-icon.record-ready {
+    color: #aa4444;
+    opacity: 0.6;
+  }
+
+  .clip-icon.stop-ready {
+    color: #666;
+    opacity: 0.4;
+  }
+
+  .clip.empty:hover .clip-icon.record-ready {
+    color: #ff4444;
+    opacity: 1;
+  }
+
+  .clip.empty:hover .clip-icon.stop-ready {
+    color: #aaa;
+    opacity: 0.8;
+  }
+
+  /* Armed empty slot has subtle red tint */
+  .clip.empty.armed {
+    background: color-mix(in srgb, #ff0000 8%, #2a2a2a);
+    border-color: color-mix(in srgb, #ff0000 20%, #333);
   }
 
   .scene-btn {

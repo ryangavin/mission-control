@@ -66,16 +66,62 @@ function handleServerMessage(msg: any) {
     return;
   }
 
-  if (msg.type === 'patch' && msg.payload?._osc) {
-    const osc = msg.payload._osc;
-    const parsed = parseOSCResponse(osc);
-
-    // Pretty print the response
-    if (parsed.type !== 'unknown') {
-      console.log(`📥 ${parsed.type}:`, JSON.stringify(parsed, null, 2));
-    } else {
-      console.log(`📥 OSC: ${osc.address}`, osc.args);
+  if (msg.type === 'session') {
+    const session = msg.payload;
+    console.log(`\n📦 Session received:`);
+    console.log(`   Tempo: ${session.tempo} BPM`);
+    console.log(`   Playing: ${session.isPlaying}`);
+    console.log(`   Metronome: ${session.metronome}`);
+    console.log(`   Tracks: ${session.tracks?.length || 0}`);
+    console.log(`   Scenes: ${session.scenes?.length || 0}`);
+    if (session.tracks?.length > 0) {
+      console.log(`\n   Track names:`);
+      session.tracks.slice(0, 10).forEach((t: any, i: number) => {
+        console.log(`     ${i}: ${t.name} (vol: ${t.volume?.toFixed(2)}, mute: ${t.mute}, solo: ${t.solo})`);
+      });
+      if (session.tracks.length > 10) {
+        console.log(`     ... and ${session.tracks.length - 10} more`);
+      }
     }
+    return;
+  }
+
+  if (msg.type === 'patch') {
+    const patch = msg.payload;
+    if (patch.kind) {
+      // New typed patch format
+      switch (patch.kind) {
+        case 'transport':
+          console.log(`📥 Transport: tempo=${patch.tempo}, playing=${patch.isPlaying}, metro=${patch.metronome}`);
+          break;
+        case 'track':
+          console.log(`📥 Track ${patch.trackIndex}: ${JSON.stringify(patch.track)}`);
+          break;
+        case 'clip':
+          console.log(`📥 Clip [${patch.trackIndex},${patch.sceneIndex}]: ${JSON.stringify(patch.clipSlot)}`);
+          break;
+        case 'selection':
+          console.log(`📥 Selection: track=${patch.selectedTrack}, scene=${patch.selectedScene}`);
+          break;
+        default:
+          console.log(`📥 Patch: ${JSON.stringify(patch)}`);
+      }
+    } else if (patch._osc) {
+      // Legacy OSC format
+      const osc = patch._osc;
+      const parsed = parseOSCResponse(osc);
+      if (parsed.type !== 'unknown') {
+        console.log(`📥 ${parsed.type}:`, JSON.stringify(parsed, null, 2));
+      } else {
+        console.log(`📥 OSC: ${osc.address}`, osc.args);
+      }
+    }
+    return;
+  }
+
+  if (msg.type === 'error') {
+    console.log(`❌ Error: ${msg.message}`);
+    return;
   }
 }
 
@@ -139,7 +185,17 @@ function oscToClientMessage(msg: OSCMessage): any {
 
 const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
 
-// Session info
+// Session request (new protocol)
+function requestSession() {
+  if (!ws || !connected) {
+    console.log('Not connected');
+    return;
+  }
+  console.log('Requesting session...');
+  ws.send(JSON.stringify({ type: 'session/request' }));
+}
+
+// Session info (legacy OSC queries)
 function getInfo() {
   send(song.getTempo());
   send(song.getIsPlaying());
@@ -173,6 +229,9 @@ const stopTrack = (t: number) => send(track.stop(t));
 
 async function runCommand(cmd: string, args: string[]): Promise<void> {
   switch (cmd.toLowerCase()) {
+    case 'session':
+      requestSession();
+      break;
     case 'info':
       getInfo();
       break;
@@ -237,7 +296,8 @@ function printHelp() {
   console.log(`
 🎹 Test Harness Commands:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  info              Get session info (tempo, playing, tracks, scenes)
+  session           Request full session state (new protocol)
+  info              Get session info via OSC (legacy)
   play / stop       Transport controls
   tempo <bpm>       Set tempo (e.g., tempo 128)
   metro on|off      Toggle metronome

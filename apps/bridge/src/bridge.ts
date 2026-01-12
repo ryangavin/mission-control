@@ -378,22 +378,47 @@ export class Bridge {
       return this.session.setTrackFiredSlot(args[0] as number, args[1] as number);
     }
 
-    // Clip updates - format: [trackId, sceneId, value]
+    // Clip updates - handle both formats:
+    // 5 args: [trackId, sceneId, isPlaying, isTriggered, isRecording] (booleans)
+    // 3 args: [trackId, sceneId, status] where status is 0=stopped, 1=playing, 2=triggered, 3=recording
     if (address === '/live/clip/get/playing_status' && args.length >= 3) {
       const trackId = args[0] as number;
       const sceneId = args[1] as number;
-      const status = args[2] as number;
-      // playing_status: 0=stopped, 1=playing, 2=triggered
-      const isPlaying = status === 1;
-      const isTriggered = status === 2;
-      return this.session.setClipPlayingStatus(trackId, sceneId, isPlaying, isTriggered);
+
+      let isPlaying = false;
+      let isTriggered = false;
+      let isRecording = false;
+
+      if (args.length >= 5) {
+        // 5-arg format: separate booleans
+        isPlaying = !!args[2];
+        isTriggered = !!args[3];
+        isRecording = !!args[4];
+      } else {
+        // 3-arg format: combined status value
+        const status = args[2] as number;
+        isPlaying = status === 1;
+        isTriggered = status === 2;
+        isRecording = status === 3;
+      }
+
+      return this.session.setClipPlayingStatus(trackId, sceneId, isPlaying, isTriggered, isRecording);
     }
 
-    // Clip slot updates
+    // Clip slot updates - when a clip is created/deleted, update listeners
     if (address === '/live/clip_slot/get/has_clip' && args.length >= 3) {
       const trackId = args[0] as number;
       const sceneId = args[1] as number;
       const hasClip = !!args[2];
+
+      // Dynamically subscribe/unsubscribe to clip status based on clip existence
+      if (hasClip) {
+        this.sync.startClipListener(trackId, sceneId);
+        this.log(`New clip detected at ${trackId}:${sceneId}, listening to status`);
+      } else {
+        this.sync.stopClipListener(trackId, sceneId);
+      }
+
       return this.session.setHasClip(trackId, sceneId, hasClip);
     }
 
