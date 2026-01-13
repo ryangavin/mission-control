@@ -7,14 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bun run --filter '*' dev",
-    "bridge": "bun run --filter @mission-control/bridge start",
-    "bridge:dev": "bun run --filter @mission-control/bridge dev",
-    "web": "bun run --filter @mission-control/web dev",
-    "install-script": "bun run --filter @mission-control/bridge start install",
-    "desktop": "bun run --filter @mission-control/desktop dev",
-    "desktop:build": "bun run --filter @mission-control/desktop build",
-    "desktop:sidecar": "bun run --filter @mission-control/desktop build:sidecar"
+    "dev": "bun run --filter @mission-control/web dev"
   },
   "devDependencies": {
     "@types/bun": "latest",

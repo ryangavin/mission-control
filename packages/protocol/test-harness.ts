@@ -14,7 +14,7 @@ import {
   song, track, clip, clipSlot, scene, device, view, application,
   parseOSCResponse, isResponseType,
   type OSCMessage,
-} from './src/index.js';
+} from './src/index.ts';
 
 // Bridge connection
 const WS_URL = 'ws://localhost:8080';

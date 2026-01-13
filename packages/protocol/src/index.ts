@@ -4,13 +4,13 @@
  */
 
 // Core types
-export * from './types.js';
+export * from './types.ts';
 
 // Response types
-export * from './responses.js';
+export * from './responses.ts';
 
 // Message builders
-export * as messages from './messages.js';
+export * as messages from './messages.ts';
 export {
   application,
   song,
@@ -25,7 +25,7 @@ export {
   type LogLevel,
   type LaunchMode,
   type MonitoringState,
-} from './messages.js';
+} from './messages.ts';
 
 // Response parsers
 export {
@@ -35,4 +35,4 @@ export {
   type RawOSCMessage,
   type ParseResult,
   type ResponseHandlers,
-} from './parsers.js';
+} from './parsers.ts';

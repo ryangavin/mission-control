@@ -100,9 +100,8 @@
             <div class="issue">
               <h4>"Bridge not connected"</h4>
               <ul>
-                <li>Make sure the MC Bridge app is running in your menubar</li>
-                <li>Click the menubar icon and ensure "Start Bridge" has been clicked</li>
-                <li>Check if another application is using port 8080</li>
+                <li>Refresh the page to reconnect</li>
+                <li>Check if the dev server is running (bun run dev)</li>
               </ul>
             </div>
 

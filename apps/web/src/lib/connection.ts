@@ -14,8 +14,8 @@ const RECONNECT_DELAY = 2000;
 let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 
 function getWsUrl(): string {
-  const host = window.location.hostname || 'localhost';
-  return `ws://${host}:8080`;
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${protocol}//${window.location.host}/ws`;
 }
 
 export function connect() {

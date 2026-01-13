@@ -471,7 +471,7 @@
         </p>
         <p class="empty-hint">
           {#if connectionState !== 'connected'}
-            Bridge server: ws://localhost:8080
+            Connecting to bridge...
           {:else if !abletonConnected}
             Make sure Ableton is running with AbletonOSC
           {/if}
