@@ -1,6 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { connect, disconnect, send, onMessage, onStateChange } from './lib/connection';
+  import SetupPanel from './lib/SetupPanel.svelte';
+  import HelpModal from './lib/HelpModal.svelte';
+
+  // Help modal state
+  let showHelpModal = $state(false);
 
   // Types from protocol
   interface ClipSlot {
@@ -13,6 +18,8 @@
       isPlaying: boolean;
       isTriggered: boolean;
       isRecording: boolean;
+      isAudioClip: boolean;
+      isMidiClip: boolean;
     };
   }
 
@@ -28,6 +35,8 @@
     playingSlotIndex: number;
     firedSlotIndex: number;
     clips: ClipSlot[];
+    hasMidiInput: boolean;
+    hasAudioInput: boolean;
   }
 
   interface Scene {
@@ -53,6 +62,41 @@
 
   // Full session state
   let session = $state<SessionState | null>(null);
+
+  // Drag-and-drop state
+  let dragState = $state<{
+    isDragging: boolean;
+    sourceTrack: number;
+    sourceScene: number;
+    clipType: 'audio' | 'midi' | null;
+  } | null>(null);
+  let dragOverDelete = $state(false);
+
+  // Compute valid drop targets based on clip type and track type
+  function isValidDropTarget(trackIndex: number, sceneIndex: number): boolean {
+    if (!dragState || !session) return false;
+
+    const track = session.tracks[trackIndex];
+    if (!track) return false;
+
+    // Don't drop on self
+    if (dragState.sourceTrack === trackIndex && dragState.sourceScene === sceneIndex) {
+      return false;
+    }
+
+    // Check track type compatibility
+    const clipType = dragState.clipType;
+    if (clipType === 'audio') {
+      // Audio clips can only go to audio tracks
+      return track.hasAudioInput && !track.hasMidiInput;
+    } else if (clipType === 'midi') {
+      // MIDI clips can only go to MIDI tracks
+      return track.hasMidiInput && !track.hasAudioInput;
+    }
+
+    // Unknown type - allow on any track
+    return true;
+  }
 
   // Convert Ableton int color to hex
   function intToHex(color: number): string {
@@ -140,8 +184,8 @@
   });
 
   // Element refs for scroll sync
-  let gridScrollEl: HTMLDivElement;
-  let sceneColumnEl: HTMLDivElement;
+  let gridScrollEl = $state<HTMLDivElement | null>(null);
+  let sceneColumnEl = $state<HTMLDivElement | null>(null);
 
   // Sync vertical scroll between grid and scene column
   function syncScroll(source: 'grid' | 'scene') {
@@ -267,6 +311,106 @@
       send({ type: 'mixer/arm', trackId, armed: !track.arm });
     }
   }
+
+  // Drag-and-drop handlers
+  function handleDragStart(event: DragEvent, trackIndex: number, sceneIndex: number) {
+    const clipSlot = getClip(trackIndex, sceneIndex);
+    if (!clipSlot?.hasClip || !clipSlot.clip) {
+      event.preventDefault();
+      return;
+    }
+
+    // Prevent dragging playing or recording clips
+    if (clipSlot.clip.isPlaying || clipSlot.clip.isRecording) {
+      event.preventDefault();
+      return;
+    }
+
+    // Determine clip type
+    let clipType: 'audio' | 'midi' | null = null;
+    if (clipSlot.clip.isAudioClip) {
+      clipType = 'audio';
+    } else if (clipSlot.clip.isMidiClip) {
+      clipType = 'midi';
+    }
+
+    dragState = {
+      isDragging: true,
+      sourceTrack: trackIndex,
+      sourceScene: sceneIndex,
+      clipType,
+    };
+
+    // Set drag data
+    if (event.dataTransfer) {
+      event.dataTransfer.setData('text/plain', `${trackIndex}:${sceneIndex}`);
+      event.dataTransfer.effectAllowed = 'move';
+    }
+  }
+
+  function handleDragOver(event: DragEvent, trackIndex: number, sceneIndex: number) {
+    event.preventDefault();
+    if (!dragState) return;
+
+    const isValid = isValidDropTarget(trackIndex, sceneIndex);
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = isValid ? 'move' : 'none';
+    }
+  }
+
+  function handleDrop(event: DragEvent, trackIndex: number, sceneIndex: number) {
+    event.preventDefault();
+    if (!dragState || !session) return;
+
+    // Check if valid drop target
+    if (!isValidDropTarget(trackIndex, sceneIndex)) {
+      dragState = null;
+      return;
+    }
+
+    // Send move command
+    send({
+      type: 'clip/move',
+      srcTrack: dragState.sourceTrack,
+      srcScene: dragState.sourceScene,
+      dstTrack: trackIndex,
+      dstScene: sceneIndex,
+    });
+
+    dragState = null;
+  }
+
+  function handleDragEnd() {
+    dragState = null;
+    dragOverDelete = false;
+  }
+
+  function handleDeleteDragOver(event: DragEvent) {
+    event.preventDefault();
+    dragOverDelete = true;
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+
+  function handleDeleteDragLeave() {
+    dragOverDelete = false;
+  }
+
+  function handleDeleteDrop(event: DragEvent) {
+    event.preventDefault();
+    if (!dragState) return;
+
+    // Delete the clip
+    send({
+      type: 'clip/delete',
+      trackId: dragState.sourceTrack,
+      sceneId: dragState.sourceScene,
+    });
+
+    dragState = null;
+    dragOverDelete = false;
+  }
 </script>
 
 <div class="app">
@@ -307,8 +451,11 @@
           </span>
         </div>
       </div>
+      <button class="help-btn" title="Help" onclick={() => showHelpModal = true}>?</button>
     </div>
   </header>
+
+  <SetupPanel isConnected={connectionState === 'connected'} onDismiss={() => {}} />
 
   <main class="main">
     {#if tracks.length === 0}
@@ -380,10 +527,20 @@
                 {@const clipName = getClipName(trackIndex, sceneIndex)}
                 {@const clipColor = getClipColor(trackIndex, sceneIndex)}
                 {@const clipProgress = getClipProgress(trackIndex, sceneIndex)}
+                {@const isDropTarget = dragState && isValidDropTarget(trackIndex, sceneIndex)}
+                {@const isDragSource = dragState?.sourceTrack === trackIndex && dragState?.sourceScene === sceneIndex}
                 <button
                   class="clip {clipState}"
                   class:armed={track.arm && clipState === 'empty'}
+                  class:dragging={isDragSource}
+                  class:drop-target={isDropTarget}
+                  class:drop-invalid={dragState && !isDropTarget && !isDragSource}
                   style="--color: {clipColor}; --scene-color: {sceneColor}; --progress: {clipProgress}"
+                  draggable={clipState !== 'empty' && clipState !== 'playing' && clipState !== 'recording'}
+                  ondragstart={(e) => handleDragStart(e, trackIndex, sceneIndex)}
+                  ondragend={handleDragEnd}
+                  ondragover={(e) => handleDragOver(e, trackIndex, sceneIndex)}
+                  ondrop={(e) => handleDrop(e, trackIndex, sceneIndex)}
                   onclick={() => handleClipClick(track.id, scene.id)}
                 >
                   {#if clipState === 'playing' || clipState === 'recording'}
@@ -425,9 +582,27 @@
         </div>
       </div>
 
+      <!-- Delete zone (appears when dragging) -->
+      {#if dragState?.isDragging}
+        <div
+          class="delete-zone"
+          class:active={dragOverDelete}
+          role="button"
+          tabindex="-1"
+          ondragover={handleDeleteDragOver}
+          ondragleave={handleDeleteDragLeave}
+          ondrop={handleDeleteDrop}
+        >
+          <span class="delete-icon">🗑️</span>
+          <span class="delete-text">Drop to Delete</span>
+        </div>
+      {/if}
+
     {/if}
   </main>
 </div>
+
+<HelpModal isOpen={showHelpModal} onClose={() => showHelpModal = false} />
 
 <style>
   :global(html, body) {
@@ -469,6 +644,28 @@
     justify-content: flex-end;
     gap: 8px;
     flex: 1;
+  }
+
+  .help-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: #333;
+    border: 1px solid #444;
+    border-radius: 50%;
+    color: #888;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .help-btn:hover {
+    background: #444;
+    color: #fff;
+    border-color: #555;
   }
 
   .connection-status {
@@ -1068,6 +1265,119 @@
     font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
     color: #ff9944;
     letter-spacing: 0.5px;
+  }
+
+  /* ============================================
+     Drag-and-drop styles
+     ============================================ */
+
+  /* Dragging clip (source) */
+  .clip.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+    cursor: grabbing;
+  }
+
+  /* Valid drop target */
+  .clip.drop-target {
+    border: 2px dashed #4CAF50 !important;
+    background: color-mix(in srgb, #4CAF50 20%, #2d2d2d) !important;
+    box-shadow: 0 0 12px rgba(76, 175, 80, 0.4);
+  }
+
+  .clip.drop-target::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(76, 175, 80, 0.15);
+    border-radius: 2px;
+    pointer-events: none;
+  }
+
+  /* Invalid drop target (while dragging) */
+  .clip.drop-invalid {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  /* Clip with content when it's a drop target (shows replacement indicator) */
+  .clip.drop-target.has-clip::before {
+    content: '↻';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.8);
+    z-index: 5;
+  }
+
+  /* Delete zone */
+  .delete-zone {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: linear-gradient(to top, rgba(180, 50, 50, 0.95), rgba(140, 40, 40, 0.85));
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    z-index: 100;
+    animation: slideUp 0.2s ease-out;
+    transition: background 0.15s, transform 0.15s;
+    border-top: 2px solid rgba(255, 100, 100, 0.5);
+  }
+
+  .delete-zone.active {
+    background: linear-gradient(to top, rgba(220, 60, 60, 1), rgba(180, 50, 50, 0.95));
+    transform: scale(1.02);
+    border-top-color: rgba(255, 150, 150, 0.8);
+  }
+
+  .delete-zone .delete-icon {
+    font-size: 28px;
+  }
+
+  .delete-zone .delete-text {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  /* Make clips grabbable when they have content */
+  .clip.has-clip,
+  .clip.triggered {
+    cursor: grab;
+  }
+
+  .clip.has-clip:active,
+  .clip.triggered:active {
+    cursor: grabbing;
+  }
+
+  /* Playing/recording clips not draggable */
+  .clip.playing,
+  .clip.recording {
+    cursor: pointer;
   }
 
 </style>

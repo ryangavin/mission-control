@@ -1,0 +1,10 @@
+{
+  "name": "@mission-control/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "cargo tauri dev",
+    "build": "cargo tauri build",
+    "build:sidecar": "cd ../bridge && bun build --compile --outfile ../desktop/binaries/mission-control-bridge src/index.ts"
+  }
+}

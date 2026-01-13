@@ -102,7 +102,7 @@ export class SyncManager {
    * Sync a single track's properties
    */
   private async syncTrack(trackIndex: number): Promise<void> {
-    const [name, color, volume, pan, mute, solo, arm, playingSlot, firedSlot] = await Promise.all([
+    const [name, color, volume, pan, mute, solo, arm, playingSlot, firedSlot, hasMidiInput, hasAudioInput] = await Promise.all([
       this.queryOSC(track.getName(trackIndex)),
       this.queryOSC(track.getColor(trackIndex)),
       this.queryOSC(track.getVolume(trackIndex)),
@@ -112,6 +112,8 @@ export class SyncManager {
       this.queryOSC(track.getArm(trackIndex)),
       this.queryOSC(track.getPlayingSlotIndex(trackIndex)),
       this.queryOSC(track.getFiredSlotIndex(trackIndex)),
+      this.queryOSC(track.getHasMidiInput(trackIndex)),
+      this.queryOSC(track.getHasAudioInput(trackIndex)),
     ]);
 
     this.session.updateTrack(trackIndex, {
@@ -124,6 +126,8 @@ export class SyncManager {
       arm: !!arm,
       playingSlotIndex: playingSlot ?? -1,
       firedSlotIndex: firedSlot ?? -1,
+      hasMidiInput: !!hasMidiInput,
+      hasAudioInput: !!hasAudioInput,
     });
   }
 
@@ -175,10 +179,12 @@ export class SyncManager {
     // If there's a clip, get its properties
     // Note: playing_status can only be obtained via listeners, not direct query
     if (hasClip) {
-      const [name, color, length] = await Promise.all([
+      const [name, color, length, isAudioClip, isMidiClip] = await Promise.all([
         this.queryOSC(clip.getName(trackIndex, sceneIndex)),
         this.queryOSC(clip.getColor(trackIndex, sceneIndex)),
         this.queryOSC(clip.getLength(trackIndex, sceneIndex)),
+        this.queryOSC(clip.getIsAudioClip(trackIndex, sceneIndex)),
+        this.queryOSC(clip.getIsMidiClip(trackIndex, sceneIndex)),
       ]);
 
       this.session.updateClip(trackIndex, sceneIndex, {
@@ -188,6 +194,8 @@ export class SyncManager {
         isPlaying: false,
         isTriggered: false,
         isRecording: false,
+        isAudioClip: !!isAudioClip,
+        isMidiClip: !!isMidiClip,
       });
     }
   }
@@ -274,6 +282,33 @@ export class SyncManager {
    */
   startClipListener(trackIndex: number, sceneIndex: number): void {
     this.callbacks.sendOSC(clip.startListenPlayingStatus(trackIndex, sceneIndex));
+  }
+
+  /**
+   * Sync a single clip's properties (called when a new clip appears via listener)
+   * Returns the patch payload for broadcasting
+   */
+  async syncNewClip(trackIndex: number, sceneIndex: number): Promise<void> {
+    this.callbacks.onLog(`Syncing new clip at ${trackIndex}:${sceneIndex}`);
+
+    const [name, color, length, isAudioClip, isMidiClip] = await Promise.all([
+      this.queryOSC(clip.getName(trackIndex, sceneIndex)),
+      this.queryOSC(clip.getColor(trackIndex, sceneIndex)),
+      this.queryOSC(clip.getLength(trackIndex, sceneIndex)),
+      this.queryOSC(clip.getIsAudioClip(trackIndex, sceneIndex)),
+      this.queryOSC(clip.getIsMidiClip(trackIndex, sceneIndex)),
+    ]);
+
+    this.session.updateClip(trackIndex, sceneIndex, {
+      name: name || '',
+      color: color || 0,
+      length: length || 0,
+      isPlaying: false,
+      isTriggered: false,
+      isRecording: false,
+      isAudioClip: !!isAudioClip,
+      isMidiClip: !!isMidiClip,
+    });
   }
 
   /**

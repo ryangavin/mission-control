@@ -267,6 +267,8 @@ export class SessionManager {
       playingSlotIndex: -1,
       firedSlotIndex: -1,
       clips,
+      hasMidiInput: false,
+      hasAudioInput: false,
     };
   }
 
@@ -297,6 +299,8 @@ export class SessionManager {
       length: 0,
       loopStart: 0,
       loopEnd: 0,
+      isAudioClip: false,
+      isMidiClip: false,
     };
   }
 }

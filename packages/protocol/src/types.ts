@@ -24,6 +24,8 @@ export interface Track {
   playingSlotIndex: number;  // -1 if no slot playing
   firedSlotIndex: number;    // -1 if no slot triggered
   clips: ClipSlot[];
+  hasMidiInput: boolean;     // true for MIDI tracks
+  hasAudioInput: boolean;    // true for Audio tracks
 }
 
 export interface Scene {
@@ -49,6 +51,8 @@ export interface Clip {
   length: number;
   loopStart: number;
   loopEnd: number;
+  isAudioClip: boolean;
+  isMidiClip: boolean;
 }
 
 export interface Device {
@@ -96,6 +100,8 @@ export type ClientMessage =
   | { type: 'mixer/arm'; trackId: number; armed: boolean }
   | { type: 'device/parameter'; trackId: number; deviceId: number; parameterId: number; value: number }
   | { type: 'session/request' }
+  | { type: 'clip/move'; srcTrack: number; srcScene: number; dstTrack: number; dstScene: number }
+  | { type: 'clip/delete'; trackId: number; sceneId: number }
   | { type: 'osc'; address: string; args: OSCValue[] };
 
 // Patch payloads for granular state updates

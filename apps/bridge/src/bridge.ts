@@ -50,7 +50,7 @@ export class Bridge {
     await this.startWebSocket();
 
     this.log(`Bridge running:`);
-    this.log(`  WebSocket: ws://localhost:${this.config.wsPort}`);
+    this.log(`  WebSocket: ws://0.0.0.0:${this.config.wsPort}`);
     this.log(`  OSC Send: localhost:${this.config.oscSendPort}`);
     this.log(`  OSC Receive: localhost:${this.config.oscReceivePort}`);
     this.log(`\nWaiting for connections...`);
@@ -146,6 +146,7 @@ export class Bridge {
     const bridge = this;
 
     this.server = Bun.serve({
+      hostname: '0.0.0.0',
       port: this.config.wsPort,
       fetch(req, server) {
         // Upgrade HTTP request to WebSocket
@@ -205,6 +206,12 @@ export class Bridge {
         return;
       }
 
+      // Handle clip move (requires multiple OSC calls)
+      if (message.type === 'clip/move') {
+        this.handleClipMove(message.srcTrack, message.srcScene, message.dstTrack, message.dstScene);
+        return;
+      }
+
       // Handle raw OSC messages (for testing and queries)
       if (message.type === 'osc' && message.address) {
         this.sendOSC({ address: message.address, args: message.args || [] });
@@ -219,6 +226,28 @@ export class Bridge {
     } catch (error) {
       this.log(`Invalid message from client: ${error}`);
     }
+  }
+
+  /**
+   * Handle clip move operation (duplicate to destination + delete source)
+   */
+  private async handleClipMove(srcTrack: number, srcScene: number, dstTrack: number, dstScene: number): Promise<void> {
+    this.log(`Moving clip from ${srcTrack}:${srcScene} to ${dstTrack}:${dstScene}`);
+
+    // Step 1: Duplicate to target
+    this.sendOSC({
+      address: '/live/clip_slot/duplicate_clip_to',
+      args: [srcTrack, srcScene, dstTrack, dstScene],
+    });
+
+    // Step 2: Wait briefly for Ableton to process
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Step 3: Delete source
+    this.sendOSC({
+      address: '/live/clip_slot/delete_clip',
+      args: [srcTrack, srcScene],
+    });
   }
 
   /**
@@ -263,6 +292,8 @@ export class Bridge {
         return { address: '/live/clip_slot/fire', args: [message.trackId, message.sceneId] };
       case 'clip/stop':
         return { address: '/live/clip_slot/stop', args: [message.trackId, message.sceneId] };
+      case 'clip/delete':
+        return { address: '/live/clip_slot/delete_clip', args: [message.trackId, message.sceneId] };
       case 'scene/fire':
         return { address: '/live/scene/fire', args: [message.sceneId] };
       case 'track/stop':
@@ -416,7 +447,19 @@ export class Bridge {
       // Dynamically subscribe/unsubscribe to clip status based on clip existence
       if (hasClip) {
         this.sync.startClipListener(trackId, sceneId);
-        this.log(`New clip detected at ${trackId}:${sceneId}, listening to status`);
+        this.log(`New clip detected at ${trackId}:${sceneId}, syncing properties`);
+
+        // Sync clip properties asynchronously and broadcast update when done
+        this.sync.syncNewClip(trackId, sceneId).then(() => {
+          // Broadcast updated clip data to clients
+          const clipSlot = this.session.getState().tracks[trackId]?.clips[sceneId];
+          if (clipSlot) {
+            this.broadcastToClients({
+              type: 'patch',
+              payload: { kind: 'clip', trackIndex: trackId, sceneIndex: sceneId, clipSlot }
+            });
+          }
+        });
       } else {
         this.sync.stopClipListener(trackId, sceneId);
       }

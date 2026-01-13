@@ -9,7 +9,9 @@
     "dev": "bun --watch src/index.ts start",
     "start": "bun src/index.ts start",
     "test-osc": "bun src/index.ts test",
-    "build": "bun build src/index.ts --outdir dist --target node"
+    "build": "bun build src/index.ts --outdir dist --target node",
+    "compile": "bun build --compile --outfile dist/mission-control-bridge src/index.ts",
+    "compile:sidecar": "bun build --compile --outfile ../desktop/binaries/mission-control-bridge src/index.ts"
   },
   "dependencies": {
     "@mission-control/protocol": "workspace:*",
