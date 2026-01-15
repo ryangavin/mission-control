@@ -403,6 +403,13 @@
   @media (max-width: 580px) {
     .header {
       gap: 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .header::-webkit-scrollbar {
+      display: none;
     }
 
     .header-left,
@@ -417,6 +424,7 @@
     .header-center {
       flex: 1;
       justify-content: space-between;
+      min-width: min-content;
     }
 
     .metronome-icon {
