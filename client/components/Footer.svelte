@@ -46,6 +46,7 @@
     background: #151515;
     border-top: 1px solid #333;
     flex-shrink: 0;
+    z-index: 100;
   }
 
   .footer.collapsed {
