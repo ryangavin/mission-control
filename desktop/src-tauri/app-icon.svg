@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="180" fill="#1a1a1a"/>
+
+  <!-- Rocket body -->
+  <g transform="translate(512, 512) rotate(-45) translate(-512, -512)">
+    <!-- Main rocket body -->
+    <path d="M512 180c-120 0-200 180-200 400 0 80 20 140 50 180h300c30-40 50-100 50-180 0-220-80-400-200-400z" fill="#ff9944"/>
+
+    <!-- Rocket tip -->
+    <ellipse cx="512" cy="220" rx="60" ry="80" fill="#ffbb66"/>
+
+    <!-- Window -->
+    <circle cx="512" cy="420" r="60" fill="#1a1a1a"/>
+    <circle cx="512" cy="420" r="45" fill="#334455"/>
+    <ellipse cx="500" cy="408" rx="15" ry="20" fill="#5577aa" opacity="0.6"/>
+
+    <!-- Left fin -->
+    <path d="M312 580c-60 40-100 120-100 180l100 40c0-60 0-140 0-220z" fill="#ff7722"/>
+
+    <!-- Right fin -->
+    <path d="M712 580c60 40 100 120 100 180l-100 40c0-60 0-140 0-220z" fill="#ff7722"/>
+
+    <!-- Rocket bottom -->
+    <rect x="412" y="740" width="200" height="60" rx="10" fill="#ff7722"/>
+
+    <!-- Flames -->
+    <ellipse cx="512" cy="860" rx="70" ry="100" fill="#ff4444"/>
+    <ellipse cx="512" cy="840" rx="45" ry="70" fill="#ffaa44"/>
+    <ellipse cx="512" cy="820" rx="25" ry="45" fill="#ffdd88"/>
+  </g>
+</svg>

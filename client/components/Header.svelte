@@ -124,7 +124,10 @@
 
 <header class="header">
   <div class="header-left">
-    <button class="header-box help-btn" title="Help" onclick={onShowHelp}>?</button>
+    <div class="app-brand">
+      <i class="fa-solid fa-rocket app-icon"></i>
+      <span class="app-title">Mission Control</span>
+    </div>
   </div>
   <div class="header-center">
     <div class="header-box header-group">
@@ -183,6 +186,7 @@
       bridgeConnected={connectionState === 'connected'}
       {abletonConnected}
     />
+    <button class="header-box help-btn" title="Help" onclick={onShowHelp}>?</button>
   </div>
 </header>
 
@@ -203,6 +207,23 @@
     align-items: center;
     gap: 8px;
     flex: 1;
+  }
+
+  .app-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .app-icon {
+    font-size: 16px;
+    color: #ff9944;
+  }
+
+  .app-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #888;
   }
 
   .header-center {

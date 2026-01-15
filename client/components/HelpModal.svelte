@@ -1,5 +1,6 @@
 <script lang="ts">
   import pkg from '../../package.json';
+  import appIcon from '../assets/app-icon.png';
 
   let {
     isOpen = false,
@@ -127,9 +128,7 @@
         {:else if activeTab === 'about'}
           <div class="section about-section">
             <div class="about-left">
-              <div class="app-icon">
-                <i class="fa-solid fa-rocket"></i>
-              </div>
+              <img src={appIcon} alt="Mission Control" class="app-icon" />
             </div>
             <div class="about-right">
               <h3>Mission Control</h3>
@@ -359,8 +358,8 @@
   }
 
   .app-icon {
-    font-size: 56px;
-    color: #ff9944;
+    width: 180px;
+    height: 180px;
   }
 
   .about-section h3 {

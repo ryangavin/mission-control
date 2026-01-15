@@ -9,10 +9,12 @@ A modern web-based controller for Ableton Live. Control your sessions from any b
 - **Transport Control** — Play, stop, record, tap tempo, punch in/out, loop toggle
 - **Clip Launching** — Fire and stop clips with quantization support (1/32 to 8 bars)
 - **Scene Launching** — Trigger entire scenes with one click
-- **Mixer Controls** — Volume, pan, mute, solo, and arm per track
+- **Track Controls** — Mute, solo, and arm per track
 - **Drag & Drop** — Move clips between tracks with automatic type validation
 - **Real-time Sync** — Instant bidirectional updates between Ableton and the UI
 - **Visual Feedback** — Color-coded clips, playback progress indicators, playing states
+
+Inspired by the [Novation Launchpad](https://amzn.to/4by97mP) — if you want physical controls, check it out.
 
 ## Download
 
