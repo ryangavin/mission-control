@@ -66,8 +66,13 @@ fn main() {
                 })
                 .build(app)?;
 
-            // Start bridge sidecar
+            // Start bridge sidecar (only in release builds)
+            // In dev mode, run `bun run server/standalone.ts` separately
+            #[cfg(not(debug_assertions))]
             start_bridge(app.handle());
+
+            #[cfg(debug_assertions)]
+            println!("[dev] Skipping sidecar - run `bun run server/standalone.ts` manually");
 
             Ok(())
         })
