@@ -10,6 +10,10 @@ dist
 desktop/dist-bridge
 desktop/src-tauri/target
 
+# Rust
+Cargo.lock
+!desktop/src-tauri/Cargo.lock
+
 # code coverage
 coverage
 *.lcov
