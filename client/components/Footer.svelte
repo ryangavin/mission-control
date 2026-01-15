@@ -8,16 +8,33 @@
   }
 
   let { bridgeConnected, abletonConnected, onShowHelp }: Props = $props();
+
+  let collapsed = $state(true);
 </script>
 
-<footer class="footer">
-  <ConnectionStatus {bridgeConnected} {abletonConnected} />
-  <div class="app-brand">
-    <i class="fa-solid fa-rocket app-icon"></i>
-    <span class="app-title">Mission Control</span>
-  </div>
-  <button class="help-btn" title="Help" onclick={onShowHelp}>?</button>
-</footer>
+{#if collapsed}
+  <footer class="footer collapsed" onclick={() => collapsed = false}>
+    <div class="collapsed-content">
+      <i class="fa-solid fa-rocket app-icon"></i>
+      <span class="app-title">Mission Control</span>
+      <i class="fa-solid fa-chevron-up chevron"></i>
+    </div>
+  </footer>
+{:else}
+  <footer class="footer">
+    <ConnectionStatus {bridgeConnected} {abletonConnected} />
+    <div class="app-brand">
+      <i class="fa-solid fa-rocket app-icon"></i>
+      <span class="app-title">Mission Control</span>
+    </div>
+    <div class="right-controls">
+      <button class="help-btn" title="Help" onclick={onShowHelp}>?</button>
+      <button class="collapse-btn" title="Collapse" onclick={() => collapsed = true}>
+        <i class="fa-solid fa-chevron-down"></i>
+      </button>
+    </div>
+  </footer>
+{/if}
 
 <style>
   .footer {
@@ -29,6 +46,36 @@
     background: #151515;
     border-top: 1px solid #333;
     flex-shrink: 0;
+  }
+
+  .footer.collapsed {
+    justify-content: center;
+    border-top: none;
+    background: transparent;
+    padding: 6px;
+  }
+
+  .collapsed-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .collapsed-content:hover {
+    background: #252525;
+    border-color: #444;
+  }
+
+  .collapsed-content .chevron {
+    font-size: 10px;
+    color: #666;
+    margin-left: 4px;
   }
 
   .footer :global(.connection-status) {
@@ -59,6 +106,12 @@
     color: #888;
   }
 
+  .right-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
   .help-btn {
     display: flex;
     align-items: center;
@@ -78,6 +131,26 @@
   .help-btn:hover {
     background: #2a2a2a;
     color: #fff;
+  }
+
+  .collapse-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #666;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+
+  .collapse-btn:hover {
+    background: #2a2a2a;
+    color: #888;
   }
 
   /* Show footer at narrow widths (same breakpoint header elements hide) */
