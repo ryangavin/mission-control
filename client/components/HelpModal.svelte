@@ -1,4 +1,6 @@
 <script lang="ts">
+  import pkg from '../../package.json';
+
   let {
     isOpen = false,
     onClose = () => {}
@@ -146,7 +148,7 @@
 
               <div class="about-footer">
                 <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener" class="license">GPL-3.0</a>
-                <span class="version">v0.1.0</span>
+                <span class="version">v{pkg.version}</span>
               </div>
             </div>
           </div>

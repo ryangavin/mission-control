@@ -9,9 +9,13 @@
   import ClipGrid from './components/ClipGrid.svelte';
   import SceneColumn from './components/SceneColumn.svelte';
   import DeleteZone from './components/DeleteZone.svelte';
+  import Toast from './components/Toast.svelte';
 
   // Help modal state
   let showHelpModal = $state(false);
+
+  // Error toast state
+  let errorMessage = $state('');
 
   // Connection state
   let connectionState = $state<'disconnected' | 'connecting' | 'connected'>('disconnected');
@@ -101,6 +105,7 @@
 
         case 'error':
           console.error('[app] Bridge error:', msg.message);
+          errorMessage = msg.message;
           break;
       }
     });
@@ -338,6 +343,8 @@
 </div>
 
 <HelpModal isOpen={showHelpModal} onClose={() => showHelpModal = false} />
+
+<Toast message={errorMessage} type="error" onClose={() => errorMessage = ''} />
 
 <style>
   :global(html, body) {

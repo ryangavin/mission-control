@@ -9,6 +9,7 @@ use tauri::{
     tray::TrayIconBuilder,
     AppHandle, Manager, RunEvent,
 };
+use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 use tauri_plugin_shell::process::CommandChild;
 use tauri_plugin_shell::ShellExt;
 
@@ -21,6 +22,7 @@ struct AppState {
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
         .manage(AppState {
             bridge_process: Mutex::new(None),
         })
@@ -67,9 +69,25 @@ fn handle_menu_event(app: &AppHandle, id: &str) {
             }
         }
         "install_script" => {
-            if let Err(e) = install_remote_script(app) {
-                eprintln!("Failed to install remote script: {}", e);
-                // TODO: Show error dialog
+            match install_remote_script(app) {
+                Ok(path) => {
+                    app.dialog()
+                        .message(format!(
+                            "AbletonOSC installed successfully.\n\nLocation: {}\n\nRestart Ableton Live and enable AbletonOSC in Preferences → Link, Tempo & MIDI → Control Surface.",
+                            path
+                        ))
+                        .title("Installation Complete")
+                        .kind(MessageDialogKind::Info)
+                        .blocking_show();
+                }
+                Err(e) => {
+                    eprintln!("Failed to install remote script: {}", e);
+                    app.dialog()
+                        .message(format!("Failed to install remote script:\n\n{}", e))
+                        .title("Installation Failed")
+                        .kind(MessageDialogKind::Error)
+                        .blocking_show();
+                }
             }
         }
         "quit" => {
@@ -138,7 +156,7 @@ fn get_remote_scripts_path() -> Result<PathBuf, String> {
     Ok(path)
 }
 
-fn install_remote_script(app: &AppHandle) -> Result<(), String> {
+fn install_remote_script(app: &AppHandle) -> Result<String, String> {
     // Get source path (bundled AbletonOSC)
     let resource_path = app
         .path()
@@ -165,8 +183,7 @@ fn install_remote_script(app: &AppHandle) -> Result<(), String> {
 
     println!("Remote script installed to: {:?}", dest_path);
 
-    // TODO: Show success dialog
-    Ok(())
+    Ok(dest_path.to_string_lossy().to_string())
 }
 
 fn copy_dir_recursive(src: &PathBuf, dst: &PathBuf) -> Result<(), String> {

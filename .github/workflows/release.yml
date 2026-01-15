@@ -19,7 +19,7 @@ jobs:
             target: aarch64-apple-darwin
             bun_target: bun-darwin-arm64
             sidecar_suffix: aarch64-apple-darwin
-          - platform: macos-13
+          - platform: macos-14
             target: x86_64-apple-darwin
             bun_target: bun-darwin-x64
             sidecar_suffix: x86_64-apple-darwin
