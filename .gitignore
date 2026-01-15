@@ -6,6 +6,10 @@ out
 dist
 *.tgz
 
+# desktop build artifacts
+desktop/dist-bridge
+desktop/src-tauri/target
+
 # code coverage
 coverage
 *.lcov

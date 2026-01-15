@@ -12,10 +12,10 @@
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
   const isWindows = navigator.platform.toUpperCase().indexOf('WIN') >= 0;
 
-  // GitHub release URL - update this with your actual repo
-  const releaseUrl = 'https://github.com/yourusername/mission-control/releases/latest';
-  const macDownload = `${releaseUrl}/download/MC-Bridge.dmg`;
-  const windowsDownload = `${releaseUrl}/download/MC-Bridge-Setup.exe`;
+  // GitHub release URL
+  const releaseUrl = 'https://github.com/ryangavin/mission-control/releases/latest';
+  const macDownload = `${releaseUrl}/download/Mission.Control.dmg`;
+  const windowsDownload = `${releaseUrl}/download/Mission.Control.Setup.exe`;
 
   // Track expanded state
   let isExpanded = $state(true);
@@ -91,8 +91,8 @@
       <div class="step">
         <span class="step-number">2</span>
         <div class="step-content">
-          <span class="step-title">Launch from Applications</span>
-          <span class="step-desc">Click the menubar icon, then "Install Remote Script"</span>
+          <span class="step-title">Install Remote Script</span>
+          <span class="step-desc">Click tray icon → "Install Remote Script"</span>
         </div>
       </div>
 
@@ -100,15 +100,15 @@
         <span class="step-number">3</span>
         <div class="step-content">
           <span class="step-title">Configure Ableton</span>
-          <span class="step-desc">Preferences > Link/MIDI > Control Surface > AbletonOSC</span>
+          <span class="step-desc">Preferences → Link/MIDI → Control Surface → AbletonOSC</span>
         </div>
       </div>
 
       <div class="step">
         <span class="step-number">4</span>
         <div class="step-content">
-          <span class="step-title">Start Bridge</span>
-          <span class="step-desc">Click menubar icon > "Start Bridge"</span>
+          <span class="step-title">Show UI</span>
+          <span class="step-desc">Click tray icon → "Show UI"</span>
         </div>
       </div>
     </div>

@@ -33,7 +33,7 @@
   <div class="modal-backdrop" onclick={handleBackdropClick}>
     <div class="modal">
       <div class="modal-header">
-        <h2>MC Bridge Help</h2>
+        <h2>Mission Control Help</h2>
         <button class="close-btn" onclick={onClose}>x</button>
       </div>
 
@@ -67,8 +67,8 @@
             <h3>Getting Started</h3>
             <ol class="steps">
               <li>
-                <strong>Download the app</strong>
-                <p>Download MC Bridge for your platform from the setup panel or GitHub releases.</p>
+                <strong>Download Mission Control</strong>
+                <p>Download for your platform from <a href="https://github.com/ryangavin/mission-control/releases/latest" target="_blank" rel="noopener">GitHub Releases</a>.</p>
               </li>
               <li>
                 <strong>Install and launch</strong>
@@ -76,19 +76,41 @@
               </li>
               <li>
                 <strong>Install the Remote Script</strong>
-                <p>Click the menubar icon and select "Install Remote Script". This copies the AbletonOSC script to your Ableton User Library.</p>
+                <p>Click the tray icon and select "Install Remote Script". This copies AbletonOSC to your Ableton User Library.</p>
               </li>
               <li>
                 <strong>Configure Ableton</strong>
-                <p>Open Ableton Live, go to Preferences > Link/Tempo/MIDI, find Control Surface, and select "AbletonOSC" from the dropdown.</p>
+                <p>Open Ableton Live, go to Preferences → Link/Tempo/MIDI → Control Surface, and select "AbletonOSC" from the dropdown.</p>
               </li>
               <li>
-                <strong>Start the Bridge</strong>
-                <p>Click the menubar icon and select "Start Bridge". The icon will turn green when connected.</p>
+                <strong>Open the UI</strong>
+                <p>Click the tray icon and select "Show UI". Your browser will open and automatically connect.</p>
+              </li>
+            </ol>
+          </div>
+
+          <div class="section">
+            <h3>Installing the Remote Script Manually</h3>
+            <p>If the automatic installer doesn't work, you can install AbletonOSC manually:</p>
+            <ol class="steps">
+              <li>
+                <strong>Download AbletonOSC</strong>
+                <p>Get the latest release from <a href="https://github.com/ideoforms/AbletonOSC/releases" target="_blank" rel="noopener">GitHub</a>.</p>
               </li>
               <li>
-                <strong>You're ready!</strong>
-                <p>This web interface will automatically connect. You should see your Ableton session appear.</p>
+                <strong>Extract and rename</strong>
+                <p>Unzip the download and rename the folder to "AbletonOSC" (remove the version suffix).</p>
+              </li>
+              <li>
+                <strong>Copy to Remote Scripts</strong>
+                <p>
+                  <strong>macOS:</strong> ~/Music/Ableton/User Library/Remote Scripts/<br>
+                  <strong>Windows:</strong> ~\Documents\Ableton\User Library\Remote Scripts\
+                </p>
+              </li>
+              <li>
+                <strong>Restart Ableton</strong>
+                <p>Restart Ableton Live and select AbletonOSC in Control Surface preferences.</p>
               </li>
             </ol>
           </div>
@@ -100,8 +122,9 @@
             <div class="issue">
               <h4>"Bridge not connected"</h4>
               <ul>
-                <li>Refresh the page to reconnect</li>
-                <li>Check if the dev server is running (bun run dev)</li>
+                <li>Make sure Mission Control is running (check your system tray)</li>
+                <li>Try clicking "Show UI" from the tray menu to reconnect</li>
+                <li>Restart the Mission Control app</li>
               </ul>
             </div>
 
@@ -117,9 +140,12 @@
             <div class="issue">
               <h4>AbletonOSC not appearing in Control Surface list</h4>
               <ul>
-                <li>Click "Install Remote Script" from the menubar app</li>
-                <li>Restart Ableton Live</li>
-                <li>Check that the script was copied to: ~/Music/Ableton/User Library/Remote Scripts/</li>
+                <li>Click "Install Remote Script" from the tray menu</li>
+                <li>Restart Ableton Live completely</li>
+                <li>Check that the script exists at:
+                  <br>macOS: ~/Music/Ableton/User Library/Remote Scripts/AbletonOSC
+                  <br>Windows: ~\Documents\Ableton\User Library\Remote Scripts\AbletonOSC
+                </li>
               </ul>
             </div>
 
@@ -127,31 +153,43 @@
               <h4>macOS security warning</h4>
               <ul>
                 <li>Right-click the app and select "Open" the first time</li>
-                <li>Or go to System Preferences > Security & Privacy and click "Open Anyway"</li>
+                <li>Or go to System Settings → Privacy & Security and click "Open Anyway"</li>
+              </ul>
+            </div>
+
+            <div class="issue">
+              <h4>Windows SmartScreen warning</h4>
+              <ul>
+                <li>Click "More info" then "Run anyway"</li>
+                <li>This warning appears because the app isn't code-signed yet</li>
               </ul>
             </div>
           </div>
 
         {:else if activeTab === 'about'}
           <div class="section">
-            <h3>About MC Bridge</h3>
-            <p>MC Bridge is a web-based controller for Ableton Live. It connects to Ableton through OSC (Open Sound Control) protocol via a local bridge application.</p>
+            <h3>About Mission Control</h3>
+            <p>Mission Control is a web-based controller for Ableton Live. It connects to Ableton through OSC (Open Sound Control) via the AbletonOSC remote script.</p>
 
             <h4>Features</h4>
             <ul>
-              <li>View and control your Ableton session</li>
+              <li>View and control your Ableton session from any browser</li>
               <li>Launch clips and scenes</li>
               <li>Transport controls (play, stop, record)</li>
               <li>Track mute, solo, and arm</li>
               <li>Drag and drop clips between slots</li>
+              <li>Real-time sync with Ableton</li>
             </ul>
 
             <h4>Links</h4>
             <p>
-              <a href="https://github.com/yourusername/mission-control" target="_blank" rel="noopener">GitHub Repository</a>
+              <a href="https://github.com/ryangavin/mission-control" target="_blank" rel="noopener">GitHub Repository</a>
+            </p>
+            <p>
+              <a href="https://github.com/ideoforms/AbletonOSC" target="_blank" rel="noopener">AbletonOSC (Remote Script)</a>
             </p>
 
-            <p class="version">Version 0.1.0</p>
+            <p class="version">Version 0.1.0 (Beta)</p>
           </div>
         {/if}
       </div>
