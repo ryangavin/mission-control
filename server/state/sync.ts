@@ -266,22 +266,10 @@ export class SyncManager {
       for (let s = 0; s < trackData.clips.length; s++) {
         // Listen for clip creation/deletion
         this.callbacks.sendOSC(clipSlot.startListenHasClip(t, s));
-        // If clip exists, also listen to its playing status
-        const clipSlotData = trackData.clips[s];
-        if (clipSlotData?.hasClip) {
-          this.callbacks.sendOSC(clip.startListenPlayingStatus(t, s));
-        }
       }
     }
 
     this.callbacks.onLog('Listeners active');
-  }
-
-  /**
-   * Start listening to a specific clip's playing status (called when clip is created)
-   */
-  startClipListener(trackIndex: number, sceneIndex: number): void {
-    this.callbacks.sendOSC(clip.startListenPlayingStatus(trackIndex, sceneIndex));
   }
 
   /**
@@ -312,13 +300,6 @@ export class SyncManager {
   }
 
   /**
-   * Stop listening to a specific clip's playing status (called when clip is deleted)
-   */
-  stopClipListener(trackIndex: number, sceneIndex: number): void {
-    this.callbacks.sendOSC(clip.stopListenPlayingStatus(trackIndex, sceneIndex));
-  }
-
-  /**
    * Stop all listeners
    */
   stopListeners(): void {
@@ -346,19 +327,13 @@ export class SyncManager {
       this.callbacks.sendOSC(track.stopListenFiredSlot(t));
     }
 
-    // Clip slots and clips
+    // Clip slots
     const state = this.session.getState();
     for (let t = 0; t < this.numTracks; t++) {
       const trackData = state.tracks[t];
       if (!trackData) continue;
       for (let s = 0; s < trackData.clips.length; s++) {
-        // Stop listening to has_clip changes
         this.callbacks.sendOSC(clipSlot.stopListenHasClip(t, s));
-        // Stop listening to clip status if clip exists
-        const clipSlotData = trackData.clips[s];
-        if (clipSlotData?.hasClip) {
-          this.callbacks.sendOSC(clip.stopListenPlayingStatus(t, s));
-        }
       }
     }
 

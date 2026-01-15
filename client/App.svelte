@@ -977,10 +977,6 @@
     opacity: 1;
   }
 
-  .clip.has-clip {
-    /* Default styles from .clip */
-  }
-
   .clip.playing {
     background: color-mix(in srgb, #00ff00 25%, #2d2d2d);
     border-color: #00ff00;

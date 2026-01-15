@@ -1117,18 +1117,6 @@ export const clip = {
     args: [trackId, sceneId]
   }),
 
-  /** Start listening to playing status */
-  startListenPlayingStatus: (trackId: number, sceneId: number): OSCMessage => ({
-    address: '/live/clip/start_listen/playing_status',
-    args: [trackId, sceneId]
-  }),
-
-  /** Stop listening to playing status */
-  stopListenPlayingStatus: (trackId: number, sceneId: number): OSCMessage => ({
-    address: '/live/clip/stop_listen/playing_status',
-    args: [trackId, sceneId]
-  }),
-
   /** Get playing position */
   getPlayingPosition: (trackId: number, sceneId: number): OSCMessage => ({
     address: '/live/clip/get/playing_position',
