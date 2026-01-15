@@ -215,6 +215,7 @@
   .tab {
     background: none;
     border: none;
+    border-radius: 0;
     color: #888;
     padding: 12px 16px;
     cursor: pointer;
