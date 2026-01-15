@@ -59,7 +59,6 @@
   .scene-column {
     display: flex;
     flex-direction: column;
-    gap: 3px;
     width: 80px;
     min-width: 80px;
     flex-shrink: 0;
@@ -149,6 +148,10 @@
     font-size: 10px;
     cursor: pointer;
     transition: background 0.1s;
+  }
+
+  .scene-btn + .scene-btn {
+    margin-top: 3px;
   }
 
   .scene-btn:hover {
