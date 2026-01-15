@@ -12,12 +12,17 @@
 
 <footer class="footer">
   <ConnectionStatus {bridgeConnected} {abletonConnected} />
+  <div class="app-brand">
+    <i class="fa-solid fa-rocket app-icon"></i>
+    <span class="app-title">Mission Control</span>
+  </div>
   <button class="help-btn" title="Help" onclick={onShowHelp}>?</button>
 </footer>
 
 <style>
   .footer {
     display: none;
+    position: relative;
     align-items: center;
     justify-content: space-between;
     padding: 6px 12px;
@@ -31,6 +36,27 @@
     border: none;
     padding: 0;
     height: auto;
+  }
+
+  .app-brand {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .app-icon {
+    font-size: 14px;
+    color: #ff9944;
+    transform: rotate(-90deg);
+  }
+
+  .app-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #888;
   }
 
   .help-btn {
