@@ -65,11 +65,13 @@
     background: #1a1a1a;
     border-left: 1px solid #333;
     padding: 0 3px 3px 3px;
+    position: relative;
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
+
 
   .scene-column::-webkit-scrollbar {
     display: none;

@@ -16,7 +16,11 @@ use tauri_plugin_shell::process::CommandChild;
 #[allow(unused_imports)]
 use tauri_plugin_shell::ShellExt;
 
-const BRIDGE_PORT: u16 = 5555;
+// Port depends on dev vs release mode
+#[cfg(debug_assertions)]
+const UI_PORT: u16 = 5173; // Vite dev server
+#[cfg(not(debug_assertions))]
+const UI_PORT: u16 = 5555; // Standalone bridge
 
 /// Get the local network IP address
 fn get_local_ip() -> Option<String> {
@@ -40,23 +44,15 @@ fn main() {
         })
         .setup(|app| {
             // Build tray menu
-            let show_ui = MenuItem::with_id(app, "show_ui", "Show UI", true, None::<&str>)?;
-
-            // Network URL item
-            let network_label = if let Some(ip) = get_local_ip() {
-                format!("http://{}:{}", ip, BRIDGE_PORT)
-            } else {
-                format!("http://localhost:{}", BRIDGE_PORT)
-            };
-            let network_url = MenuItem::with_id(app, "network_url", &network_label, true, None::<&str>)?;
+            let open_ui = MenuItem::with_id(app, "open_ui", "Open Mission Control", true, None::<&str>)?;
+            let copy_url = MenuItem::with_id(app, "copy_url", "Copy URL", true, None::<&str>)?;
             let show_qr = MenuItem::with_id(app, "show_qr", "Show QR Code", true, None::<&str>)?;
-
             let separator1 = MenuItem::with_id(app, "sep1", "─────────────", false, None::<&str>)?;
-            let install_script = MenuItem::with_id(app, "install_script", "Install Remote Script", true, None::<&str>)?;
+            let install_script = MenuItem::with_id(app, "install_script", "Install AbletonOSC", true, None::<&str>)?;
             let separator2 = MenuItem::with_id(app, "sep2", "─────────────", false, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
 
-            let menu = Menu::with_items(app, &[&show_ui, &network_url, &show_qr, &separator1, &install_script, &separator2, &quit])?;
+            let menu = Menu::with_items(app, &[&open_ui, &copy_url, &show_qr, &separator1, &install_script, &separator2, &quit])?;
 
             // Create tray icon with custom rocket icon
             let _tray = TrayIconBuilder::new()
@@ -99,18 +95,18 @@ fn main() {
 
 fn handle_menu_event(app: &AppHandle, id: &str) {
     match id {
-        "show_ui" => {
-            let url = format!("http://localhost:{}", BRIDGE_PORT);
+        "open_ui" => {
+            let url = format!("http://localhost:{}", UI_PORT);
             if let Err(e) = open::that(&url) {
                 eprintln!("Failed to open browser: {}", e);
             }
         }
-        "network_url" => {
+        "copy_url" => {
             // Copy the network URL to clipboard
             let url = if let Some(ip) = get_local_ip() {
-                format!("http://{}:{}", ip, BRIDGE_PORT)
+                format!("http://{}:{}", ip, UI_PORT)
             } else {
-                format!("http://localhost:{}", BRIDGE_PORT)
+                format!("http://localhost:{}", UI_PORT)
             };
 
             #[cfg(target_os = "macos")]
@@ -143,9 +139,9 @@ fn handle_menu_event(app: &AppHandle, id: &str) {
         "show_qr" => {
             // Generate QR code URL and open in browser
             let url = if let Some(ip) = get_local_ip() {
-                format!("http://{}:{}", ip, BRIDGE_PORT)
+                format!("http://{}:{}", ip, UI_PORT)
             } else {
-                format!("http://localhost:{}", BRIDGE_PORT)
+                format!("http://localhost:{}", UI_PORT)
             };
 
             let qr_url = format!(
