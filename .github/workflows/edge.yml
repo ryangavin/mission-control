@@ -1,4 +1,4 @@
-name: Build Latest
+name: Build Edge
 
 on:
   push:
@@ -59,10 +59,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: desktop
-          tagName: latest
-          releaseName: 'Mission Control (Latest Build)'
+          tagName: edge
+          releaseName: 'Mission Control Edge'
           releaseBody: |
-            This is an automated build from the latest commit on main.
+            Automated build from the tip of main.
 
             **Commit:** ${{ github.sha }}
             **Date:** ${{ github.event.head_commit.timestamp }}
@@ -79,10 +79,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: desktop
-          tagName: latest
-          releaseName: 'Mission Control (Latest Build)'
+          tagName: edge
+          releaseName: 'Mission Control Edge'
           releaseBody: |
-            This is an automated build from the latest commit on main.
+            Automated build from the tip of main.
 
             **Commit:** ${{ github.sha }}
             **Date:** ${{ github.event.head_commit.timestamp }}

@@ -60,10 +60,6 @@ jobs:
         with:
           projectPath: desktop
           tagName: ${{ github.ref_name }}
-          releaseName: 'Mission Control ${{ github.ref_name }}'
-          releaseBody: 'See the assets below to download and install Mission Control.'
-          releaseDraft: true
-          prerelease: false
           args: --target ${{ matrix.target }}
 
       - name: Build Tauri app (Windows)
@@ -74,7 +70,3 @@ jobs:
         with:
           projectPath: desktop
           tagName: ${{ github.ref_name }}
-          releaseName: 'Mission Control ${{ github.ref_name }}'
-          releaseBody: 'See the assets below to download and install Mission Control.'
-          releaseDraft: true
-          prerelease: false

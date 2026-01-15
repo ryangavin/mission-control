@@ -14,6 +14,13 @@ A modern web-based controller for Ableton Live. Control your sessions from any b
 - **Real-time Sync** — Instant bidirectional updates between Ableton and the UI
 - **Visual Feedback** — Color-coded clips, playback progress indicators, playing states
 
+## Download
+
+| Release | Description |
+|---------|-------------|
+| [**Latest**](https://github.com/ryangavin/mission-control/releases/latest) | Stable release, recommended for most users |
+| [**Edge**](https://github.com/ryangavin/mission-control/releases/tag/edge) | Bleeding edge build from main, updated on every commit |
+
 ## Quick Start
 
 ### 1. Download
