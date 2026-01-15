@@ -401,10 +401,6 @@
 
   /* Responsive: hide status, help, and logo - footer takes over */
   @media (max-width: 580px) {
-    .header {
-      justify-content: center;
-    }
-
     .header-left,
     .header-right {
       display: none;
@@ -415,7 +411,8 @@
     }
 
     .header-center {
-      gap: 6px;
+      flex: 1;
+      justify-content: space-between;
     }
 
     .metronome-icon {
