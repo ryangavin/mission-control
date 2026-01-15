@@ -13,26 +13,38 @@ A modern web-based controller for Ableton Live. Control your sessions from any b
 - **Drag & Drop** — Move clips between tracks with automatic type validation
 - **Real-time Sync** — Instant bidirectional updates between Ableton and the UI
 - **Visual Feedback** — Color-coded clips, playback progress indicators, playing states
-- **Desktop App** — Optional Tauri-based app with system tray integration
-
-## Requirements
-
-- [Ableton Live](https://www.ableton.com/live/) (10 or 11)
-- [AbletonOSC](https://github.com/ideoforms/AbletonOSC) remote script installed
-- [Bun](https://bun.sh) (for development/building)
 
 ## Quick Start
 
-### 1. Install AbletonOSC
+### 1. Download
 
-Download [AbletonOSC](https://github.com/ideoforms/AbletonOSC) and copy the `AbletonOSC` folder to your Ableton Remote Scripts directory:
+Grab the latest release for your platform from [GitHub Releases](https://github.com/ryangavin/mission-control/releases/latest).
+
+### 2. Install the Remote Script
+
+Launch Mission Control, then click the tray icon → **Install Remote Script**.
+
+Or manually: download [AbletonOSC](https://github.com/ideoforms/AbletonOSC) and copy the `AbletonOSC` folder to:
 
 - **macOS**: `~/Music/Ableton/User Library/Remote Scripts/`
 - **Windows**: `~\Documents\Ableton\User Library\Remote Scripts\`
 
-Then in Ableton Live, go to **Preferences → Link, Tempo & MIDI → Control Surface** and select `AbletonOSC`.
+### 3. Enable in Ableton
 
-### 2. Run Mission Control
+In Ableton Live, go to **Preferences → Link, Tempo & MIDI → Control Surface** and select **AbletonOSC**.
+
+### 4. Connect
+
+Open a Live Set. Click the tray icon → **Show UI**. The connection status indicator will turn green when connected.
+
+## Requirements
+
+- [Ableton Live](https://www.ableton.com/live/) 10, 11, or 12
+- macOS or Windows
+
+## Development
+
+### Setup
 
 ```bash
 # Install dependencies
@@ -44,34 +56,16 @@ bun run dev
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-### 3. Connect
-
-Mission Control automatically connects to Ableton via OSC on ports 11000/11001. Once AbletonOSC is enabled in Ableton, the connection status indicator will turn green.
-
-## Building
-
-### Web (Standalone Server)
+### Building
 
 ```bash
-# Build the web assets
+# Build web assets
 bun run build
 
-# Build the bridge server binary
+# Build standalone bridge server
 bun run build:bridge
 
-# Run production server
-bun run start:standalone
-```
-
-The standalone server runs on [http://localhost:5555](http://localhost:5555).
-
-### Desktop App (Tauri)
-
-```bash
-# Development
-bun run tauri:dev
-
-# Production build
+# Build desktop app
 bun run tauri:build
 ```
 
@@ -83,18 +77,17 @@ bun run build:bridge:mac-x64   # macOS Intel
 bun run build:bridge:win       # Windows x64
 ```
 
-## Project Structure
+### Project Structure
 
 ```
 mission-control/
 ├── client/          # Svelte 5 frontend
 ├── server/          # Bridge server (OSC ↔ WebSocket)
 ├── protocol/        # Type-safe message protocol
-├── desktop/         # Tauri desktop app
-└── docs/            # Documentation
+└── desktop/         # Tauri desktop app
 ```
 
-## Tech Stack
+### Tech Stack
 
 - **Frontend**: [Svelte 5](https://svelte.dev) + [Vite](https://vitejs.dev)
 - **Runtime**: [Bun](https://bun.sh)

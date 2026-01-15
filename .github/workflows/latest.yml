@@ -1,0 +1,92 @@
+name: Build Latest
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            target: aarch64-apple-darwin
+            bun_target: bun-darwin-arm64
+            sidecar_suffix: aarch64-apple-darwin
+          - platform: macos-13
+            target: x86_64-apple-darwin
+            bun_target: bun-darwin-x64
+            sidecar_suffix: x86_64-apple-darwin
+          - platform: windows-latest
+            target: x86_64-pc-windows-msvc
+            bun_target: bun-windows-x64
+            sidecar_suffix: x86_64-pc-windows-msvc.exe
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build client
+        run: bun run build
+
+      - name: Build bridge sidecar
+        run: |
+          mkdir -p desktop/dist-bridge
+          bun build --compile --target=${{ matrix.bun_target }} --outfile=desktop/dist-bridge/mission-control-bridge-${{ matrix.sidecar_suffix }} ./server/standalone.ts
+
+      - name: Build Tauri app (macOS)
+        if: runner.os == 'macOS'
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: desktop
+          tagName: latest
+          releaseName: 'Mission Control (Latest Build)'
+          releaseBody: |
+            This is an automated build from the latest commit on main.
+
+            **Commit:** ${{ github.sha }}
+            **Date:** ${{ github.event.head_commit.timestamp }}
+
+            ⚠️ This is a pre-release build and may be unstable.
+          releaseDraft: false
+          prerelease: true
+          args: --target ${{ matrix.target }}
+
+      - name: Build Tauri app (Windows)
+        if: runner.os == 'Windows'
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: desktop
+          tagName: latest
+          releaseName: 'Mission Control (Latest Build)'
+          releaseBody: |
+            This is an automated build from the latest commit on main.
+
+            **Commit:** ${{ github.sha }}
+            **Date:** ${{ github.event.head_commit.timestamp }}
+
+            ⚠️ This is a pre-release build and may be unstable.
+          releaseDraft: false
+          prerelease: true
