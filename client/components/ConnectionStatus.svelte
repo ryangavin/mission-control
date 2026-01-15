@@ -27,7 +27,7 @@
   }
 
   .connection-status {
-    gap: 4px;
+    gap: 12px;
     padding: 0 8px;
   }
 
