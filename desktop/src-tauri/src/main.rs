@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use tauri::{
     menu::{Menu, MenuItem},
-    tray::TrayIconBuilder,
+    tray::{TrayIconBuilder, TrayIconEvent},
     AppHandle, Manager, RunEvent,
 };
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
@@ -63,9 +63,17 @@ fn main() {
                 .icon(tauri::include_image!("icons/tray-icon.png"))
                 .icon_as_template(false)
                 .menu(&menu)
-                .menu_on_left_click(true)
+                .show_menu_on_left_click(true)
                 .on_menu_event(|app, event| {
                     handle_menu_event(app, &event.id.0);
+                })
+                .on_tray_icon_event(|_tray, event| {
+                    match event {
+                        TrayIconEvent::Click { button, .. } => {
+                            println!("[tray] Click: {:?}", button);
+                        }
+                        _ => {}
+                    }
                 })
                 .build(app)?;
 
