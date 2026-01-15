@@ -55,15 +55,15 @@
     transform: translateX(-50%);
     width: fit-content;
     padding: 6px 14px;
-    background: rgba(30, 30, 30, 0.9);
-    border: 1px solid #444;
+    background: #151515;
+    border: 1px solid #333;
     border-radius: 20px;
     cursor: pointer;
   }
 
   .footer.collapsed:hover {
-    background: rgba(40, 40, 40, 0.95);
-    border-color: #555;
+    background: #1a1a1a;
+    border-color: #444;
   }
 
   .collapsed-content {
