@@ -325,10 +325,18 @@ export class SyncManager {
 
   /**
    * Stop all listeners
+   * @param silent - If true, just reset internal state without sending stop messages
+   *                 (use when OSC connection is already closed)
    */
-  stopListeners(): void {
+  stopListeners(silent = false): void {
     if (!this.listenersActive) return;
     this.listenersActive = false;
+
+    // If silent mode, just reset internal state (connection already closed)
+    if (silent) {
+      this.callbacks.onLog('Listeners cleared (silent)');
+      return;
+    }
 
     this.callbacks.onLog('Stopping listeners...');
 

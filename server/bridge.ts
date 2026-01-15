@@ -135,6 +135,9 @@ export class Bridge {
         this.osc.on('close', () => {
           this.log('OSC connection closed');
           this.stopConnectionChecking();
+          this.stopBeatTimePolling();
+          // Use silent mode - don't try to send stop messages to closed connection
+          this.sync.stopListeners(true);
           this.setAbletonConnected(false);
           this.synced = false;
         });
