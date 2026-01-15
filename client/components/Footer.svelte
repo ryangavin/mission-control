@@ -49,27 +49,26 @@
   }
 
   .footer.collapsed {
-    justify-content: center;
-    border-top: none;
-    background: transparent;
-    padding: 6px;
+    width: fit-content;
+    margin: 0 auto 6px;
+    padding: 6px 14px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-top: 1px solid #333;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .footer.collapsed:hover {
+    background: #252525;
+    border-color: #444;
   }
 
   .collapsed-content {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 14px;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .collapsed-content:hover {
-    background: #252525;
-    border-color: #444;
   }
 
   .collapsed-content .chevron {
