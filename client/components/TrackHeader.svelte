@@ -52,6 +52,7 @@
     z-index: 10;
     height: 56px;
     box-sizing: border-box;
+    box-shadow: -3px 0 0 #1a1a1a, 3px 0 0 #1a1a1a;
   }
 
   .track-header::after {
