@@ -1,17 +1,35 @@
 <script lang="ts">
   import type { Scene } from '../../protocol';
-  import { intToHex } from './colorUtils';
+  import { intToHex } from '../lib/colorUtils';
 
   interface Props {
     scenes: Scene[];
-    onSceneLaunch: (sceneIndex: number) => void;
+    onSceneLaunch: (sceneId: number) => void;
     onStopAll: () => void;
+    onScroll?: () => void;
   }
 
-  let { scenes, onSceneLaunch, onStopAll }: Props = $props();
+  let { scenes, onSceneLaunch, onStopAll, onScroll }: Props = $props();
+
+  // Expose element for scroll sync via bindable
+  let element = $state<HTMLDivElement | null>(null);
+
+  export function getElement(): HTMLDivElement | null {
+    return element;
+  }
+
+  export function setScrollTop(scrollTop: number) {
+    if (element) {
+      element.scrollTop = scrollTop;
+    }
+  }
 </script>
 
-<div class="scene-column">
+<div
+  class="scene-column"
+  bind:this={element}
+  onscroll={onScroll}
+>
   <div class="scene-header">Scene</div>
   <button class="stop-all-btn" onclick={onStopAll} title="Stop All Clips">
     ■ All

@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Track } from '../../protocol';
-  import { intToHex } from './colorUtils';
+  import { intToHex } from '../lib/colorUtils';
 
   interface Props {
     track: Track;

@@ -1,79 +1,68 @@
 <script lang="ts">
-  import { intToHex } from './colorUtils';
-
   interface Props {
-    clipState: 'empty' | 'stopped' | 'playing' | 'triggered' | 'recording';
+    clipState: 'empty' | 'has-clip' | 'playing' | 'triggered' | 'recording';
     clipName: string;
-    clipColor: number;
+    clipColor: string;
+    sceneColor: string;
     clipProgress: number;
-    hasClip: boolean;
-    isAudioClip: boolean;
-    isMidiClip: boolean;
+    isArmed: boolean;
     isDragSource: boolean;
     isDropTarget: boolean;
+    isDropInvalid: boolean;
     onClick: () => void;
     onDragStart: (e: DragEvent) => void;
-    onDragOver: (e: DragEvent) => void;
-    onDragLeave: () => void;
-    onDrop: (e: DragEvent) => void;
     onDragEnd: () => void;
+    onDragOver: (e: DragEvent) => void;
+    onDrop: (e: DragEvent) => void;
   }
 
   let {
     clipState,
     clipName,
     clipColor,
+    sceneColor,
     clipProgress,
-    hasClip,
-    isAudioClip,
-    isMidiClip,
+    isArmed,
     isDragSource,
     isDropTarget,
+    isDropInvalid,
     onClick,
     onDragStart,
-    onDragOver,
-    onDragLeave,
-    onDrop,
     onDragEnd,
+    onDragOver,
+    onDrop,
   }: Props = $props();
 
-  // Convert color to hex
-  let colorHex = $derived(intToHex(clipColor));
-
   // Determine if draggable (has clip, not playing or recording)
-  let isDraggable = $derived(hasClip && clipState !== 'playing' && clipState !== 'recording');
+  let isDraggable = $derived(clipState !== 'empty' && clipState !== 'playing' && clipState !== 'recording');
 </script>
 
 <button
-  class="clip"
-  class:empty={clipState === 'empty'}
-  class:has-clip={hasClip}
-  class:playing={clipState === 'playing'}
-  class:triggered={clipState === 'triggered'}
-  class:recording={clipState === 'recording'}
+  class="clip {clipState}"
+  class:armed={isArmed && clipState === 'empty'}
   class:dragging={isDragSource}
-  class:drag-over={isDropTarget}
-  class:audio-clip={isAudioClip}
-  class:midi-clip={isMidiClip}
-  style="--color: {colorHex}; --progress: {clipProgress}"
+  class:drop-target={isDropTarget}
+  class:drop-invalid={isDropInvalid}
+  style="--color: {clipColor}; --scene-color: {sceneColor}; --progress: {clipProgress}"
   draggable={isDraggable}
   ondragstart={onDragStart}
   ondragend={onDragEnd}
   ondragover={onDragOver}
-  ondragleave={onDragLeave}
   ondrop={onDrop}
   onclick={onClick}
 >
   {#if clipState === 'playing' || clipState === 'recording'}
     <div class="clip-progress"></div>
   {/if}
-  {#if hasClip}
-    <span class="clip-name">{clipName}</span>
-    {#if isAudioClip}
-      <span class="clip-type-indicator audio">~</span>
-    {:else if isMidiClip}
-      <span class="clip-type-indicator midi">M</span>
+  {#if clipState === 'empty'}
+    {#if isArmed}
+      <span class="clip-icon record-ready">●</span>
+    {:else}
+      <span class="clip-icon stop-ready">■</span>
     {/if}
+  {/if}
+  {#if clipState !== 'empty'}
+    <span class="clip-name">{clipName}</span>
   {/if}
 </button>
 
@@ -85,16 +74,14 @@
     height: 47px;
     box-sizing: border-box;
     background: color-mix(in srgb, var(--color) 20%, #2d2d2d);
-    border: 1px solid color-mix(in srgb, var(--color) 30%, #111);
+    border: 1px solid color-mix(in srgb, var(--color) 40%, #222);
     border-radius: 3px;
     color: #fff;
     font-size: 9px;
     cursor: pointer;
     transition: background 0.1s, transform 0.1s;
     text-align: left;
-    overflow: hidden;
     text-overflow: ellipsis;
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color) 15%, rgba(255,255,255,0.08));
   }
 
   .clip:hover {
@@ -110,19 +97,25 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: color-mix(in srgb, var(--color, #666) 8%, #2a2a2a);
-    border-color: color-mix(in srgb, var(--color, #666) 20%, #222);
+    background: color-mix(in srgb, var(--scene-color, #666) 8%, #2a2a2a);
+    border-color: color-mix(in srgb, var(--scene-color, #666) 20%, #222);
     box-shadow: none;
     opacity: 0.7;
   }
 
   .clip.empty:hover {
-    background: color-mix(in srgb, var(--color, #666) 15%, #3a3a3a);
-    border-color: color-mix(in srgb, var(--color, #666) 30%, #333);
+    background: color-mix(in srgb, var(--scene-color, #666) 15%, #3a3a3a);
+    border-color: color-mix(in srgb, var(--scene-color, #666) 30%, #333);
     opacity: 1;
   }
 
-  /* Has clip state (stopped) */
+  /* Armed empty slot has subtle red tint */
+  .clip.empty.armed {
+    background: color-mix(in srgb, #ff0000 8%, #2a2a2a);
+    border-color: color-mix(in srgb, #ff0000 20%, #333);
+  }
+
+  /* Has clip state */
   .clip.has-clip {
     cursor: grab;
   }
@@ -171,14 +164,14 @@
     cursor: grabbing;
   }
 
-  /* Drop target (valid drop zone) */
-  .clip.drag-over {
+  /* Valid drop target */
+  .clip.drop-target {
     border: 2px dashed #4CAF50 !important;
     background: color-mix(in srgb, #4CAF50 20%, #2d2d2d) !important;
     box-shadow: 0 0 12px rgba(76, 175, 80, 0.4);
   }
 
-  .clip.drag-over::after {
+  .clip.drop-target::after {
     content: '';
     position: absolute;
     top: 0;
@@ -190,14 +183,22 @@
     pointer-events: none;
   }
 
-  /* Audio clip indicator */
-  .clip.audio-clip {
-    /* Audio clips can have subtle waveform-like styling if desired */
+  /* Clip with content when it's a drop target (shows replacement indicator) */
+  .clip.drop-target.has-clip::before {
+    content: '↻';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.8);
+    z-index: 5;
   }
 
-  /* MIDI clip indicator */
-  .clip.midi-clip {
-    /* MIDI clips can have subtle note-like styling if desired */
+  /* Invalid drop target (while dragging) */
+  .clip.drop-invalid {
+    opacity: 0.3;
+    cursor: not-allowed;
   }
 
   /* Progress bar */
@@ -220,6 +221,33 @@
     background: rgba(255, 100, 100, 0.8);
   }
 
+  /* Clip icon for empty cells */
+  .clip-icon {
+    font-size: 12px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .clip-icon.record-ready {
+    color: #aa4444;
+    opacity: 0.6;
+  }
+
+  .clip-icon.stop-ready {
+    color: #666;
+    opacity: 0.4;
+  }
+
+  .clip.empty:hover .clip-icon.record-ready {
+    color: #ff4444;
+    opacity: 1;
+  }
+
+  .clip.empty:hover .clip-icon.stop-ready {
+    color: #aaa;
+    opacity: 0.8;
+  }
+
   /* Clip name */
   .clip-name {
     position: relative;
@@ -228,24 +256,6 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  /* Clip type indicator */
-  .clip-type-indicator {
-    position: absolute;
-    bottom: 2px;
-    right: 4px;
-    font-size: 8px;
-    opacity: 0.5;
-    z-index: 2;
-  }
-
-  .clip-type-indicator.audio {
-    color: #88aaff;
-  }
-
-  .clip-type-indicator.midi {
-    color: #ffaa88;
   }
 
   /* Animations */
