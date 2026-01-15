@@ -224,6 +224,13 @@ export class Bridge {
       const oscMessage = this.clientMessageToOSC(message as ClientMessage);
       if (oscMessage) {
         this.sendOSC(oscMessage);
+
+        // After stop, poll beat time to catch position reset (e.g., double-stop returns to 0)
+        if (message.type === 'transport/stop') {
+          setTimeout(() => {
+            this.sendOSC({ address: '/live/song/get/current_song_time', args: [] });
+          }, 100);
+        }
       }
     } catch (error) {
       this.log(`Invalid message from client: ${error}`);
