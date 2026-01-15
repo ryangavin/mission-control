@@ -117,6 +117,7 @@ export type ServerMessage =
   | { type: 'session'; payload: SessionState }
   | { type: 'patch'; payload: PatchPayload }
   | { type: 'connected'; abletonConnected: boolean }
+  | { type: 'sync_phase'; phase: string; progress?: number }
   | { type: 'error'; message: string };
 
 // Connection Status

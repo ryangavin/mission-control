@@ -12,6 +12,7 @@ import type { SessionManager } from './session';
 export interface SyncCallbacks {
   sendOSC: (message: OSCMessage) => void;
   onLog: (message: string) => void;
+  onSyncPhase?: (phase: string, progress?: number) => void;
 }
 
 /**
@@ -37,6 +38,7 @@ export class SyncManager {
    */
   async performInitialSync(): Promise<void> {
     this.callbacks.onLog('Starting initial sync...');
+    this.callbacks.onSyncPhase?.('structure');
 
     try {
       // Phase 1: Get song structure
@@ -72,6 +74,7 @@ export class SyncManager {
       this.session.setSelectedScene(selectedScene);
 
       // Phase 3: Query all tracks in parallel
+      this.callbacks.onSyncPhase?.('tracks');
       const trackPromises: Promise<void>[] = [];
       for (let t = 0; t < numTracks; t++) {
         trackPromises.push(this.syncTrack(t));
@@ -79,6 +82,7 @@ export class SyncManager {
       await Promise.all(trackPromises);
 
       // Phase 4: Query all scenes
+      this.callbacks.onSyncPhase?.('scenes');
       const scenePromises: Promise<void>[] = [];
       for (let s = 0; s < numScenes; s++) {
         scenePromises.push(this.syncScene(s));
@@ -86,6 +90,7 @@ export class SyncManager {
       await Promise.all(scenePromises);
 
       // Phase 5: Query clip slots (has_clip status)
+      this.callbacks.onSyncPhase?.('clips');
       await this.syncClipSlots();
 
       // Phase 6: Mark playing/triggered clips based on track slot indices
@@ -152,6 +157,8 @@ export class SyncManager {
   private async syncClipSlots(): Promise<void> {
     // Query has_clip for all slots in parallel batches
     const batchSize = 32; // Limit concurrent queries
+    const totalTracks = this.numTracks;
+
     for (let t = 0; t < this.numTracks; t++) {
       const scenePromises: Promise<void>[] = [];
       for (let s = 0; s < this.numScenes; s++) {
@@ -164,6 +171,9 @@ export class SyncManager {
       if (scenePromises.length > 0) {
         await Promise.all(scenePromises);
       }
+      // Emit progress after each track completes
+      const progress = Math.round(((t + 1) / totalTracks) * 100);
+      this.callbacks.onSyncPhase?.('clips', progress);
     }
   }
 

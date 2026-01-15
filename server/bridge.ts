@@ -44,6 +44,7 @@ export class Bridge {
     this.sync = new SyncManager(this.session, {
       sendOSC: (msg) => this.sendOSC(msg),
       onLog: (msg) => this.log(msg),
+      onSyncPhase: (phase, progress) => this.broadcastToClients({ type: 'sync_phase', phase, progress }),
     });
   }
 
@@ -428,12 +429,9 @@ export class Bridge {
       const sceneId = args[1] as number;
       const hasClip = !!args[2];
 
-      // Dynamically subscribe/unsubscribe to clip status based on clip existence
+      // Sync new clip properties when created
       if (hasClip) {
-        this.sync.startClipListener(trackId, sceneId);
         this.log(`New clip detected at ${trackId}:${sceneId}, syncing properties`);
-
-        // Sync clip properties asynchronously and broadcast update when done
         this.sync.syncNewClip(trackId, sceneId).then(() => {
           // Broadcast updated clip data to clients
           const clipSlot = this.session.getState().tracks[trackId]?.clips[sceneId];
@@ -444,8 +442,6 @@ export class Bridge {
             });
           }
         });
-      } else {
-        this.sync.stopClipListener(trackId, sceneId);
       }
 
       return this.session.setHasClip(trackId, sceneId, hasClip);
