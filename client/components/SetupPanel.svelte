@@ -8,21 +8,18 @@
     onDismiss: () => void;
   } = $props();
 
-  // Detect platform
+  // Detect platform for path display
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-  const isWindows = navigator.platform.toUpperCase().indexOf('WIN') >= 0;
 
-  // GitHub release URL
-  const releaseUrl = 'https://github.com/ryangavin/mission-control/releases/latest';
-  const macDownload = `${releaseUrl}/download/Mission.Control.dmg`;
-  const windowsDownload = `${releaseUrl}/download/Mission.Control.Setup.exe`;
+  const remoteScriptsPath = isMac
+    ? '~/Music/Ableton/User Library/Remote Scripts/'
+    : '~\\Documents\\Ableton\\User Library\\Remote Scripts\\';
 
   // Track expanded state
   let isExpanded = $state(true);
 
   function handleDismiss() {
     isExpanded = false;
-    // Store in localStorage so it doesn't show again this session
     localStorage.setItem('setup-panel-dismissed', 'true');
     onDismiss();
   }
@@ -50,7 +47,7 @@
   <div class="setup-panel">
     <div class="panel-header">
       <span class="warning-icon">!</span>
-      <span class="title">Bridge not connected</span>
+      <span class="title">Waiting for Ableton Live</span>
       <button class="dismiss-btn" onclick={handleDismiss} title="Dismiss">
         <span>x</span>
       </button>
@@ -60,63 +57,36 @@
       <div class="step">
         <span class="step-number">1</span>
         <div class="step-content">
-          <span class="step-title">Download & Install</span>
-          <div class="download-buttons">
-            {#if isMac}
-              <a href={macDownload} class="download-btn primary">
-                Download for macOS
-              </a>
-              <a href={windowsDownload} class="download-btn secondary">
-                Windows
-              </a>
-            {:else if isWindows}
-              <a href={windowsDownload} class="download-btn primary">
-                Download for Windows
-              </a>
-              <a href={macDownload} class="download-btn secondary">
-                macOS
-              </a>
-            {:else}
-              <a href={macDownload} class="download-btn">
-                macOS
-              </a>
-              <a href={windowsDownload} class="download-btn">
-                Windows
-              </a>
-            {/if}
-          </div>
+          <span class="step-title">Install AbletonOSC</span>
+          <span class="step-desc">
+            Copy the <code>AbletonOSC</code> folder to:<br>
+            <code class="path">{remoteScriptsPath}</code>
+          </span>
+          <a href="https://github.com/ideoforms/AbletonOSC/releases" target="_blank" class="download-btn">
+            Download AbletonOSC
+          </a>
         </div>
       </div>
 
       <div class="step">
         <span class="step-number">2</span>
         <div class="step-content">
-          <span class="step-title">Install Remote Script</span>
-          <span class="step-desc">Click tray icon → "Install Remote Script"</span>
+          <span class="step-title">Enable in Ableton</span>
+          <span class="step-desc">
+            <strong>Preferences</strong> → <strong>Link, Tempo & MIDI</strong> → <strong>Control Surface</strong> → select <strong>AbletonOSC</strong>
+          </span>
         </div>
       </div>
 
       <div class="step">
         <span class="step-number">3</span>
         <div class="step-content">
-          <span class="step-title">Configure Ableton</span>
-          <span class="step-desc">Preferences → Link/MIDI → Control Surface → AbletonOSC</span>
+          <span class="step-title">Open a Project</span>
+          <span class="step-desc">
+            Open or create a Live Set in Ableton
+          </span>
         </div>
       </div>
-
-      <div class="step">
-        <span class="step-number">4</span>
-        <div class="step-content">
-          <span class="step-title">Show UI</span>
-          <span class="step-desc">Click tray icon → "Show UI"</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel-footer">
-      <button class="help-link" onclick={() => {}}>
-        Need help?
-      </button>
     </div>
   </div>
 {/if}
@@ -198,7 +168,7 @@
   .step-content {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
   }
 
   .step-title {
@@ -210,12 +180,22 @@
   .step-desc {
     color: #888;
     font-size: 12px;
+    line-height: 1.4;
   }
 
-  .download-buttons {
-    display: flex;
-    gap: 8px;
+  .step-desc code {
+    background: #333;
+    padding: 1px 4px;
+    border-radius: 3px;
+    color: #ccc;
+  }
+
+  .step-desc code.path {
+    display: block;
     margin-top: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
+    word-break: break-all;
   }
 
   .download-btn {
@@ -226,43 +206,11 @@
     text-decoration: none;
     border-radius: 4px;
     font-size: 12px;
+    margin-top: 4px;
     transition: background 0.15s;
   }
 
   .download-btn:hover {
     background: #444;
-  }
-
-  .download-btn.primary {
-    background: #ff9944;
-    color: #000;
-  }
-
-  .download-btn.primary:hover {
-    background: #ffaa66;
-  }
-
-  .download-btn.secondary {
-    background: transparent;
-    border: 1px solid #444;
-  }
-
-  .panel-footer {
-    margin-top: 12px;
-    padding-top: 8px;
-    border-top: 1px solid #333;
-  }
-
-  .help-link {
-    background: none;
-    border: none;
-    color: #ff9944;
-    cursor: pointer;
-    font-size: 12px;
-    padding: 0;
-  }
-
-  .help-link:hover {
-    text-decoration: underline;
   }
 </style>

@@ -64,53 +64,27 @@
       <div class="modal-content">
         {#if activeTab === 'setup'}
           <div class="section">
-            <h3>Getting Started</h3>
+            <h3>Setting Up Ableton Live</h3>
             <ol class="steps">
-              <li>
-                <strong>Download Mission Control</strong>
-                <p>Download for your platform from <a href="https://github.com/ryangavin/mission-control/releases/latest" target="_blank" rel="noopener">GitHub Releases</a>.</p>
-              </li>
-              <li>
-                <strong>Install and launch</strong>
-                <p>Open the .dmg (macOS) or run the installer (Windows). The app runs in your menubar/system tray.</p>
-              </li>
               <li>
                 <strong>Install the Remote Script</strong>
-                <p>Click the tray icon and select "Install Remote Script". This copies AbletonOSC to your Ableton User Library.</p>
+                <p class="recommended">Click the tray icon → <code>Install Remote Script</code></p>
+                <details class="manual-install">
+                  <summary>Manual installation</summary>
+                  <p>Download <a href="https://github.com/ideoforms/AbletonOSC/releases" target="_blank" rel="noopener">AbletonOSC</a> and copy the folder to:</p>
+                  <p class="path">
+                    <strong>macOS:</strong> ~/Music/Ableton/User Library/Remote Scripts/<br>
+                    <strong>Windows:</strong> ~\Documents\Ableton\User Library\Remote Scripts\
+                  </p>
+                </details>
               </li>
               <li>
-                <strong>Configure Ableton</strong>
-                <p>Open Ableton Live, go to Preferences → Link/Tempo/MIDI → Control Surface, and select "AbletonOSC" from the dropdown.</p>
+                <strong>Enable in Ableton</strong>
+                <p class="nav-path"><code>Preferences</code> → <code>Link, Tempo & MIDI</code> → <code>Control Surface</code> → <code>AbletonOSC</code></p>
               </li>
               <li>
-                <strong>Open the UI</strong>
-                <p>Click the tray icon and select "Show UI". Your browser will open and automatically connect.</p>
-              </li>
-            </ol>
-          </div>
-
-          <div class="section">
-            <h3>Installing the Remote Script Manually</h3>
-            <p>If the automatic installer doesn't work, you can install AbletonOSC manually:</p>
-            <ol class="steps">
-              <li>
-                <strong>Download AbletonOSC</strong>
-                <p>Get the latest release from <a href="https://github.com/ideoforms/AbletonOSC/releases" target="_blank" rel="noopener">GitHub</a>.</p>
-              </li>
-              <li>
-                <strong>Extract and rename</strong>
-                <p>Unzip the download and rename the folder to "AbletonOSC" (remove the version suffix).</p>
-              </li>
-              <li>
-                <strong>Copy to Remote Scripts</strong>
-                <p>
-                  <strong>macOS:</strong> ~/Music/Ableton/User Library/Remote Scripts/<br>
-                  <strong>Windows:</strong> ~\Documents\Ableton\User Library\Remote Scripts\
-                </p>
-              </li>
-              <li>
-                <strong>Restart Ableton</strong>
-                <p>Restart Ableton Live and select AbletonOSC in Control Surface preferences.</p>
+                <strong>Open a Project</strong>
+                <p>Open or create a Live Set. Mission Control will automatically connect.</p>
               </li>
             </ol>
           </div>
@@ -120,19 +94,10 @@
             <h3>Common Issues</h3>
 
             <div class="issue">
-              <h4>"Bridge not connected"</h4>
-              <ul>
-                <li>Make sure Mission Control is running (check your system tray)</li>
-                <li>Try clicking "Show UI" from the tray menu to reconnect</li>
-                <li>Restart the Mission Control app</li>
-              </ul>
-            </div>
-
-            <div class="issue">
               <h4>"Waiting for Ableton Live"</h4>
               <ul>
-                <li>Ensure Ableton Live is running</li>
-                <li>Check that AbletonOSC is selected as a Control Surface in Preferences</li>
+                <li>Ensure Ableton Live is running with a project open</li>
+                <li>Check that AbletonOSC is selected in Preferences → Link, Tempo & MIDI → Control Surface</li>
                 <li>Try restarting Ableton after installing the remote script</li>
               </ul>
             </div>
@@ -140,9 +105,9 @@
             <div class="issue">
               <h4>AbletonOSC not appearing in Control Surface list</h4>
               <ul>
-                <li>Click "Install Remote Script" from the tray menu</li>
-                <li>Restart Ableton Live completely</li>
-                <li>Check that the script exists at:
+                <li>Make sure the folder is named exactly <code>AbletonOSC</code> (no version number)</li>
+                <li>Restart Ableton Live completely after copying the folder</li>
+                <li>Verify the script location:
                   <br>macOS: ~/Music/Ableton/User Library/Remote Scripts/AbletonOSC
                   <br>Windows: ~\Documents\Ableton\User Library\Remote Scripts\AbletonOSC
                 </li>
@@ -150,18 +115,11 @@
             </div>
 
             <div class="issue">
-              <h4>macOS security warning</h4>
+              <h4>Controls not responding</h4>
               <ul>
-                <li>Right-click the app and select "Open" the first time</li>
-                <li>Or go to System Settings → Privacy & Security and click "Open Anyway"</li>
-              </ul>
-            </div>
-
-            <div class="issue">
-              <h4>Windows SmartScreen warning</h4>
-              <ul>
-                <li>Click "More info" then "Run anyway"</li>
-                <li>This warning appears because the app isn't code-signed yet</li>
+                <li>Check that AbletonOSC is still selected in Control Surface preferences</li>
+                <li>Try refreshing the browser page</li>
+                <li>Restart Ableton Live</li>
               </ul>
             </div>
           </div>
@@ -374,5 +332,59 @@
     margin-top: 24px;
     color: #666;
     font-size: 12px;
+  }
+
+  .nav-path {
+    white-space: nowrap;
+    color: #666;
+  }
+
+  .nav-path code {
+    background: #333;
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: #ccc;
+    font-size: 12px;
+    margin: 0 2px;
+  }
+
+  .path {
+    background: #252525;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+  }
+
+  .steps li code {
+    background: #333;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #ccc;
+    font-size: 12px;
+  }
+
+  .recommended {
+    color: #ccc;
+  }
+
+  .manual-install {
+    margin-top: 8px;
+    font-size: 14px;
+  }
+
+  .manual-install summary {
+    color: #aaa;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .manual-install summary:hover {
+    color: #ccc;
+  }
+
+  .manual-install p {
+    margin: 8px 0 0 0;
   }
 </style>
