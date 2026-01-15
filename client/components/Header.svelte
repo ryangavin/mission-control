@@ -401,6 +401,10 @@
 
   /* Responsive: hide status, help, and logo - footer takes over */
   @media (max-width: 580px) {
+    .header {
+      padding: 6px 7px;
+    }
+
     .header-left,
     .header-right {
       display: none;
