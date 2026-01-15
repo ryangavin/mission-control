@@ -1,6 +1,6 @@
 # Mission Control
 
-A modern web-based controller for Ableton Live. Control your sessions from any browser with real-time bidirectional sync.
+A modern web-based controller for Ableton Live. Control your sessions from any browser with real-time bidirectional sync. Inspired by the legendary [Novation Launchpad](https://amzn.to/4by97mP).
 
 ![Mission Control Screenshot](docs/screenshot.png)
 
@@ -13,8 +13,6 @@ A modern web-based controller for Ableton Live. Control your sessions from any b
 - **Drag & Drop** — Move clips between tracks with automatic type validation
 - **Real-time Sync** — Instant bidirectional updates between Ableton and the UI
 - **Visual Feedback** — Color-coded clips, playback progress indicators, playing states
-
-Inspired by the [Novation Launchpad](https://amzn.to/4by97mP) — if you want physical controls, check it out.
 
 ## Download
 
