@@ -160,8 +160,8 @@
     }
 
     .footer:not(.collapsed) {
-      padding-left: calc(32px + env(safe-area-inset-left, 0px));
-      padding-right: calc(32px + env(safe-area-inset-right, 0px));
+      padding-left: calc(40px + env(safe-area-inset-left, 0px));
+      padding-right: calc(40px + env(safe-area-inset-right, 0px));
     }
   }
 </style>
