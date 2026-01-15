@@ -355,8 +355,8 @@ export class Bridge {
    * Handle an incoming OSC message from Ableton
    */
   private handleOSCMessage(message: { address: string; args: unknown[] }): void {
-    // Log the message for debugging
-    this.log(`OSC <- ${message.address} ${JSON.stringify(message.args)}`);
+    // Logging disabled for now
+    // this.log(`OSC <- ${message.address} ${JSON.stringify(message.args)}`);
 
     // Check for ping response (connection test)
     if (message.address === '/live/test') {
@@ -408,13 +408,13 @@ export class Bridge {
       return this.session.setClipTriggerQuantization(args[0] as number);
     }
     if (address === '/live/song/get/punch_in') {
-      return this.session.setPunchIn(args[0] === 1);
+      return this.session.setPunchIn(!!args[0]);
     }
     if (address === '/live/song/get/punch_out') {
-      return this.session.setPunchOut(args[0] === 1);
+      return this.session.setPunchOut(!!args[0]);
     }
     if (address === '/live/song/get/loop') {
-      return this.session.setLoop(args[0] === 1);
+      return this.session.setLoop(!!args[0]);
     }
 
     // View selection updates
@@ -511,7 +511,8 @@ export class Bridge {
       return;
     }
 
-    this.log(`OSC -> ${message.address} ${JSON.stringify(message.args)}`);
+    // Logging disabled for now
+    // this.log(`OSC -> ${message.address} ${JSON.stringify(message.args)}`);
     this.osc.send(new OSC.Message(message.address, ...message.args));
   }
 

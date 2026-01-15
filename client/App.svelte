@@ -6,32 +6,11 @@
   import SetupPanel from './lib/SetupPanel.svelte';
   import HelpModal from './lib/HelpModal.svelte';
   import Header from './lib/Header.svelte';
-  import ClipCell from './lib/ClipCell.svelte';
   import TrackHeader from './lib/TrackHeader.svelte';
-  import SceneColumn from './lib/SceneColumn.svelte';
   import DeleteZone from './lib/DeleteZone.svelte';
-  import ConnectionStatus from './lib/ConnectionStatus.svelte';
 
   // Help modal state
   let showHelpModal = $state(false);
-
-  // Quantization value labels
-  const QUANTIZATION_OPTIONS = [
-    { value: 0, label: 'None' },
-    { value: 1, label: '8 Bars' },
-    { value: 2, label: '4 Bars' },
-    { value: 3, label: '2 Bars' },
-    { value: 4, label: '1 Bar' },
-    { value: 5, label: '1/2' },
-    { value: 6, label: '1/2T' },
-    { value: 7, label: '1/4' },
-    { value: 8, label: '1/4T' },
-    { value: 9, label: '1/8' },
-    { value: 10, label: '1/8T' },
-    { value: 11, label: '1/16' },
-    { value: 12, label: '1/16T' },
-    { value: 13, label: '1/32' },
-  ];
 
   // Connection state
   let connectionState = $state<'disconnected' | 'connecting' | 'connected'>('disconnected');
@@ -50,12 +29,6 @@
     clipType: 'audio' | 'midi' | null;
   } | null>(null);
   let dragOverDelete = $state(false);
-
-  // Tempo drag state for tap-and-drag control
-  let tempoDragState = $state<{
-    startX: number;
-    startTempo: number;
-  } | null>(null);
 
   // Compute valid drop targets based on clip type and track type
   function isValidDropTarget(trackIndex: number, sceneIndex: number): boolean {
@@ -93,6 +66,9 @@
         if (patch.isPlaying !== undefined) session.isPlaying = patch.isPlaying;
         if (patch.isRecording !== undefined) session.isRecording = patch.isRecording;
         if (patch.metronome !== undefined) session.metronome = patch.metronome;
+        if (patch.punchIn !== undefined) session.punchIn = patch.punchIn;
+        if (patch.punchOut !== undefined) session.punchOut = patch.punchOut;
+        if (patch.loop !== undefined) session.loop = patch.loop;
         if (patch.clipTriggerQuantization !== undefined) session.clipTriggerQuantization = patch.clipTriggerQuantization;
         if (patch.beatTime !== undefined) session.beatTime = patch.beatTime;
         break;
@@ -162,16 +138,8 @@
     // Connect
     connect();
 
-    // Window event listeners for tempo drag
-    const onWindowMouseMove = (e: MouseEvent) => handleTempoMouseMove(e);
-    const onWindowMouseUp = () => handleTempoMouseUp();
-    window.addEventListener('mousemove', onWindowMouseMove);
-    window.addEventListener('mouseup', onWindowMouseUp);
-
     return () => {
       disconnect();
-      window.removeEventListener('mousemove', onWindowMouseMove);
-      window.removeEventListener('mouseup', onWindowMouseUp);
     };
   });
 
@@ -198,20 +166,9 @@
   let punchOut = $derived(session?.punchOut ?? false);
   let loop = $derived(session?.loop ?? false);
   let quantization = $derived(session?.clipTriggerQuantization ?? 8);
-  let quantizationLabel = $derived(QUANTIZATION_OPTIONS.find(q => q.value === quantization)?.label ?? '1/8');
   let beatTime = $derived(session?.beatTime ?? 0);
   let tracks = $derived(session?.tracks ?? []);
   let scenes = $derived(session?.scenes ?? []);
-
-  // Format beat time as bar.beat.sixteenth (e.g., "1.1.1")
-  function formatBeatTime(beats: number): string {
-    // Ableton uses 4/4 time signature by default
-    // 1 bar = 4 beats, 1 beat = 4 sixteenths
-    const bar = Math.floor(beats / 4) + 1;
-    const beat = Math.floor(beats % 4) + 1;
-    const sixteenth = Math.floor((beats % 1) * 4) + 1;
-    return `${bar}.${beat}.${sixteenth}`;
-  }
 
   // Get clip for a specific cell
   function getClip(trackIndex: number, sceneIndex: number): ClipSlot | null {
@@ -301,52 +258,27 @@
   }
 
   function handleMetronome() {
-    send({ type: 'transport/metronome', enabled: !metronome });
+    const current = session?.metronome ?? false;
+    send({ type: 'transport/metronome', enabled: !current });
   }
 
   function handlePunchIn() {
-    send({ type: 'transport/punchIn', enabled: !punchIn });
+    const current = session?.punchIn ?? false;
+    send({ type: 'transport/punchIn', enabled: !current });
   }
 
   function handlePunchOut() {
-    send({ type: 'transport/punchOut', enabled: !punchOut });
+    const current = session?.punchOut ?? false;
+    send({ type: 'transport/punchOut', enabled: !current });
   }
 
   function handleLoop() {
-    send({ type: 'transport/loop', enabled: !loop });
+    const current = session?.loop ?? false;
+    send({ type: 'transport/loop', enabled: !current });
   }
 
   function handleTapTempo() {
     send({ type: 'transport/tapTempo' });
-  }
-
-  function handleQuantization(e: Event) {
-    const value = parseInt((e.target as HTMLSelectElement).value);
-    send({ type: 'transport/quantization', value });
-  }
-
-  // Tempo drag handlers
-  function handleTempoMouseDown(e: MouseEvent) {
-    tempoDragState = {
-      startX: e.clientX,
-      startTempo: tempo,
-    };
-    e.preventDefault();
-  }
-
-  function handleTempoMouseMove(e: MouseEvent) {
-    if (!tempoDragState) return;
-
-    const deltaX = e.clientX - tempoDragState.startX;
-    // Fine sensitivity: ~0.15 BPM per pixel
-    const deltaTempo = deltaX * 0.15;
-    const newTempo = Math.max(20, Math.min(999, tempoDragState.startTempo + deltaTempo));
-
-    send({ type: 'transport/tempo', bpm: newTempo });
-  }
-
-  function handleTempoMouseUp() {
-    tempoDragState = null;
   }
 
   function handleMute(trackId: number) {
@@ -477,67 +409,30 @@
 <div class="app">
   <SetupPanel isConnected={connectionState === 'connected'} onDismiss={() => {}} />
 
-  <header class="header">
-    <div class="header-left">
-      <button class="header-box help-btn" title="Help" onclick={() => showHelpModal = true}>?</button>
-    </div>
-    <div class="header-center">
-      <div class="header-box header-group">
-        <button class="group-item" title="Tap Tempo" onclick={handleTapTempo}>TAP</button>
-        <span class="group-item tempo-item">
-          <span
-            class="tempo-value"
-            class:dragging={tempoDragState !== null}
-            onmousedown={handleTempoMouseDown}
-          >{tempo.toFixed(2)}</span>
-          <span class="tempo-suffix">BPM</span>
-        </span>
-        <button class="group-item" class:active={metronome} title="Metronome" onclick={handleMetronome}>
-          <span class="metronome-icon">● ○</span>
-        </button>
-        <select class="group-item group-select" title="Clip Trigger Quantization" value={quantization} onchange={handleQuantization}>
-          {#each QUANTIZATION_OPTIONS as opt}
-            <option value={opt.value}>{opt.label}</option>
-          {/each}
-        </select>
-      </div>
-      <div class="header-box header-group">
-        <span class="group-item playhead-item">
-          <span class="playhead-value">{formatBeatTime(beatTime)}</span>
-        </span>
-        <button class="group-item transport-btn" class:active={isPlaying} title="Play" onclick={handlePlay}>
-          <span class="icon">▶</span>
-        </button>
-        <button class="group-item transport-btn" title="Stop" onclick={handleStop}>
-          <span class="icon">■</span>
-        </button>
-        <button class="group-item transport-btn record" class:active={isRecording} title="Record" onclick={handleRecord}>
-          <span class="icon">●</span>
-        </button>
-      </div>
-      <div class="header-box header-group">
-        <button class="group-item loop-btn" class:active={punchIn} title="Punch In" onclick={handlePunchIn}>
-          <i class="fa-solid fa-chevron-right"></i>
-        </button>
-        <button class="group-item loop-btn" class:active={loop} title="Loop" onclick={handleLoop}>
-          <i class="fa-solid fa-repeat"></i>
-        </button>
-        <button class="group-item loop-btn" class:active={punchOut} title="Punch Out" onclick={handlePunchOut}>
-          <i class="fa-solid fa-chevron-left"></i>
-        </button>
-      </div>
-    </div>
-    <div class="header-right">
-      <div class="header-box connection-status">
-        <span class="status-indicator" class:connected={connectionState === 'connected'} title="Bridge connection">
-          <span class="dot"></span>Bridge
-        </span>
-        <span class="status-indicator" class:connected={abletonConnected} title="Ableton connection">
-          <span class="dot"></span>Live
-        </span>
-      </div>
-    </div>
-  </header>
+  <Header
+    {connectionState}
+    {abletonConnected}
+    {tempo}
+    {isPlaying}
+    {isRecording}
+    {metronome}
+    {punchIn}
+    {punchOut}
+    {loop}
+    {beatTime}
+    {quantization}
+    onShowHelp={() => showHelpModal = true}
+    onPlay={handlePlay}
+    onStop={handleStop}
+    onRecord={handleRecord}
+    onMetronome={handleMetronome}
+    onPunchIn={handlePunchIn}
+    onPunchOut={handlePunchOut}
+    onLoop={handleLoop}
+    onTapTempo={handleTapTempo}
+    onQuantization={(value) => send({ type: 'transport/quantization', value })}
+    onTempoChange={(newTempo) => send({ type: 'transport/tempo', bpm: newTempo })}
+  />
 
   <main class="main">
     {#if tracks.length === 0}
@@ -575,29 +470,12 @@
           <div class="grid" style="--cols: {tracks.length}">
             <!-- Track headers -->
             {#each tracks as track}
-              <div class="track-header" style="--color: {intToHex(track.color)}">
-                <span class="track-name">{track.name}</span>
-                <div class="track-controls">
-                  <button
-                    class="track-btn mute"
-                    class:active={track.mute}
-                    onclick={() => handleMute(track.id)}
-                    title="Mute"
-                  >M</button>
-                  <button
-                    class="track-btn solo"
-                    class:active={track.solo}
-                    onclick={() => handleSolo(track.id)}
-                    title="Solo"
-                  >S</button>
-                  <button
-                    class="track-btn arm"
-                    class:active={track.arm}
-                    onclick={() => handleArm(track.id)}
-                    title="Arm"
-                  >●</button>
-                </div>
-              </div>
+              <TrackHeader
+                {track}
+                onMute={() => handleMute(track.id)}
+                onSolo={() => handleSolo(track.id)}
+                onArm={() => handleArm(track.id)}
+              />
             {/each}
 
             <!-- Stop buttons row (sticky) -->
@@ -674,20 +552,13 @@
       </div>
 
       <!-- Delete zone (appears when dragging) -->
-      {#if dragState?.isDragging}
-        <div
-          class="delete-zone"
-          class:active={dragOverDelete}
-          role="button"
-          tabindex="-1"
-          ondragover={handleDeleteDragOver}
-          ondragleave={handleDeleteDragLeave}
-          ondrop={handleDeleteDrop}
-        >
-          <span class="delete-icon">🗑️</span>
-          <span class="delete-text">Drop to Delete</span>
-        </div>
-      {/if}
+      <DeleteZone
+        isVisible={dragState?.isDragging ?? false}
+        isOver={dragOverDelete}
+        onDragOver={handleDeleteDragOver}
+        onDragLeave={handleDeleteDragLeave}
+        onDrop={handleDeleteDrop}
+      />
 
     {/if}
   </main>
@@ -709,87 +580,6 @@
     display: flex;
     flex-direction: column;
     height: 100vh;
-  }
-
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 6px;
-    padding: 6px;
-    background: #151515;
-    border-bottom: 1px solid #333;
-    flex-shrink: 0;
-  }
-
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex: 1;
-  }
-
-  .header-center {
-    display: flex;
-    align-items: stretch;
-    gap: 12px;
-  }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-    flex: 1;
-  }
-
-  .header-box {
-    display: flex;
-    align-items: center;
-    height: 32px;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 4px;
-  }
-
-  .help-btn {
-    justify-content: center;
-    padding: 0 12px;
-    color: #888;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.1s;
-  }
-
-  .help-btn:hover {
-    background: #2a2a2a;
-    color: #fff;
-  }
-
-  .status-indicator {
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    font-size: 10px;
-    font-weight: 500;
-    color: #664444;
-  }
-
-  .status-indicator .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #442222;
-  }
-
-  .status-indicator.connected {
-    color: #44aa44;
-  }
-
-  .status-indicator.connected .dot {
-    background: #44ff44;
-    box-shadow: 0 0 6px #44ff44;
   }
 
   .main {
@@ -881,93 +671,6 @@
     display: none;
   }
 
-  .track-header {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    padding: 6px;
-    background: #1e1e1e;
-    border-left: 3px solid var(--color);
-    border-radius: 0 3px 3px 0;
-    font-size: 10px;
-    font-weight: 500;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    height: 56px;
-    box-sizing: border-box;
-  }
-
-  .track-header::after {
-    content: '';
-    position: absolute;
-    bottom: -3px;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: #1a1a1a;
-    pointer-events: none;
-  }
-
-  .track-name {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .track-controls {
-    display: flex;
-    gap: 2px;
-    width: 100%;
-  }
-
-  .track-controls .track-btn {
-    flex: 1;
-  }
-
-  .track-btn {
-    padding: 4px 2px;
-    font-size: 10px;
-    font-weight: 600;
-    border: 1px solid #555;
-    border-radius: 3px;
-    background: #3d3d3d;
-    color: #888;
-    cursor: pointer;
-    transition: all 0.1s;
-    min-width: 20px;
-    min-height: 24px;
-  }
-
-  .track-btn:hover {
-    background: #4d4d4d;
-    color: #fff;
-  }
-
-  .track-btn.mute.active {
-    background: #b54;
-    border-color: #d65;
-    color: #fff;
-  }
-
-  .track-btn.solo.active {
-    background: #54b;
-    border-color: #65d;
-    color: #fff;
-  }
-
-  .track-btn.arm.active {
-    background: #b33;
-    border-color: #d44;
-    color: #fff;
-  }
-
-  .track-btn.stop:hover {
-    background: #4d3d3d;
-    border-color: #888;
-    color: #fff;
-  }
-
   .scene-header {
     padding: 6px;
     background: #1e1e1e;
@@ -1030,7 +733,7 @@
     height: 47px;
     box-sizing: border-box;
     background: color-mix(in srgb, var(--color) 20%, #2d2d2d);
-    border: 1px solid color-mix(in srgb, var(--color) 30%, #111);
+    border: 1px solid color-mix(in srgb, var(--color) 40%, #222);
     border-radius: 3px;
     color: #fff;
     font-size: 9px;
@@ -1039,7 +742,6 @@
     text-align: left;
     overflow: hidden;
     text-overflow: ellipsis;
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color) 15%, rgba(255,255,255,0.08));
   }
 
   .clip:hover {
@@ -1239,119 +941,6 @@
     transform: scale(0.95);
   }
 
-  .transport-btn .icon {
-    font-size: 10px;
-  }
-
-  .transport-btn.active {
-    background: #2a3a2a;
-    color: #4f4;
-  }
-
-  .transport-btn.record.active {
-    background: #3a2a2a;
-    color: #f44;
-  }
-
-  .connection-status {
-    gap: 4px;
-    padding: 0 8px;
-  }
-
-  .header-group {
-    overflow: hidden;
-  }
-
-  .group-item {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    padding: 0 10px;
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    border-right: 1px solid #333;
-    color: #888;
-    font-size: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.1s;
-  }
-
-  .group-item:last-child {
-    border-right: none;
-  }
-
-  button.group-item:hover {
-    background: #2a2a2a;
-    color: #fff;
-  }
-
-  button.group-item:active {
-    background: #222;
-  }
-
-  button.group-item.active {
-    background: #2a3a2a;
-    color: #4f4;
-  }
-
-  .group-select {
-    padding: 0 8px;
-    outline: none;
-    cursor: pointer;
-  }
-
-  .group-select:hover {
-    background: #2a2a2a;
-    color: #fff;
-  }
-
-  .tempo-item {
-    gap: 4px;
-    cursor: default;
-  }
-
-  .playhead-item {
-    cursor: default;
-  }
-
-  .metronome-icon {
-    font-size: 12px;
-  }
-
-  .loop-btn {
-    padding: 0 8px;
-  }
-
-  .loop-btn i {
-    font-size: 12px;
-  }
-
-  .playhead-value,
-  .tempo-value,
-  .tempo-suffix {
-    font-size: 13px;
-    font-weight: 500;
-    font-variant-numeric: tabular-nums;
-    font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
-    color: #ff9944;
-  }
-
-  .tempo-suffix {
-    color: #888;
-  }
-
-  .tempo-value {
-    cursor: ew-resize;
-    user-select: none;
-  }
-
-  .tempo-value.dragging {
-    color: #ffbb66;
-  }
-
   /* ============================================
      Drag-and-drop styles
      ============================================ */
@@ -1398,54 +987,6 @@
     font-size: 18px;
     color: rgba(255, 255, 255, 0.8);
     z-index: 5;
-  }
-
-  /* Delete zone */
-  .delete-zone {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    background: linear-gradient(to top, rgba(180, 50, 50, 0.95), rgba(140, 40, 40, 0.85));
-    color: white;
-    font-size: 16px;
-    font-weight: 500;
-    z-index: 100;
-    animation: slideUp 0.2s ease-out;
-    transition: background 0.15s, transform 0.15s;
-    border-top: 2px solid rgba(255, 100, 100, 0.5);
-  }
-
-  .delete-zone.active {
-    background: linear-gradient(to top, rgba(220, 60, 60, 1), rgba(180, 50, 50, 0.95));
-    transform: scale(1.02);
-    border-top-color: rgba(255, 150, 150, 0.8);
-  }
-
-  .delete-zone .delete-icon {
-    font-size: 28px;
-  }
-
-  .delete-zone .delete-text {
-    font-size: 14px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-
-  @keyframes slideUp {
-    from {
-      transform: translateY(100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
   }
 
   /* Make clips grabbable when they have content */

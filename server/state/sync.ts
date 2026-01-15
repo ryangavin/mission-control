@@ -70,6 +70,7 @@ export class SyncManager {
         punchOut: !!punchOut,
         loop: !!loop,
       });
+
       // setStructure must come AFTER initialize to not be overwritten
       this.session.setStructure(numTracks, numScenes);
 
@@ -261,6 +262,9 @@ export class SyncManager {
     this.callbacks.sendOSC(song.startListenTempo());
     this.callbacks.sendOSC(song.startListenIsPlaying());
     this.callbacks.sendOSC(song.startListenMetronome());
+    this.callbacks.sendOSC(song.startListenPunchIn());
+    this.callbacks.sendOSC(song.startListenPunchOut());
+    this.callbacks.sendOSC(song.startListenLoop());
 
     // View listeners
     this.callbacks.sendOSC(view.startListenSelectedTrack());
@@ -330,6 +334,9 @@ export class SyncManager {
     this.callbacks.sendOSC(song.stopListenTempo());
     this.callbacks.sendOSC(song.stopListenIsPlaying());
     this.callbacks.sendOSC(song.stopListenMetronome());
+    this.callbacks.sendOSC(song.stopListenPunchIn());
+    this.callbacks.sendOSC(song.stopListenPunchOut());
+    this.callbacks.sendOSC(song.stopListenLoop());
 
     // View
     this.callbacks.sendOSC(view.stopListenSelectedTrack());

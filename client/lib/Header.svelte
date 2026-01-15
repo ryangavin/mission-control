@@ -291,6 +291,7 @@
 
   .transport-btn .icon {
     font-size: 10px;
+    pointer-events: none;
   }
 
   .transport-btn.active {
@@ -352,6 +353,7 @@
 
   .loop-btn i {
     font-size: 12px;
+    pointer-events: none;
   }
 
   .status-indicator {

@@ -153,6 +153,22 @@ export const song = {
   stopListenMetronome: (): OSCMessage => ({ address: '/live/song/stop_listen/metronome', args: [] }),
 
   // ---------------------------------------------------------------------------
+  // Punch In/Out
+  // ---------------------------------------------------------------------------
+
+  /** Start listening to punch in changes */
+  startListenPunchIn: (): OSCMessage => ({ address: '/live/song/start_listen/punch_in', args: [] }),
+
+  /** Stop listening to punch in changes */
+  stopListenPunchIn: (): OSCMessage => ({ address: '/live/song/stop_listen/punch_in', args: [] }),
+
+  /** Start listening to punch out changes */
+  startListenPunchOut: (): OSCMessage => ({ address: '/live/song/start_listen/punch_out', args: [] }),
+
+  /** Stop listening to punch out changes */
+  stopListenPunchOut: (): OSCMessage => ({ address: '/live/song/stop_listen/punch_out', args: [] }),
+
+  // ---------------------------------------------------------------------------
   // Recording
   // ---------------------------------------------------------------------------
 
@@ -241,6 +257,12 @@ export const song = {
     address: '/live/song/set/loop',
     args: [enabled ? 1 : 0]
   }),
+
+  /** Start listening to loop changes */
+  startListenLoop: (): OSCMessage => ({ address: '/live/song/start_listen/loop', args: [] }),
+
+  /** Stop listening to loop changes */
+  stopListenLoop: (): OSCMessage => ({ address: '/live/song/stop_listen/loop', args: [] }),
 
   /** Get loop start position */
   getLoopStart: (): OSCMessage => ({ address: '/live/song/get/loop_start', args: [] }),

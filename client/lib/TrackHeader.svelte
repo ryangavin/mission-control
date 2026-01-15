@@ -13,10 +13,7 @@
 </script>
 
 <div class="track-header" style="--color: {intToHex(track.color)}">
-  <div class="track-info">
-    <span class="track-color" style="background-color: {intToHex(track.color)}"></span>
-    <span class="track-name">{track.name}</span>
-  </div>
+  <span class="track-name">{track.name}</span>
   <div class="track-controls">
     <button
       class="track-btn mute"
@@ -66,19 +63,6 @@
     height: 3px;
     background: #1a1a1a;
     pointer-events: none;
-  }
-
-  .track-info {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .track-color {
-    width: 8px;
-    height: 8px;
-    border-radius: 2px;
-    flex-shrink: 0;
   }
 
   .track-name {
