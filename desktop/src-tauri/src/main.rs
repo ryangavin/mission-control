@@ -45,14 +45,13 @@ fn main() {
         .setup(|app| {
             // Build tray menu
             let open_ui = MenuItem::with_id(app, "open_ui", "Open Mission Control", true, None::<&str>)?;
-            let copy_url = MenuItem::with_id(app, "copy_url", "Copy URL", true, None::<&str>)?;
             let show_qr = MenuItem::with_id(app, "show_qr", "Connect on Mobile", true, None::<&str>)?;
             let separator1 = MenuItem::with_id(app, "sep1", "─────────────", false, None::<&str>)?;
             let install_script = MenuItem::with_id(app, "install_script", "Install AbletonOSC", true, None::<&str>)?;
             let separator2 = MenuItem::with_id(app, "sep2", "─────────────", false, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
 
-            let menu = Menu::with_items(app, &[&open_ui, &copy_url, &show_qr, &separator1, &install_script, &separator2, &quit])?;
+            let menu = Menu::with_items(app, &[&open_ui, &show_qr, &separator1, &install_script, &separator2, &quit])?;
 
             // Create tray icon with custom rocket icon
             let _tray = TrayIconBuilder::new()
@@ -100,36 +99,6 @@ fn handle_menu_event(app: &AppHandle, id: &str) {
             if let Err(e) = open::that(&url) {
                 eprintln!("Failed to open browser: {}", e);
             }
-        }
-        "copy_url" => {
-            let url = if let Some(ip) = get_local_ip() {
-                format!("http://{}:{}", ip, UI_PORT)
-            } else {
-                format!("http://localhost:{}", UI_PORT)
-            };
-
-            // Copy to clipboard
-            #[cfg(target_os = "macos")]
-            {
-                use std::process::{Command, Stdio};
-                use std::io::Write;
-                if let Ok(mut child) = Command::new("pbcopy").stdin(Stdio::piped()).spawn() {
-                    if let Some(mut stdin) = child.stdin.take() {
-                        let _ = stdin.write_all(url.as_bytes());
-                    }
-                    let _ = child.wait();
-                }
-            }
-
-            #[cfg(target_os = "windows")]
-            {
-                use std::process::Command;
-                let _ = Command::new("cmd")
-                    .args(["/C", &format!("echo {}| clip", url)])
-                    .spawn();
-            }
-
-            println!("[tray] Copied URL: {}", url);
         }
         "show_qr" => {
             // Generate QR code URL and open in browser

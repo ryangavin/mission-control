@@ -208,7 +208,6 @@
     background: #1a1a1a;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    box-shadow: inset -8px 0 12px -4px rgba(0, 0, 0, 0.5);
   }
 
   .grid-scroll::-webkit-scrollbar {
