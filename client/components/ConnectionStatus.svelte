@@ -37,14 +37,14 @@
     gap: 3px;
     font-size: 10px;
     font-weight: 500;
-    color: #664444;
+    color: #aa6666;
   }
 
   .status-indicator .dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #442222;
+    background: #884444;
   }
 
   .status-indicator.connected {
