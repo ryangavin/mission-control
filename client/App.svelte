@@ -371,6 +371,7 @@
     flex-direction: column;
     height: 100vh;
     height: 100dvh;
+    position: relative;
   }
 
   .main {
