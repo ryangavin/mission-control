@@ -312,7 +312,7 @@ export class Bridge {
       case 'transport/stop':
         return { address: '/live/song/stop_playing', args: [] };
       case 'transport/record':
-        return { address: '/live/song/record_mode', args: [] };
+        return { address: '/live/song/set/record_mode', args: [message.enabled ? 1 : 0] };
       case 'transport/tempo':
         return { address: '/live/song/set/tempo', args: [message.bpm] };
       case 'transport/metronome':

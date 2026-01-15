@@ -5,12 +5,30 @@
  */
 
 import { createServer } from 'http';
+import { networkInterfaces } from 'os';
 import { Bridge } from './bridge';
 import { defaultConfig } from './config';
 import { join, resolve, extname } from 'path';
 import { statSync, readFileSync, existsSync } from 'fs';
 
 const PORT = 5555;
+const HOST = '0.0.0.0';
+
+// Get local network IP addresses
+function getNetworkAddresses(): string[] {
+  const interfaces = networkInterfaces();
+  const addresses: string[] = [];
+
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name] || []) {
+      // Skip internal and non-IPv4 addresses
+      if (iface.internal || iface.family !== 'IPv4') continue;
+      addresses.push(iface.address);
+    }
+  }
+
+  return addresses;
+}
 
 // MIME types for static file serving
 const MIME_TYPES: Record<string, string> = {
@@ -128,9 +146,17 @@ server.on('upgrade', (request, socket, head) => {
 });
 
 // Start the server
-server.listen(PORT, () => {
-  console.log(`[standalone] Server running at http://localhost:${PORT}`);
-  console.log(`[standalone] WebSocket available at ws://localhost:${PORT}/ws`);
+server.listen(PORT, HOST, () => {
+  console.log(`[standalone] Server running on port ${PORT}`);
+  console.log(`[standalone] Local: http://localhost:${PORT}`);
+
+  const networkAddresses = getNetworkAddresses();
+  if (networkAddresses.length > 0) {
+    console.log(`[standalone] Network:`);
+    for (const addr of networkAddresses) {
+      console.log(`[standalone]   http://${addr}:${PORT}`);
+    }
+  }
 });
 
 // Start OSC connection

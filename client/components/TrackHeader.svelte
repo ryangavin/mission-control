@@ -32,7 +32,7 @@
       class:active={track.arm}
       onclick={onArm}
       title="Arm"
-    >R</button>
+    >●</button>
   </div>
 </div>
 
@@ -107,8 +107,8 @@
   }
 
   .track-btn.solo.active {
-    background: #54b;
-    border-color: #65d;
+    background: #b90;
+    border-color: #da2;
     color: #fff;
   }
 

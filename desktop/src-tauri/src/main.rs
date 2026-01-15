@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::fs;
+use std::net::UdpSocket;
 use std::path::PathBuf;
 use std::sync::Mutex;
 use tauri::{
@@ -14,6 +15,15 @@ use tauri_plugin_shell::process::CommandChild;
 use tauri_plugin_shell::ShellExt;
 
 const BRIDGE_PORT: u16 = 5555;
+
+/// Get the local network IP address
+fn get_local_ip() -> Option<String> {
+    // Create a UDP socket and "connect" to a public IP to determine local interface
+    let socket = UdpSocket::bind("0.0.0.0:0").ok()?;
+    socket.connect("8.8.8.8:80").ok()?;
+    let addr = socket.local_addr().ok()?;
+    Some(addr.ip().to_string())
+}
 
 struct AppState {
     bridge_process: Mutex<Option<CommandChild>>,
@@ -29,11 +39,22 @@ fn main() {
         .setup(|app| {
             // Build tray menu
             let show_ui = MenuItem::with_id(app, "show_ui", "Show UI", true, None::<&str>)?;
+
+            // Network URL item
+            let network_label = if let Some(ip) = get_local_ip() {
+                format!("http://{}:{}", ip, BRIDGE_PORT)
+            } else {
+                format!("http://localhost:{}", BRIDGE_PORT)
+            };
+            let network_url = MenuItem::with_id(app, "network_url", &network_label, true, None::<&str>)?;
+            let show_qr = MenuItem::with_id(app, "show_qr", "Show QR Code", true, None::<&str>)?;
+
+            let separator1 = MenuItem::with_id(app, "sep1", "─────────────", false, None::<&str>)?;
             let install_script = MenuItem::with_id(app, "install_script", "Install Remote Script", true, None::<&str>)?;
-            let separator = MenuItem::with_id(app, "sep", "─────────────", false, None::<&str>)?;
+            let separator2 = MenuItem::with_id(app, "sep2", "─────────────", false, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
 
-            let menu = Menu::with_items(app, &[&show_ui, &install_script, &separator, &quit])?;
+            let menu = Menu::with_items(app, &[&show_ui, &network_url, &show_qr, &separator1, &install_script, &separator2, &quit])?;
 
             // Create tray icon
             let _tray = TrayIconBuilder::new()
@@ -66,6 +87,58 @@ fn handle_menu_event(app: &AppHandle, id: &str) {
             let url = format!("http://localhost:{}", BRIDGE_PORT);
             if let Err(e) = open::that(&url) {
                 eprintln!("Failed to open browser: {}", e);
+            }
+        }
+        "network_url" => {
+            // Copy the network URL to clipboard
+            let url = if let Some(ip) = get_local_ip() {
+                format!("http://{}:{}", ip, BRIDGE_PORT)
+            } else {
+                format!("http://localhost:{}", BRIDGE_PORT)
+            };
+
+            #[cfg(target_os = "macos")]
+            {
+                let _ = std::process::Command::new("pbcopy")
+                    .stdin(std::process::Stdio::piped())
+                    .spawn()
+                    .and_then(|mut child| {
+                        use std::io::Write;
+                        if let Some(stdin) = child.stdin.as_mut() {
+                            stdin.write_all(url.as_bytes())?;
+                        }
+                        child.wait()
+                    });
+            }
+
+            #[cfg(target_os = "windows")]
+            {
+                let _ = std::process::Command::new("cmd")
+                    .args(["/C", &format!("echo {}| clip", url)])
+                    .spawn();
+            }
+
+            app.dialog()
+                .message(format!("Copied to clipboard:\n\n{}", url))
+                .title("Network URL")
+                .kind(MessageDialogKind::Info)
+                .blocking_show();
+        }
+        "show_qr" => {
+            // Generate QR code URL and open in browser
+            let url = if let Some(ip) = get_local_ip() {
+                format!("http://{}:{}", ip, BRIDGE_PORT)
+            } else {
+                format!("http://localhost:{}", BRIDGE_PORT)
+            };
+
+            let qr_url = format!(
+                "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={}",
+                urlencoding::encode(&url)
+            );
+
+            if let Err(e) = open::that(&qr_url) {
+                eprintln!("Failed to open QR code: {}", e);
             }
         }
         "install_script" => {

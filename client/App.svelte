@@ -159,7 +159,8 @@
   }
 
   function handleRecord() {
-    send({ type: 'transport/record' });
+    const current = session?.isRecording ?? false;
+    send({ type: 'transport/record', enabled: !current });
   }
 
   function handleMetronome() {
