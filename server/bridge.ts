@@ -401,6 +401,9 @@ export class Bridge {
     if (address === '/live/song/get/current_song_time') {
       return this.session.setBeatTime(args[0] as number);
     }
+    if (address === '/live/song/get/record_mode') {
+      return this.session.setIsRecording(!!args[0]);
+    }
     if (address === '/live/song/get/metronome') {
       return this.session.setMetronome(!!args[0]);
     }

@@ -42,9 +42,10 @@ export class SyncManager {
 
     try {
       // Phase 1: Get song structure
-      const [tempo, isPlaying, metronome, clipTriggerQuantization, punchIn, punchOut, loop, numTracks, numScenes] = await Promise.all([
+      const [tempo, isPlaying, isRecording, metronome, clipTriggerQuantization, punchIn, punchOut, loop, numTracks, numScenes] = await Promise.all([
         this.queryOSC(song.getTempo()),
         this.queryOSC(song.getIsPlaying()),
+        this.queryOSC(song.getRecordMode()),
         this.queryOSC(song.getMetronome()),
         this.queryOSC(song.getClipTriggerQuantization()),
         this.queryOSC(song.getPunchIn()),
@@ -63,7 +64,7 @@ export class SyncManager {
       this.session.initialize({
         tempo,
         isPlaying: !!isPlaying,
-        isRecording: false,
+        isRecording: !!isRecording,
         metronome: !!metronome,
         clipTriggerQuantization: clipTriggerQuantization ?? 8,
         punchIn: !!punchIn,
@@ -261,6 +262,7 @@ export class SyncManager {
     // Song-level listeners
     this.callbacks.sendOSC(song.startListenTempo());
     this.callbacks.sendOSC(song.startListenIsPlaying());
+    this.callbacks.sendOSC(song.startListenRecordMode());
     this.callbacks.sendOSC(song.startListenMetronome());
     this.callbacks.sendOSC(song.startListenPunchIn());
     this.callbacks.sendOSC(song.startListenPunchOut());
@@ -333,6 +335,7 @@ export class SyncManager {
     // Song-level
     this.callbacks.sendOSC(song.stopListenTempo());
     this.callbacks.sendOSC(song.stopListenIsPlaying());
+    this.callbacks.sendOSC(song.stopListenRecordMode());
     this.callbacks.sendOSC(song.stopListenMetronome());
     this.callbacks.sendOSC(song.stopListenPunchIn());
     this.callbacks.sendOSC(song.stopListenPunchOut());

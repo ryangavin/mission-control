@@ -94,7 +94,7 @@ export type ClientMessage =
   | { type: 'track/stop'; trackId: number }
   | { type: 'transport/play' }
   | { type: 'transport/stop' }
-  | { type: 'transport/record' }
+  | { type: 'transport/record'; enabled: boolean }
   | { type: 'transport/tempo'; bpm: number }
   | { type: 'transport/metronome'; enabled: boolean }
   | { type: 'transport/punchIn'; enabled: boolean }

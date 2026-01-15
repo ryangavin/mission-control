@@ -181,6 +181,12 @@ export const song = {
     args: [enabled ? 1 : 0]
   }),
 
+  /** Start listening to record mode changes */
+  startListenRecordMode: (): OSCMessage => ({ address: '/live/song/start_listen/record_mode', args: [] }),
+
+  /** Stop listening to record mode changes */
+  stopListenRecordMode: (): OSCMessage => ({ address: '/live/song/stop_listen/record_mode', args: [] }),
+
   /** Get session record state */
   getSessionRecord: (): OSCMessage => ({ address: '/live/song/get/session_record', args: [] }),
 
