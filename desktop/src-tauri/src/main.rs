@@ -59,10 +59,8 @@ fn main() {
             let menu = Menu::with_items(app, &[&show_ui, &network_url, &show_qr, &separator1, &install_script, &separator2, &quit])?;
 
             // Create tray icon with custom rocket icon
-            let tray_icon = tauri::image::Image::from_bytes(include_bytes!("../icons/tray-icon.png"))
-                .expect("Failed to load tray icon");
             let _tray = TrayIconBuilder::new()
-                .icon(tray_icon)
+                .icon(tauri::include_image!("../icons/tray-icon.png"))
                 .icon_as_template(true)
                 .menu(&menu)
                 .show_menu_on_left_click(true)
