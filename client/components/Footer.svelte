@@ -42,7 +42,7 @@
     position: relative;
     align-items: center;
     justify-content: space-between;
-    padding: 6px;
+    padding: 6px 12px;
     background: #151515;
     border-top: 1px solid #333;
     flex-shrink: 0;
