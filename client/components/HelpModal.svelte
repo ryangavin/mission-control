@@ -73,11 +73,12 @@
                 <p class="recommended">Click the tray icon → <code>Install Remote Script</code></p>
                 <details class="manual-install">
                   <summary>Manual installation</summary>
-                  <p>Download <a href="https://github.com/ideoforms/AbletonOSC/releases" target="_blank" rel="noopener">AbletonOSC</a> and copy the folder to:</p>
+                  <p>Download <a href="https://github.com/ideoforms/AbletonOSC/releases" target="_blank" rel="noopener">AbletonOSC</a> and copy the folder to your Remote Scripts directory:</p>
                   <p class="path">
                     <strong>macOS:</strong> ~/Music/Ableton/User Library/Remote Scripts/<br>
                     <strong>Windows:</strong> ~\Documents\Ableton\User Library\Remote Scripts\
                   </p>
+                  <p class="path-note">Your location may differ if you've customized your User Library path in Ableton's preferences.</p>
                 </details>
               </li>
               <li>
@@ -109,10 +110,7 @@
               <ul>
                 <li>Make sure the folder is named exactly <code>AbletonOSC</code> (no version number)</li>
                 <li>Restart Ableton Live completely after copying the folder</li>
-                <li>Verify the script location:
-                  <br>macOS: ~/Music/Ableton/User Library/Remote Scripts/AbletonOSC
-                  <br>Windows: ~\Documents\Ableton\User Library\Remote Scripts\AbletonOSC
-                </li>
+                <li>Verify the script is in your User Library's <code>Remote Scripts</code> folder. Find your User Library location in Ableton: <code>Preferences</code> → <code>Library</code> → <code>User Library</code></li>
               </ul>
             </div>
 
@@ -445,6 +443,13 @@
     font-size: 12px;
     color: #888;
     margin-top: 4px;
+  }
+
+  .path-note {
+    font-size: 11px;
+    color: #666;
+    font-style: italic;
+    margin-top: 8px;
   }
 
   .steps li code {
