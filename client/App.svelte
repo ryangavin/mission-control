@@ -234,12 +234,21 @@
   }
 
   // Determine clip state for styling
+  // Uses track's playingSlotIndex/firedSlotIndex as the source of truth for real-time updates
   function getClipState(trackIndex: number, sceneIndex: number): 'empty' | 'has-clip' | 'playing' | 'triggered' | 'recording' {
     const clipSlot = getClip(trackIndex, sceneIndex);
     if (!clipSlot?.hasClip) return 'empty';
+
+    // Check recording first (from clip property)
     if (clipSlot.clip?.isRecording) return 'recording';
-    if (clipSlot.clip?.isTriggered) return 'triggered';
-    if (clipSlot.clip?.isPlaying) return 'playing';
+
+    // Use track's slot indices for playing/triggered state (these get updated in real-time)
+    const track = session?.tracks[trackIndex];
+    if (track) {
+      if (track.playingSlotIndex === sceneIndex) return 'playing';
+      if (track.firedSlotIndex === sceneIndex && track.firedSlotIndex !== track.playingSlotIndex) return 'triggered';
+    }
+
     return 'has-clip';
   }
 
@@ -253,7 +262,12 @@
   // Get clip playback progress (0-1) for playing clips
   function getClipProgress(trackIndex: number, sceneIndex: number): number {
     const clipSlot = getClip(trackIndex, sceneIndex);
-    if (!clipSlot?.clip?.isPlaying || !clipSlot.clip.length) return 0;
+    if (!clipSlot?.clip?.length) return 0;
+
+    // Use track's playingSlotIndex to determine if this clip is playing
+    const track = session?.tracks[trackIndex];
+    if (!track || track.playingSlotIndex !== sceneIndex) return 0;
+
     // Calculate position within clip loop using song beat time
     const clipLength = clipSlot.clip.length;
     const position = beatTime % clipLength;
