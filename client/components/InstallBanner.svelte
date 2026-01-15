@@ -45,7 +45,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 10px 12px;
+    padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 10px;
     background: linear-gradient(135deg, #2a2218 0%, #1a1a1a 100%);
     border-bottom: 1px solid #333;
   }
