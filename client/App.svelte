@@ -10,6 +10,7 @@
   import SceneColumn from './components/SceneColumn.svelte';
   import DeleteZone from './components/DeleteZone.svelte';
   import Footer from './components/Footer.svelte';
+  import InstallBanner from './components/InstallBanner.svelte';
   import Toast from './components/Toast.svelte';
 
   // Help modal state
@@ -274,6 +275,7 @@
 </script>
 
 <div class="app">
+  <InstallBanner />
   <SetupPanel isConnected={connectionState === 'connected'} onDismiss={() => {}} />
 
   <Header

@@ -61,7 +61,7 @@ fn main() {
             // Create tray icon with custom rocket icon
             let _tray = TrayIconBuilder::new()
                 .icon(tauri::include_image!("icons/tray-icon.png"))
-                .icon_as_template(true)
+                .icon_as_template(false)
                 .menu(&menu)
                 .show_menu_on_left_click(true)
                 .on_menu_event(|app, event| {
