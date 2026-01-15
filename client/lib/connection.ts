@@ -14,6 +14,13 @@ const RECONNECT_DELAY = 2000;
 let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 
 function getWsUrl(): string {
+  // Allow override via env var (e.g., VITE_BRIDGE_URL=ws://localhost:5555/ws)
+  const envUrl = (import.meta as any).env?.VITE_BRIDGE_URL;
+  if (envUrl) {
+    return envUrl;
+  }
+
+  // Default: same host as the page
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   return `${protocol}//${window.location.host}/ws`;
 }

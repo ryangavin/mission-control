@@ -10,11 +10,10 @@
     "build:bridge:mac-arm": "bun build --compile --target=bun-darwin-arm64 --outfile=desktop/dist-bridge/mission-control-bridge-aarch64-apple-darwin ./server/standalone.ts",
     "build:bridge:mac-x64": "bun build --compile --target=bun-darwin-x64 --outfile=desktop/dist-bridge/mission-control-bridge-x86_64-apple-darwin ./server/standalone.ts",
     "build:bridge:win": "bun build --compile --target=bun-windows-x64 --outfile=desktop/dist-bridge/mission-control-bridge-x86_64-pc-windows-msvc.exe ./server/standalone.ts",
-    "dev:bridge": "bun run ./server/standalone.ts",
     "preview": "vite preview",
     "check": "svelte-check && tsc",
     "tauri": "tauri",
-    "tauri:dev": "concurrently -k -n vite,bridge,tauri -c cyan,blue,magenta \"bun run dev\" \"bun run dev:bridge\" \"cd desktop && tauri dev\"",
+    "tauri:dev": "concurrently -k -n vite,tauri -c cyan,magenta \"bun run dev\" \"cd desktop && tauri dev\"",
     "tauri:build": "bun run build && bun run build:bridge && cd desktop && tauri build"
   },
   "dependencies": {
