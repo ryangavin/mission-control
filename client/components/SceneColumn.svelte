@@ -65,23 +65,11 @@
     background: #1a1a1a;
     border-left: 1px solid #333;
     padding: 0 3px 3px 3px;
-    position: relative;
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: none;
     -ms-overflow-style: none;
-  }
-
-  .scene-column::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    right: 80px;
-    width: 12px;
-    background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.35));
-    pointer-events: none;
-    z-index: 100;
+    overscroll-behavior: none;
   }
 
   .scene-column::-webkit-scrollbar {

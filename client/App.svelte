@@ -364,6 +364,7 @@
     background: #1e1e1e;
     color: #fff;
     overflow: hidden;
+    overscroll-behavior: none;
   }
 
   .app {

@@ -155,11 +155,14 @@
   }
 
   /* Show footer at narrow widths (same breakpoint header elements hide) */
-  @media (max-width: 580px) {
+  @media (max-width: 750px) {
     .footer {
       display: flex;
     }
+  }
 
+  /* Mobile-specific: safe area padding and pill positioning */
+  @media (max-width: 580px) {
     .footer:not(.collapsed) {
       padding-left: calc(40px + env(safe-area-inset-left, 0px));
       padding-right: calc(40px + env(safe-area-inset-right, 0px));

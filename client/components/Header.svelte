@@ -400,7 +400,7 @@
   }
 
   /* Responsive: hide status, help, and logo - footer takes over */
-  @media (max-width: 580px) {
+  @media (max-width: 750px) {
     .header {
       gap: 0;
       overflow-x: auto;
