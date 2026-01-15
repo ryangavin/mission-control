@@ -9,6 +9,7 @@ import type { Duplex } from 'stream';
 import OSC from 'osc-js';
 import type { Config } from './config';
 import type { OSCMessage, ClientMessage, ServerMessage, PatchPayload } from '../protocol';
+import { application } from '../protocol';
 import { SessionManager, SyncManager } from './state';
 
 export interface BridgeOptions {
@@ -30,6 +31,12 @@ export class Bridge {
   private syncInProgress = false;
   private synced = false;
   private beatTimeInterval: ReturnType<typeof setInterval> | null = null;
+
+  // Connection check state
+  private connectionCheckInterval: ReturnType<typeof setInterval> | null = null;
+  private pendingPing: { resolve: (connected: boolean) => void; timeout: ReturnType<typeof setTimeout> } | null = null;
+  private readonly CONNECTION_CHECK_INTERVAL = 5000; // Check every 5 seconds
+  private readonly PING_TIMEOUT = 2000; // 2 second timeout for ping response
 
   constructor(options: BridgeOptions) {
     this.config = options.config;
@@ -107,10 +114,17 @@ export class Bridge {
           this.handleOSCMessage(message);
         });
 
-        this.osc.on('open', () => {
-          this.log('OSC connection ready');
-          this.abletonConnected = true;
-          this.broadcastToClients({ type: 'connected', abletonConnected: true });
+        this.osc.on('open', async () => {
+          this.log('OSC socket ready, checking for AbletonOSC...');
+          // Don't set abletonConnected yet - need to verify AbletonOSC is responding
+
+          // Check if Ableton is actually responding
+          const connected = await this.checkAbletonConnection();
+          this.setAbletonConnected(connected);
+
+          // Start periodic connection checks
+          this.startConnectionChecking();
+
           resolve();
         });
 
@@ -120,9 +134,9 @@ export class Bridge {
 
         this.osc.on('close', () => {
           this.log('OSC connection closed');
-          this.abletonConnected = false;
+          this.stopConnectionChecking();
+          this.setAbletonConnected(false);
           this.synced = false;
-          this.broadcastToClients({ type: 'connected', abletonConnected: false });
         });
 
         this.osc.open();
@@ -137,6 +151,9 @@ export class Bridge {
    */
   async stop(): Promise<void> {
     this.log('Stopping bridge...');
+
+    // Stop connection checking
+    this.stopConnectionChecking();
 
     // Stop beat time polling
     this.stopBeatTimePolling();
@@ -323,6 +340,12 @@ export class Bridge {
   private handleOSCMessage(message: { address: string; args: unknown[] }): void {
     // Log the message for debugging
     this.log(`OSC <- ${message.address} ${JSON.stringify(message.args)}`);
+
+    // Check for ping response (connection test)
+    if (message.address === '/live/test') {
+      this.handlePingResponse();
+      return;
+    }
 
     // First, check if this is a response to a sync query
     const wasQueryResponse = this.sync.handleOSCResponse(message.address, message.args);
@@ -535,5 +558,93 @@ export class Bridge {
     // Restart polling with new interval
     this.stopBeatTimePolling();
     this.startBeatTimePolling();
+  }
+
+  /**
+   * Set Ableton connection state and broadcast to clients if changed
+   */
+  private setAbletonConnected(connected: boolean): void {
+    if (this.abletonConnected !== connected) {
+      this.abletonConnected = connected;
+      this.log(`Ableton connection: ${connected ? 'connected' : 'disconnected'}`);
+      this.broadcastToClients({ type: 'connected', abletonConnected: connected });
+
+      // Reset sync state when disconnected
+      if (!connected) {
+        this.synced = false;
+      }
+    }
+  }
+
+  /**
+   * Check if AbletonOSC is responding by sending a test message
+   */
+  private checkAbletonConnection(): Promise<boolean> {
+    return new Promise((resolve) => {
+      if (!this.osc) {
+        resolve(false);
+        return;
+      }
+
+      // Clear any pending ping
+      if (this.pendingPing) {
+        clearTimeout(this.pendingPing.timeout);
+        this.pendingPing = null;
+      }
+
+      // Set up timeout
+      const timeout = setTimeout(() => {
+        this.pendingPing = null;
+        this.log('Ping timeout - AbletonOSC not responding');
+        resolve(false);
+      }, this.PING_TIMEOUT);
+
+      this.pendingPing = { resolve, timeout };
+
+      // Send test message
+      this.sendOSC(application.test());
+    });
+  }
+
+  /**
+   * Handle ping response from AbletonOSC
+   */
+  private handlePingResponse(): void {
+    if (this.pendingPing) {
+      clearTimeout(this.pendingPing.timeout);
+      this.pendingPing.resolve(true);
+      this.pendingPing = null;
+    }
+  }
+
+  /**
+   * Start periodic connection checking
+   */
+  private startConnectionChecking(): void {
+    if (this.connectionCheckInterval) return; // Already checking
+
+    this.connectionCheckInterval = setInterval(async () => {
+      const connected = await this.checkAbletonConnection();
+      this.setAbletonConnected(connected);
+    }, this.CONNECTION_CHECK_INTERVAL);
+
+    this.log(`Connection checking started (every ${this.CONNECTION_CHECK_INTERVAL}ms)`);
+  }
+
+  /**
+   * Stop periodic connection checking
+   */
+  private stopConnectionChecking(): void {
+    if (this.connectionCheckInterval) {
+      clearInterval(this.connectionCheckInterval);
+      this.connectionCheckInterval = null;
+      this.log('Connection checking stopped');
+    }
+
+    // Clear any pending ping
+    if (this.pendingPing) {
+      clearTimeout(this.pendingPing.timeout);
+      this.pendingPing = null;
+    }
   }
 }
