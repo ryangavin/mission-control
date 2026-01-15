@@ -8,7 +8,7 @@ import type { IncomingMessage } from 'http';
 import type { Duplex } from 'stream';
 import OSC from 'osc-js';
 import type { Config } from './config';
-import type { OSCMessage, ClientMessage, ServerMessage, PatchPayload } from '@mission-control/protocol';
+import type { OSCMessage, ClientMessage, ServerMessage, PatchPayload } from '../protocol';
 import { SessionManager, SyncManager } from './state';
 
 export interface BridgeOptions {
@@ -86,8 +86,10 @@ export class Bridge {
     return new Promise((resolve, reject) => {
       try {
         // Create OSC instance with DatagramPlugin for UDP
+        // Cast needed: osc-js types are incomplete for DatagramPlugin config
+        const DatagramPlugin = OSC.DatagramPlugin as any;
         this.osc = new OSC({
-          plugin: new OSC.DatagramPlugin({
+          plugin: new DatagramPlugin({
             open: {
               host: 'localhost',
               port: this.config.oscReceivePort,

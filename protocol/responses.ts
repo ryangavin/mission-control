@@ -3,7 +3,7 @@
  * Typed responses parsed from Ableton OSC messages
  */
 
-import type { OSCValue } from './types.ts';
+import type { OSCValue } from './types';
 
 // =============================================================================
 // Base Response Types

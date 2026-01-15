@@ -6,7 +6,7 @@
 import {
   song, view, track, clip, clipSlot, scene,
   type OSCMessage,
-} from '@mission-control/protocol';
+} from '../../protocol';
 import type { SessionManager } from './session';
 
 export interface SyncCallbacks {
@@ -369,7 +369,7 @@ export class SyncManager {
    * Send an OSC query and wait for response
    */
   private queryOSC(message: OSCMessage): Promise<any> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, _reject) => {
       const key = this.getQueryKey(message);
 
       // Set up timeout

@@ -15,6 +15,7 @@
     clip?: {
       name: string;
       color: number;
+      length: number;
       isPlaying: boolean;
       isTriggered: boolean;
       isRecording: boolean;
@@ -50,6 +51,7 @@
     isPlaying: boolean;
     isRecording: boolean;
     metronome: boolean;
+    beatTime: number;
     tracks: Track[];
     scenes: Scene[];
     selectedTrack: number;
@@ -483,7 +485,7 @@
         <div class="grid-scroll" bind:this={gridScrollEl} onscroll={() => syncScroll('grid')}>
           <div class="grid" style="--cols: {tracks.length}">
             <!-- Track headers -->
-            {#each tracks as track, trackIndex}
+            {#each tracks as track}
               <div class="track-header" style="--color: {intToHex(track.color)}">
                 <span class="track-name">{track.name}</span>
                 <div class="track-controls">
@@ -510,7 +512,7 @@
             {/each}
 
             <!-- Stop buttons row (sticky) -->
-            {#each tracks as track, trackIndex}
+            {#each tracks as track}
               <button
                 class="clip-stop"
                 style="--color: {intToHex(track.color)}"

@@ -74,7 +74,7 @@ export interface Parameter {
 
 // OSC Message Types
 
-export type OSCValue = number | string | boolean | Uint8Array;
+export type OSCValue = number | string | boolean;
 
 export interface OSCMessage {
   address: string;

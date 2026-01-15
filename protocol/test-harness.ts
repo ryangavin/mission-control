@@ -11,16 +11,15 @@
  */
 
 import {
-  song, track, clip, clipSlot, scene, device, view, application,
-  parseOSCResponse, isResponseType,
+  song, track, clipSlot, scene,
+  parseOSCResponse,
   type OSCMessage,
-} from './src/index.ts';
+} from './index';
 
 // Bridge connection
 const WS_URL = 'ws://localhost:8080';
 let ws: WebSocket | null = null;
 let connected = false;
-let abletonConnected = false;
 
 // =============================================================================
 // WebSocket Connection
@@ -61,7 +60,6 @@ function connect(): Promise<void> {
 
 function handleServerMessage(msg: any) {
   if (msg.type === 'connected') {
-    abletonConnected = msg.abletonConnected;
     console.log(`📡 Ableton connected: ${msg.abletonConnected}`);
     return;
   }

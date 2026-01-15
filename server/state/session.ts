@@ -10,7 +10,7 @@ import type {
   ClipSlot,
   Clip,
   PatchPayload,
-} from '@mission-control/protocol';
+} from '../../protocol';
 
 export class SessionManager {
   private state: SessionState;

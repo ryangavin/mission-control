@@ -4,8 +4,8 @@
  * Reference: https://github.com/ideoforms/AbletonOSC
  */
 
-import type { OSCMessage, OSCValue } from './types.ts';
-import type { QuantizationValue, WarpMode } from './responses.ts';
+import type { OSCMessage } from './types';
+import type { QuantizationValue } from './responses';
 
 // =============================================================================
 // Helper Types

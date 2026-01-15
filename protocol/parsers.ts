@@ -3,7 +3,7 @@
  * Parse incoming OSC messages from Ableton into typed response objects
  */
 
-import type { OSCValue } from './types.ts';
+import type { OSCValue } from './types';
 import type {
   AbletonResponse,
   TestResponse,
@@ -62,7 +62,7 @@ import type {
   DeviceParameter,
   DeviceParameterValueResponse,
   NumDevicesResponse,
-} from './responses.ts';
+} from './responses';
 
 // =============================================================================
 // Parser Type
