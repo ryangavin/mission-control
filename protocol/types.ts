@@ -100,6 +100,8 @@ export type ClientMessage =
   | { type: 'transport/punchIn'; enabled: boolean }
   | { type: 'transport/punchOut'; enabled: boolean }
   | { type: 'transport/loop'; enabled: boolean }
+  | { type: 'transport/tapTempo' }
+  | { type: 'transport/quantization'; value: number }
   | { type: 'mixer/volume'; trackId: number; value: number }
   | { type: 'mixer/pan'; trackId: number; value: number }
   | { type: 'mixer/mute'; trackId: number; muted: boolean }
