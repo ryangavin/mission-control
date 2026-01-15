@@ -1,63 +1,19 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import type { SessionState, Track, Scene, ClipSlot } from '../protocol';
   import { connect, disconnect, send, onMessage, onStateChange } from './lib/connection';
+  import { intToHex } from './lib/colorUtils';
   import SetupPanel from './lib/SetupPanel.svelte';
   import HelpModal from './lib/HelpModal.svelte';
+  import Header from './lib/Header.svelte';
+  import ClipCell from './lib/ClipCell.svelte';
+  import TrackHeader from './lib/TrackHeader.svelte';
+  import SceneColumn from './lib/SceneColumn.svelte';
+  import DeleteZone from './lib/DeleteZone.svelte';
+  import ConnectionStatus from './lib/ConnectionStatus.svelte';
 
   // Help modal state
   let showHelpModal = $state(false);
-
-  // Types from protocol
-  interface ClipSlot {
-    trackIndex: number;
-    sceneIndex: number;
-    hasClip: boolean;
-    clip?: {
-      name: string;
-      color: number;
-      length: number;
-      isPlaying: boolean;
-      isTriggered: boolean;
-      isRecording: boolean;
-      isAudioClip: boolean;
-      isMidiClip: boolean;
-    };
-  }
-
-  interface Track {
-    id: number;
-    name: string;
-    color: number;
-    volume: number;
-    pan: number;
-    mute: boolean;
-    solo: boolean;
-    arm: boolean;
-    playingSlotIndex: number;
-    firedSlotIndex: number;
-    clips: ClipSlot[];
-    hasMidiInput: boolean;
-    hasAudioInput: boolean;
-  }
-
-  interface Scene {
-    id: number;
-    name: string;
-    color: number;
-  }
-
-  interface SessionState {
-    tempo: number;
-    isPlaying: boolean;
-    isRecording: boolean;
-    metronome: boolean;
-    clipTriggerQuantization: number;
-    beatTime: number;
-    tracks: Track[];
-    scenes: Scene[];
-    selectedTrack: number;
-    selectedScene: number;
-  }
 
   // Quantization value labels
   const QUANTIZATION_OPTIONS = [
@@ -125,15 +81,6 @@
 
     // Unknown type - allow on any track
     return true;
-  }
-
-  // Convert Ableton int color to hex
-  function intToHex(color: number): string {
-    if (!color) return '#666666';
-    const r = (color >> 16) & 0xff;
-    const g = (color >> 8) & 0xff;
-    const b = color & 0xff;
-    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
   }
 
   // Apply patches using the kind discriminator
