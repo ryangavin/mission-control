@@ -49,17 +49,21 @@
   }
 
   .footer.collapsed {
+    position: absolute;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
     width: fit-content;
-    margin: 0 auto 6px;
     padding: 6px 14px;
-    background: transparent;
-    border: none;
+    background: rgba(30, 30, 30, 0.9);
+    border: 1px solid #444;
     border-radius: 20px;
     cursor: pointer;
   }
 
   .footer.collapsed:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(40, 40, 40, 0.95);
+    border-color: #555;
   }
 
   .collapsed-content {
