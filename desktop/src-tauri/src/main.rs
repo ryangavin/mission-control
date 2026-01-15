@@ -11,7 +11,9 @@ use tauri::{
     AppHandle, Manager, RunEvent,
 };
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+#[allow(unused_imports)]
 use tauri_plugin_shell::process::CommandChild;
+#[allow(unused_imports)]
 use tauri_plugin_shell::ShellExt;
 
 const BRIDGE_PORT: u16 = 5555;
@@ -56,9 +58,12 @@ fn main() {
 
             let menu = Menu::with_items(app, &[&show_ui, &network_url, &show_qr, &separator1, &install_script, &separator2, &quit])?;
 
-            // Create tray icon
+            // Create tray icon with custom rocket icon
+            let tray_icon = tauri::image::Image::from_bytes(include_bytes!("../icons/tray-icon.png"))
+                .expect("Failed to load tray icon");
             let _tray = TrayIconBuilder::new()
-                .icon(app.default_window_icon().unwrap().clone())
+                .icon(tray_icon)
+                .icon_as_template(true)
                 .menu(&menu)
                 .show_menu_on_left_click(true)
                 .on_menu_event(|app, event| {
