@@ -317,6 +317,10 @@ export class Bridge {
         return { address: '/live/song/set/tempo', args: [message.bpm] };
       case 'transport/metronome':
         return { address: '/live/song/set/metronome', args: [message.enabled ? 1 : 0] };
+      case 'transport/tapTempo':
+        return { address: '/live/song/tap_tempo', args: [] };
+      case 'transport/quantization':
+        return { address: '/live/song/set/clip_trigger_quantization', args: [message.value] };
       case 'mixer/volume':
         return { address: '/live/track/set/volume', args: [message.trackId, message.value] };
       case 'mixer/pan':
@@ -393,6 +397,9 @@ export class Bridge {
     }
     if (address === '/live/song/get/metronome') {
       return this.session.setMetronome(!!args[0]);
+    }
+    if (address === '/live/song/get/clip_trigger_quantization') {
+      return this.session.setClipTriggerQuantization(args[0] as number);
     }
 
     // View selection updates

@@ -51,12 +51,31 @@
     isPlaying: boolean;
     isRecording: boolean;
     metronome: boolean;
+    clipTriggerQuantization: number;
     beatTime: number;
     tracks: Track[];
     scenes: Scene[];
     selectedTrack: number;
     selectedScene: number;
   }
+
+  // Quantization value labels
+  const QUANTIZATION_OPTIONS = [
+    { value: 0, label: 'None' },
+    { value: 1, label: '8 Bars' },
+    { value: 2, label: '4 Bars' },
+    { value: 3, label: '2 Bars' },
+    { value: 4, label: '1 Bar' },
+    { value: 5, label: '1/2' },
+    { value: 6, label: '1/2T' },
+    { value: 7, label: '1/4' },
+    { value: 8, label: '1/4T' },
+    { value: 9, label: '1/8' },
+    { value: 10, label: '1/8T' },
+    { value: 11, label: '1/16' },
+    { value: 12, label: '1/16T' },
+    { value: 13, label: '1/32' },
+  ];
 
   // Connection state
   let connectionState = $state<'disconnected' | 'connecting' | 'connected'>('disconnected');
@@ -127,6 +146,7 @@
         if (patch.isPlaying !== undefined) session.isPlaying = patch.isPlaying;
         if (patch.isRecording !== undefined) session.isRecording = patch.isRecording;
         if (patch.metronome !== undefined) session.metronome = patch.metronome;
+        if (patch.clipTriggerQuantization !== undefined) session.clipTriggerQuantization = patch.clipTriggerQuantization;
         if (patch.beatTime !== undefined) session.beatTime = patch.beatTime;
         break;
 
@@ -226,6 +246,9 @@
   let tempo = $derived(session?.tempo ?? 120);
   let isPlaying = $derived(session?.isPlaying ?? false);
   let isRecording = $derived(session?.isRecording ?? false);
+  let metronome = $derived(session?.metronome ?? false);
+  let quantization = $derived(session?.clipTriggerQuantization ?? 8);
+  let quantizationLabel = $derived(QUANTIZATION_OPTIONS.find(q => q.value === quantization)?.label ?? '1/8');
   let beatTime = $derived(session?.beatTime ?? 0);
   let tracks = $derived(session?.tracks ?? []);
   let scenes = $derived(session?.scenes ?? []);
@@ -325,6 +348,19 @@
 
   function handleRecord() {
     send({ type: 'transport/record' });
+  }
+
+  function handleMetronome() {
+    send({ type: 'transport/metronome', enabled: !metronome });
+  }
+
+  function handleTapTempo() {
+    send({ type: 'transport/tapTempo' });
+  }
+
+  function handleQuantization(e: Event) {
+    const value = parseInt((e.target as HTMLSelectElement).value);
+    send({ type: 'transport/quantization', value });
   }
 
   // Tempo drag handlers
@@ -482,6 +518,23 @@
       <button class="help-btn" title="Help" onclick={() => showHelpModal = true}>?</button>
     </div>
     <div class="header-center">
+      <button class="header-btn" title="Tap Tempo" onclick={handleTapTempo}>TAP</button>
+      <div class="tempo-section">
+        <span
+          class="tempo-value"
+          class:dragging={tempoDragState !== null}
+          onmousedown={handleTempoMouseDown}
+        >{tempo.toFixed(2)}</span>
+        <span class="tempo-suffix">BPM</span>
+      </div>
+      <button class="header-btn" class:active={metronome} title="Metronome" onclick={handleMetronome}>
+        <span class="metronome-icon">● ○</span>
+      </button>
+      <select class="header-select" title="Clip Trigger Quantization" value={quantization} onchange={handleQuantization}>
+        {#each QUANTIZATION_OPTIONS as opt}
+          <option value={opt.value}>{opt.label}</option>
+        {/each}
+      </select>
       <div class="playhead-section">
         <span class="playhead-value">{formatBeatTime(beatTime)}</span>
       </div>
@@ -497,14 +550,6 @@
             <span class="icon">●</span>
           </button>
         </div>
-      </div>
-      <div class="tempo-section">
-        <span
-          class="tempo-value"
-          class:dragging={tempoDragState !== null}
-          onmousedown={handleTempoMouseDown}
-        >{tempo.toFixed(2)}</span>
-        <span class="tempo-suffix">BPM</span>
       </div>
     </div>
     <div class="header-right">
@@ -1299,6 +1344,69 @@
     border-radius: 4px;
     border: 1px solid #333;
     box-sizing: border-box;
+  }
+
+  .header-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 42px;
+    padding: 0 12px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #888;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+
+  .header-btn:hover {
+    background: #2a2a2a;
+    color: #fff;
+    border-color: #444;
+  }
+
+  .header-btn:active {
+    transform: scale(0.97);
+  }
+
+  .header-btn.active {
+    background: #2a3a2a;
+    border-color: #4a5a4a;
+    color: #4f4;
+  }
+
+  .header-btn .icon {
+    font-size: 16px;
+  }
+
+  .metronome-icon {
+    font-size: 12px;
+  }
+
+  .header-select {
+    height: 42px;
+    padding: 0 8px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #888;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .header-select:hover {
+    background: #2a2a2a;
+    color: #fff;
+    border-color: #444;
+  }
+
+  .header-select:focus {
+    border-color: #555;
   }
 
   .playhead-value,

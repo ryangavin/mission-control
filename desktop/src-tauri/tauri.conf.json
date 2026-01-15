@@ -20,7 +20,8 @@
       "icons/icon.ico"
     ],
     "resources": {
-      "../resources/AbletonOSC": "AbletonOSC"
+      "../resources/AbletonOSC": "AbletonOSC",
+      "../../dist": "dist"
     },
     "externalBin": [
       "../dist-bridge/mission-control-bridge"
@@ -43,13 +44,7 @@
   },
   "plugins": {
     "shell": {
-      "sidecar": true,
-      "scope": [
-        {
-          "name": "../dist-bridge/mission-control-bridge",
-          "sidecar": true
-        }
-      ]
+      "open": true
     }
   }
 }

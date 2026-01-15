@@ -5,6 +5,7 @@ export interface SessionState {
   isPlaying: boolean;
   isRecording: boolean;
   metronome: boolean;
+  clipTriggerQuantization: number;  // 0=none, 1=8bars, ..., 13=1/32
   beatTime: number;  // Current song time in beats
   tracks: Track[];
   scenes: Scene[];

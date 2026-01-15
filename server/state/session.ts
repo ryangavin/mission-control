@@ -67,6 +67,11 @@ export class SessionManager {
     return { kind: 'transport', metronome };
   }
 
+  setClipTriggerQuantization(clipTriggerQuantization: number): PatchPayload {
+    this.state.clipTriggerQuantization = clipTriggerQuantization;
+    return { kind: 'transport', clipTriggerQuantization };
+  }
+
   setBeatTime(beatTime: number): PatchPayload {
     this.state.beatTime = beatTime;
     return { kind: 'transport', beatTime };
@@ -242,6 +247,7 @@ export class SessionManager {
       isPlaying: false,
       isRecording: false,
       metronome: false,
+      clipTriggerQuantization: 8,  // Default to 1/8
       beatTime: 0,
       tracks: [],
       scenes: [],

@@ -28,19 +28,26 @@ const MIME_TYPES: Record<string, string> = {
 
 // Resolve the dist directory
 function getDistPath(): string {
-  const execDir = process.execPath.includes('bun')
-    ? process.cwd()
-    : resolve(process.execPath, '..');
+  const execPath = process.execPath;
+  const execDir = resolve(execPath, '..');
 
+  // Different paths to check based on context
   const candidates = [
-    join(process.cwd(), 'dist'),              // Development
-    join(execDir, 'dist'),                     // Next to compiled binary
-    join(execDir, '..', 'Resources', 'dist'), // macOS app bundle
+    // macOS app bundle: Contents/MacOS/sidecar -> Contents/Resources/dist
+    join(execDir, '..', 'Resources', 'dist'),
+    // Windows app: next to sidecar in same directory
+    join(execDir, 'dist'),
+    // Development: current working directory
+    join(process.cwd(), 'dist'),
   ];
+
+  console.log(`[standalone] Executable: ${execPath}`);
+  console.log(`[standalone] Checking dist paths:`, candidates);
 
   for (const candidate of candidates) {
     try {
       if (statSync(candidate).isDirectory()) {
+        console.log(`[standalone] Found dist at: ${candidate}`);
         return candidate;
       }
     } catch {
@@ -48,7 +55,10 @@ function getDistPath(): string {
     }
   }
 
-  return join(process.cwd(), 'dist');
+  // Fallback
+  const fallback = join(process.cwd(), 'dist');
+  console.log(`[standalone] Using fallback dist path: ${fallback}`);
+  return fallback;
 }
 
 const distPath = getDistPath();
