@@ -50,7 +50,7 @@
 
   .footer.collapsed {
     position: absolute;
-    bottom: 2px;
+    bottom: 8px;
     left: 50%;
     transform: translateX(-50%);
     width: fit-content;
