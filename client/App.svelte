@@ -532,10 +532,10 @@
 
   <header class="header">
     <div class="header-left">
-      <button class="help-btn" title="Help" onclick={() => showHelpModal = true}>?</button>
+      <button class="header-box help-btn" title="Help" onclick={() => showHelpModal = true}>?</button>
     </div>
     <div class="header-center">
-      <div class="header-group">
+      <div class="header-box header-group">
         <button class="group-item" title="Tap Tempo" onclick={handleTapTempo}>TAP</button>
         <span class="group-item tempo-item">
           <span
@@ -554,7 +554,7 @@
           {/each}
         </select>
       </div>
-      <div class="header-group">
+      <div class="header-box header-group">
         <span class="group-item playhead-item">
           <span class="playhead-value">{formatBeatTime(beatTime)}</span>
         </span>
@@ -568,7 +568,7 @@
           <span class="icon">●</span>
         </button>
       </div>
-      <div class="header-group loop-group">
+      <div class="header-box header-group">
         <button class="group-item loop-btn" class:active={punchIn} title="Punch In" onclick={handlePunchIn}>
           <i class="fa-solid fa-chevron-right"></i>
         </button>
@@ -581,7 +581,7 @@
       </div>
     </div>
     <div class="header-right">
-      <div class="connection-status">
+      <div class="header-box connection-status">
         <span class="status-indicator" class:connected={connectionState === 'connected'} title="Bridge connection">
           <span class="dot"></span>Bridge
         </span>
@@ -796,30 +796,28 @@
     flex: 1;
   }
 
-  .help-btn {
+  .header-box {
     display: flex;
     align-items: center;
+    height: 32px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 4px;
+  }
+
+  .help-btn {
     justify-content: center;
-    width: 28px;
-    height: 28px;
-    background: #333;
-    border: 1px solid #444;
-    border-radius: 50%;
+    padding: 0 12px;
     color: #888;
-    font-size: 14px;
-    font-weight: bold;
+    font-size: 12px;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all 0.1s;
   }
 
   .help-btn:hover {
-    background: #444;
+    background: #2a2a2a;
     color: #fff;
-    border-color: #555;
-  }
-
-  .connection-status {
-    gap: 6px;
   }
 
   .status-indicator {
@@ -1294,11 +1292,6 @@
     transform: scale(0.95);
   }
 
-  .transport-buttons {
-    display: flex;
-    gap: 4px;
-  }
-
   .transport-btn .icon {
     font-size: 10px;
   }
@@ -1314,24 +1307,11 @@
   }
 
   .connection-status {
-    display: flex;
-    align-items: center;
     gap: 4px;
-    height: 32px;
     padding: 0 8px;
-    background: #1a1a1a;
-    border-radius: 4px;
-    border: 1px solid #333;
-    box-sizing: border-box;
   }
 
   .header-group {
-    display: flex;
-    align-items: center;
-    height: 32px;
-    background: #1a1a1a;
-    border-radius: 4px;
-    border: 1px solid #333;
     overflow: hidden;
   }
 
