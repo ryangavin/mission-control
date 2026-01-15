@@ -158,5 +158,9 @@
     .footer {
       display: flex;
     }
+
+    .footer:not(.collapsed) {
+      padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+    }
   }
 </style>
