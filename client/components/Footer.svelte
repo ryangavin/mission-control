@@ -42,7 +42,7 @@
     position: relative;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 12px;
+    padding: 6px 12px calc(6px + env(safe-area-inset-bottom, 0px));
     background: #151515;
     border-top: 1px solid #333;
     flex-shrink: 0;
@@ -50,7 +50,7 @@
 
   .footer.collapsed {
     position: absolute;
-    bottom: 6px;
+    bottom: calc(6px + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
     width: fit-content;
