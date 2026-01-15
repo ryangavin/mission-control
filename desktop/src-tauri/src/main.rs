@@ -176,6 +176,7 @@ fn handle_menu_event(app: &AppHandle, id: &str) {
     }
 }
 
+#[cfg(not(debug_assertions))]
 fn start_bridge(app: &AppHandle) {
     let state = app.state::<AppState>();
     let mut process = state.bridge_process.lock().unwrap();
