@@ -399,26 +399,20 @@
     }
   }
 
-  /* Responsive: hide connection status at narrow widths */
-  @media (max-width: 820px) {
+  /* Responsive: hide status, help, and logo - footer takes over */
+  @media (max-width: 700px) {
     .status-wrapper {
-      display: none;
-    }
-  }
-
-  /* Responsive: hide logo and help at very narrow widths */
-  @media (max-width: 620px) {
-    .app-brand {
       display: none;
     }
 
     .help-btn {
       display: none;
     }
-  }
 
-  /* Responsive: hide BPM suffix at smallest widths */
-  @media (max-width: 600px) {
+    .app-brand {
+      display: none;
+    }
+
     .tempo-suffix {
       display: none;
     }

@@ -14,7 +14,7 @@
     "preview": "vite preview",
     "check": "svelte-check && tsc",
     "tauri": "tauri",
-    "tauri:dev": "concurrently -k -n bridge,tauri -c blue,magenta \"bun run dev:bridge\" \"cd desktop && tauri dev\"",
+    "tauri:dev": "concurrently -k -n vite,bridge,tauri -c cyan,blue,magenta \"bun run dev\" \"bun run dev:bridge\" \"cd desktop && tauri dev\"",
     "tauri:build": "bun run build && bun run build:bridge && cd desktop && tauri build"
   },
   "dependencies": {

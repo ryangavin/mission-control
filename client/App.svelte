@@ -9,6 +9,7 @@
   import ClipGrid from './components/ClipGrid.svelte';
   import SceneColumn from './components/SceneColumn.svelte';
   import DeleteZone from './components/DeleteZone.svelte';
+  import Footer from './components/Footer.svelte';
   import Toast from './components/Toast.svelte';
 
   // Help modal state
@@ -341,6 +342,12 @@
       />
     {/if}
   </main>
+
+  <Footer
+    bridgeConnected={connectionState === 'connected'}
+    {abletonConnected}
+    onShowHelp={() => showHelpModal = true}
+  />
 </div>
 
 <HelpModal isOpen={showHelpModal} onClose={() => showHelpModal = false} />
