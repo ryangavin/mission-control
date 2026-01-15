@@ -235,6 +235,7 @@
     position: sticky;
     top: 59px; /* Below track header (56px) + gap (3px) */
     z-index: 9;
+    box-shadow: 0 3px 0 #1a1a1a, 0 -3px 0 #1a1a1a, 3px 0 0 #1a1a1a, -3px 0 0 #1a1a1a;
   }
 
   .clip-stop:hover {
