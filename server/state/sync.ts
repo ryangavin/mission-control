@@ -42,11 +42,14 @@ export class SyncManager {
 
     try {
       // Phase 1: Get song structure
-      const [tempo, isPlaying, metronome, clipTriggerQuantization, numTracks, numScenes] = await Promise.all([
+      const [tempo, isPlaying, metronome, clipTriggerQuantization, punchIn, punchOut, loop, numTracks, numScenes] = await Promise.all([
         this.queryOSC(song.getTempo()),
         this.queryOSC(song.getIsPlaying()),
         this.queryOSC(song.getMetronome()),
         this.queryOSC(song.getClipTriggerQuantization()),
+        this.queryOSC(song.getPunchIn()),
+        this.queryOSC(song.getPunchOut()),
+        this.queryOSC(song.getLoop()),
         this.queryOSC(song.getNumTracks()),
         this.queryOSC(song.getNumScenes()),
       ]);
@@ -63,6 +66,9 @@ export class SyncManager {
         isRecording: false,
         metronome: !!metronome,
         clipTriggerQuantization: clipTriggerQuantization ?? 8,
+        punchIn: !!punchIn,
+        punchOut: !!punchOut,
+        loop: !!loop,
       });
       // setStructure must come AFTER initialize to not be overwritten
       this.session.setStructure(numTracks, numScenes);

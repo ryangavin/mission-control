@@ -4,7 +4,10 @@ export interface SessionState {
   tempo: number;
   isPlaying: boolean;
   isRecording: boolean;
+  punchIn: boolean;
+  punchOut: boolean;
   metronome: boolean;
+  loop: boolean;
   clipTriggerQuantization: number;  // 0=none, 1=8bars, ..., 13=1/32
   beatTime: number;  // Current song time in beats
   tracks: Track[];
@@ -94,6 +97,9 @@ export type ClientMessage =
   | { type: 'transport/record' }
   | { type: 'transport/tempo'; bpm: number }
   | { type: 'transport/metronome'; enabled: boolean }
+  | { type: 'transport/punchIn'; enabled: boolean }
+  | { type: 'transport/punchOut'; enabled: boolean }
+  | { type: 'transport/loop'; enabled: boolean }
   | { type: 'mixer/volume'; trackId: number; value: number }
   | { type: 'mixer/pan'; trackId: number; value: number }
   | { type: 'mixer/mute'; trackId: number; muted: boolean }
@@ -107,7 +113,7 @@ export type ClientMessage =
 
 // Patch payloads for granular state updates
 export type PatchPayload =
-  | { kind: 'transport'; tempo?: number; isPlaying?: boolean; isRecording?: boolean; metronome?: boolean; beatTime?: number }
+  | { kind: 'transport'; tempo?: number; isPlaying?: boolean; isRecording?: boolean; punchIn?: boolean; punchOut?: boolean; metronome?: boolean; loop?: boolean; clipTriggerQuantization?: number; beatTime?: number }
   | { kind: 'track'; trackIndex: number; track: Track }
   | { kind: 'clip'; trackIndex: number; sceneIndex: number; clipSlot: ClipSlot }
   | { kind: 'scene'; sceneIndex: number; scene: Scene }

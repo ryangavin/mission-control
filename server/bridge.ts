@@ -317,6 +317,12 @@ export class Bridge {
         return { address: '/live/song/set/tempo', args: [message.bpm] };
       case 'transport/metronome':
         return { address: '/live/song/set/metronome', args: [message.enabled ? 1 : 0] };
+      case 'transport/punchIn':
+        return { address: '/live/song/set/punch_in', args: [message.enabled ? 1 : 0] };
+      case 'transport/punchOut':
+        return { address: '/live/song/set/punch_out', args: [message.enabled ? 1 : 0] };
+      case 'transport/loop':
+        return { address: '/live/song/set/loop', args: [message.enabled ? 1 : 0] };
       case 'transport/tapTempo':
         return { address: '/live/song/tap_tempo', args: [] };
       case 'transport/quantization':
@@ -400,6 +406,15 @@ export class Bridge {
     }
     if (address === '/live/song/get/clip_trigger_quantization') {
       return this.session.setClipTriggerQuantization(args[0] as number);
+    }
+    if (address === '/live/song/get/punch_in') {
+      return this.session.setPunchIn(args[0] === 1);
+    }
+    if (address === '/live/song/get/punch_out') {
+      return this.session.setPunchOut(args[0] === 1);
+    }
+    if (address === '/live/song/get/loop') {
+      return this.session.setLoop(args[0] === 1);
     }
 
     // View selection updates

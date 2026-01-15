@@ -247,6 +247,9 @@
   let isPlaying = $derived(session?.isPlaying ?? false);
   let isRecording = $derived(session?.isRecording ?? false);
   let metronome = $derived(session?.metronome ?? false);
+  let punchIn = $derived(session?.punchIn ?? false);
+  let punchOut = $derived(session?.punchOut ?? false);
+  let loop = $derived(session?.loop ?? false);
   let quantization = $derived(session?.clipTriggerQuantization ?? 8);
   let quantizationLabel = $derived(QUANTIZATION_OPTIONS.find(q => q.value === quantization)?.label ?? '1/8');
   let beatTime = $derived(session?.beatTime ?? 0);
@@ -352,6 +355,18 @@
 
   function handleMetronome() {
     send({ type: 'transport/metronome', enabled: !metronome });
+  }
+
+  function handlePunchIn() {
+    send({ type: 'transport/punchIn', enabled: !punchIn });
+  }
+
+  function handlePunchOut() {
+    send({ type: 'transport/punchOut', enabled: !punchOut });
+  }
+
+  function handleLoop() {
+    send({ type: 'transport/loop', enabled: !loop });
   }
 
   function handleTapTempo() {
@@ -513,6 +528,8 @@
 </script>
 
 <div class="app">
+  <SetupPanel isConnected={connectionState === 'connected'} onDismiss={() => {}} />
+
   <header class="header">
     <div class="header-left">
       <button class="help-btn" title="Help" onclick={() => showHelpModal = true}>?</button>
@@ -541,17 +558,26 @@
         <span class="group-item playhead-item">
           <span class="playhead-value">{formatBeatTime(beatTime)}</span>
         </span>
-        <div class="group-item transport-item">
-          <button class="transport-btn play" class:active={isPlaying} title="Play" onclick={handlePlay}>
-            <span class="icon">▶</span>
-          </button>
-          <button class="transport-btn stop" title="Stop" onclick={handleStop}>
-            <span class="icon">■</span>
-          </button>
-          <button class="transport-btn record" class:active={isRecording} title="Record" onclick={handleRecord}>
-            <span class="icon">●</span>
-          </button>
-        </div>
+        <button class="group-item transport-btn" class:active={isPlaying} title="Play" onclick={handlePlay}>
+          <span class="icon">▶</span>
+        </button>
+        <button class="group-item transport-btn" title="Stop" onclick={handleStop}>
+          <span class="icon">■</span>
+        </button>
+        <button class="group-item transport-btn record" class:active={isRecording} title="Record" onclick={handleRecord}>
+          <span class="icon">●</span>
+        </button>
+      </div>
+      <div class="header-group loop-group">
+        <button class="group-item loop-btn" class:active={punchIn} title="Punch In" onclick={handlePunchIn}>
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+        <button class="group-item loop-btn" class:active={loop} title="Loop" onclick={handleLoop}>
+          <i class="fa-solid fa-repeat"></i>
+        </button>
+        <button class="group-item loop-btn" class:active={punchOut} title="Punch Out" onclick={handlePunchOut}>
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
       </div>
     </div>
     <div class="header-right">
@@ -565,8 +591,6 @@
       </div>
     </div>
   </header>
-
-  <SetupPanel isConnected={connectionState === 'connected'} onDismiss={() => {}} />
 
   <main class="main">
     {#if tracks.length === 0}
@@ -744,8 +768,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
-    padding: 8px;
+    gap: 6px;
+    padding: 6px;
     background: #151515;
     border-bottom: 1px solid #333;
     flex-shrink: 0;
@@ -1275,70 +1299,26 @@
     gap: 4px;
   }
 
-  .transport-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    background: #2a2a2a;
-    border: 1px solid #3a3a3a;
-    border-radius: 4px;
-    color: #888;
-    cursor: pointer;
-    transition: all 0.1s;
-  }
-
-  .transport-btn:hover {
-    background: #353535;
-    color: #fff;
-  }
-
-  .transport-btn:active {
-    transform: scale(0.95);
-  }
-
   .transport-btn .icon {
-    font-size: 12px;
+    font-size: 10px;
   }
 
-  .transport-btn.play:hover {
+  .transport-btn.active {
     background: #2a3a2a;
-    border-color: #3a4a3a;
     color: #4f4;
-  }
-
-  .transport-btn.play.active {
-    background: #2a3a2a;
-    border-color: #4a5a4a;
-    color: #4f4;
-    box-shadow: 0 0 8px rgba(68, 255, 68, 0.3);
-  }
-
-  .transport-btn.stop:hover {
-    background: #353535;
-    border-color: #454545;
-  }
-
-  .transport-btn.record:hover {
-    background: #3a2a2a;
-    border-color: #4a3a3a;
-    color: #f44;
   }
 
   .transport-btn.record.active {
     background: #3a2a2a;
-    border-color: #5a4a4a;
     color: #f44;
-    box-shadow: 0 0 8px rgba(255, 68, 68, 0.3);
   }
 
   .connection-status {
     display: flex;
     align-items: center;
     gap: 4px;
-    height: 42px;
-    padding: 0 10px;
+    height: 32px;
+    padding: 0 8px;
     background: #1a1a1a;
     border-radius: 4px;
     border: 1px solid #333;
@@ -1348,7 +1328,7 @@
   .header-group {
     display: flex;
     align-items: center;
-    height: 42px;
+    height: 32px;
     background: #1a1a1a;
     border-radius: 4px;
     border: 1px solid #333;
@@ -1360,12 +1340,13 @@
     align-items: center;
     justify-content: center;
     height: 100%;
-    padding: 0 12px;
+    padding: 0 10px;
     background: transparent;
     border: none;
+    border-radius: 0;
     border-right: 1px solid #333;
     color: #888;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.1s;
@@ -1409,21 +1390,22 @@
     cursor: default;
   }
 
-  .transport-item {
-    display: flex;
-    gap: 4px;
-    padding: 0 8px;
-    cursor: default;
+  .metronome-icon {
+    font-size: 12px;
   }
 
-  .metronome-icon {
+  .loop-btn {
+    padding: 0 8px;
+  }
+
+  .loop-btn i {
     font-size: 12px;
   }
 
   .playhead-value,
   .tempo-value,
   .tempo-suffix {
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 500;
     font-variant-numeric: tabular-nums;
     font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;

@@ -67,6 +67,21 @@ export class SessionManager {
     return { kind: 'transport', metronome };
   }
 
+  setPunchIn(punchIn: boolean): PatchPayload {
+    this.state.punchIn = punchIn;
+    return { kind: 'transport', punchIn };
+  }
+
+  setPunchOut(punchOut: boolean): PatchPayload {
+    this.state.punchOut = punchOut;
+    return { kind: 'transport', punchOut };
+  }
+
+  setLoop(loop: boolean): PatchPayload {
+    this.state.loop = loop;
+    return { kind: 'transport', loop };
+  }
+
   setClipTriggerQuantization(clipTriggerQuantization: number): PatchPayload {
     this.state.clipTriggerQuantization = clipTriggerQuantization;
     return { kind: 'transport', clipTriggerQuantization };
@@ -246,7 +261,10 @@ export class SessionManager {
       tempo: 120,
       isPlaying: false,
       isRecording: false,
+      punchIn: false,
+      punchOut: false,
       metronome: false,
+      loop: false,
       clipTriggerQuantization: 8,  // Default to 1/8
       beatTime: 0,
       tracks: [],
