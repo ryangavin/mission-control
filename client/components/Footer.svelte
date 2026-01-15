@@ -26,6 +26,13 @@
     flex-shrink: 0;
   }
 
+  .footer :global(.connection-status) {
+    background: none;
+    border: none;
+    padding: 0;
+    height: auto;
+  }
+
   .help-btn {
     display: flex;
     align-items: center;
@@ -48,7 +55,7 @@
   }
 
   /* Show footer at narrow widths (same breakpoint header elements hide) */
-  @media (max-width: 700px) {
+  @media (max-width: 580px) {
     .footer {
       display: flex;
     }

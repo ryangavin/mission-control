@@ -400,7 +400,7 @@
   }
 
   /* Responsive: hide status, help, and logo - footer takes over */
-  @media (max-width: 700px) {
+  @media (max-width: 580px) {
     .status-wrapper {
       display: none;
     }

@@ -55,6 +55,11 @@ export class SyncManager {
         this.queryOSC(song.getNumScenes()),
       ]);
 
+      // Validate we got valid responses from Ableton
+      if (typeof numTracks !== 'number' || typeof numScenes !== 'number') {
+        throw new Error('Could not get track/scene counts from Ableton. Is AbletonOSC enabled?');
+      }
+
       this.numTracks = numTracks;
       this.numScenes = numScenes;
 

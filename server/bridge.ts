@@ -272,6 +272,12 @@ export class Bridge {
       return;
     }
 
+    // If not connected to Ableton, don't try to sync
+    if (!this.abletonConnected) {
+      this.log('Session requested but Ableton not connected, waiting...');
+      return;
+    }
+
     // If sync in progress, wait for it
     if (this.syncInProgress) {
       this.log('Sync already in progress, waiting...');
@@ -608,7 +614,30 @@ export class Bridge {
       // Reset sync state when disconnected
       if (!connected) {
         this.synced = false;
+      } else if (this.clients.size > 0 && !this.synced) {
+        // Auto-sync when Ableton reconnects and we have waiting clients
+        this.triggerSync();
       }
+    }
+  }
+
+  /**
+   * Trigger a sync for waiting clients
+   */
+  private async triggerSync(): Promise<void> {
+    if (this.syncInProgress || this.synced || !this.abletonConnected) return;
+
+    this.syncInProgress = true;
+    try {
+      await this.sync.performInitialSync();
+      this.sync.setupListeners();
+      this.synced = true;
+      this.broadcastToClients({ type: 'session', payload: this.session.getState() });
+    } catch (error) {
+      this.log(`Sync failed: ${error}`);
+      this.broadcastToClients({ type: 'error', message: `Sync failed: ${error}` });
+    } finally {
+      this.syncInProgress = false;
     }
   }
 
