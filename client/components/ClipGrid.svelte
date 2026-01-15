@@ -150,7 +150,7 @@
 <div class="grid-scroll" bind:this={element} onscroll={onScroll}>
   <div class="grid" style="--cols: {tracks.length}">
     <!-- Track headers -->
-    {#each tracks as track}
+    {#each tracks as track (track.id)}
       <TrackHeader
         {track}
         onMute={() => onMute(track.id)}
@@ -160,7 +160,7 @@
     {/each}
 
     <!-- Stop buttons row (sticky) -->
-    {#each tracks as track}
+    {#each tracks as track (track.id)}
       <button
         class="clip-stop"
         style="--color: {intToHex(track.color)}"
@@ -170,9 +170,9 @@
     {/each}
 
     <!-- Clip grid -->
-    {#each scenes as scene, sceneIndex}
+    {#each scenes as scene, sceneIndex (scene.id)}
       {@const sceneColor = intToHex(scene.color)}
-      {#each tracks as track, trackIndex}
+      {#each tracks as track, trackIndex (track.id)}
         {@const clipState = getClipState(tracks, trackIndex, sceneIndex)}
         {@const isDropTarget = dragState && isValidDropTarget(trackIndex, sceneIndex)}
         {@const isDragSource = dragState?.sourceTrack === trackIndex && dragState?.sourceScene === sceneIndex}

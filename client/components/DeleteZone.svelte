@@ -19,6 +19,9 @@
     <div
       class="delete-zone"
       class:drag-over={isOver}
+      role="button"
+      tabindex="-1"
+      aria-label="Drop zone to delete clip"
       ondragover={onDragOver}
       ondragleave={onDragLeave}
       ondrop={onDrop}

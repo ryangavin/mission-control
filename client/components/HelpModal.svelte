@@ -125,29 +125,20 @@
           </div>
 
         {:else if activeTab === 'about'}
-          <div class="section">
-            <h3>About Mission Control</h3>
-            <p>Mission Control is a web-based controller for Ableton Live. It connects to Ableton through OSC (Open Sound Control) via the AbletonOSC remote script.</p>
+          <div class="section about-section">
+            <h3>Mission Control</h3>
+            <p class="version">Version 0.1.0</p>
 
-            <h4>Features</h4>
-            <ul>
-              <li>View and control your Ableton session from any browser</li>
-              <li>Launch clips and scenes</li>
-              <li>Transport controls (play, stop, record)</li>
-              <li>Track mute, solo, and arm</li>
-              <li>Drag and drop clips between slots</li>
-              <li>Real-time sync with Ableton</li>
-            </ul>
+            <div class="links">
+              <a href="https://github.com/ryangavin/mission-control" target="_blank" rel="noopener">GitHub</a>
+              <span class="separator">·</span>
+              <a href="https://github.com/ideoforms/AbletonOSC" target="_blank" rel="noopener">AbletonOSC</a>
+            </div>
 
-            <h4>Links</h4>
-            <p>
-              <a href="https://github.com/ryangavin/mission-control" target="_blank" rel="noopener">GitHub Repository</a>
-            </p>
-            <p>
-              <a href="https://github.com/ideoforms/AbletonOSC" target="_blank" rel="noopener">AbletonOSC (Remote Script)</a>
-            </p>
-
-            <p class="version">Version 0.1.0 (Beta)</p>
+            <div class="license">
+              <p>Licensed under <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GPL-3.0</a></p>
+              <p class="license-note">Free to use, modify, and distribute. Source code must remain open.</p>
+            </div>
           </div>
         {/if}
       </div>
@@ -193,16 +184,23 @@
   }
 
   .close-btn {
-    background: none;
-    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 4px;
     color: #888;
     cursor: pointer;
-    padding: 4px 8px;
-    font-size: 20px;
+    font-size: 16px;
     line-height: 1;
+    transition: all 0.1s;
   }
 
   .close-btn:hover {
+    background: #2a2a2a;
     color: #fff;
   }
 
@@ -329,10 +327,49 @@
     margin-bottom: 4px;
   }
 
+  .about-section {
+    text-align: center;
+    padding: 20px 0;
+  }
+
+  .about-section h3 {
+    margin-bottom: 4px;
+  }
+
   .version {
-    margin-top: 24px;
+    color: #666;
+    font-size: 13px;
+    margin: 0;
+  }
+
+  .license {
+    margin: 24px 0;
+    padding: 16px;
+    background: #252525;
+    border-radius: 6px;
+  }
+
+  .license p {
+    margin: 0;
+  }
+
+  .license-note {
     color: #666;
     font-size: 12px;
+    margin-top: 4px !important;
+  }
+
+  .links {
+    margin-top: 24px;
+  }
+
+  .links a {
+    color: #ff9944;
+  }
+
+  .separator {
+    color: #444;
+    margin: 0 8px;
   }
 
   .nav-path {

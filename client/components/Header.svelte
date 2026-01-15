@@ -133,6 +133,12 @@
         <span
           class="tempo-value"
           class:dragging={tempoDragState !== null}
+          role="slider"
+          tabindex="0"
+          aria-label="Tempo"
+          aria-valuenow={tempo}
+          aria-valuemin={20}
+          aria-valuemax={999}
           onmousedown={handleTempoMouseDown}
         >{tempo.toFixed(2)}</span>
         <span class="tempo-suffix">BPM</span>
@@ -141,7 +147,7 @@
         <span class="metronome-icon">● ○</span>
       </button>
       <select class="group-item group-select" title="Clip Trigger Quantization" value={quantization} onchange={handleQuantization}>
-        {#each QUANTIZATION_OPTIONS as opt}
+        {#each QUANTIZATION_OPTIONS as opt (opt.value)}
           <option value={opt.value}>{opt.label}</option>
         {/each}
       </select>
@@ -161,13 +167,13 @@
       </button>
     </div>
     <div class="header-box header-group">
-      <button class="group-item loop-btn" class:active={punchIn} title="Punch In" onclick={onPunchIn}>
+      <button class="group-item loop-btn" class:active={punchIn} title="Punch In" aria-label="Punch In" onclick={onPunchIn}>
         <i class="fa-solid fa-chevron-right"></i>
       </button>
-      <button class="group-item loop-btn" class:active={loop} title="Loop" onclick={onLoop}>
+      <button class="group-item loop-btn" class:active={loop} title="Loop" aria-label="Loop" onclick={onLoop}>
         <i class="fa-solid fa-repeat"></i>
       </button>
-      <button class="group-item loop-btn" class:active={punchOut} title="Punch Out" onclick={onPunchOut}>
+      <button class="group-item loop-btn" class:active={punchOut} title="Punch Out" aria-label="Punch Out" onclick={onPunchOut}>
         <i class="fa-solid fa-chevron-left"></i>
       </button>
     </div>

@@ -34,7 +34,7 @@
   <button class="stop-all-btn" onclick={onStopAll} title="Stop All Clips">
     ■ All
   </button>
-  {#each scenes as scene, sceneIndex}
+  {#each scenes as scene, sceneIndex (scene.id)}
     {@const sceneColor = intToHex(scene.color)}
     <button
       class="scene-btn"
