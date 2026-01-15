@@ -218,6 +218,7 @@
   .app-icon {
     font-size: 16px;
     color: #ff9944;
+    transform: rotate(-90deg);
   }
 
   .app-title {
@@ -299,8 +300,8 @@
   }
 
   button.group-item.active {
-    background: #2a3a2a;
-    color: #4f4;
+    background: #2a2218;
+    color: #ff9944;
   }
 
   .group-select {
@@ -320,8 +321,8 @@
   }
 
   .transport-btn.active {
-    background: #2a3a2a;
-    color: #4f4;
+    background: #2a2218;
+    color: #ff9944;
   }
 
   .transport-btn.record.active {
