@@ -401,15 +401,8 @@
 
   /* Responsive: hide status, help, and logo - footer takes over */
   @media (max-width: 580px) {
-    .status-wrapper {
-      display: none;
-    }
-
-    .help-btn {
-      display: none;
-    }
-
-    .app-brand {
+    .header-left,
+    .header-right {
       display: none;
     }
 
