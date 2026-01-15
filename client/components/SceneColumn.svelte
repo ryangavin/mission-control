@@ -30,10 +30,18 @@
   bind:this={element}
   onscroll={onScroll}
 >
-  <div class="scene-header">Scene</div>
-  <button class="stop-all-btn" onclick={onStopAll} title="Stop All Clips">
-    ■ All
-  </button>
+  <!-- Sticky header row with background -->
+  <div class="sticky-row header-row">
+    <div class="scene-header">Scene</div>
+  </div>
+
+  <!-- Sticky stop button row with background -->
+  <div class="sticky-row stop-row">
+    <button class="stop-all-btn" onclick={onStopAll} title="Stop All Clips">
+      ■ All
+    </button>
+  </div>
+
   {#each scenes as scene, sceneIndex (scene.id)}
     {@const sceneColor = intToHex(scene.color)}
     <button
@@ -68,27 +76,41 @@
     display: none;
   }
 
+  .sticky-row {
+    position: sticky;
+    z-index: 10;
+    background: #1a1a1a;
+    flex-shrink: 0;
+  }
+
+  .header-row {
+    top: 0;
+    padding-bottom: 3px;
+  }
+
+  .stop-row {
+    top: 59px; /* Below scene header (56px) + gap (3px) */
+    padding-bottom: 3px;
+  }
+
   .scene-header {
     padding: 6px;
     background: #1e1e1e;
     font-size: 10px;
     text-align: center;
     color: #888;
-    position: sticky;
-    top: 0;
-    z-index: 10;
     height: 56px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
   }
 
   .stop-all-btn {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
     height: 28px;
     box-sizing: border-box;
     background: #3d2d2d;
@@ -99,10 +121,6 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.1s;
-    position: sticky;
-    top: 59px; /* Below scene header (56px) + gap (3px) */
-    z-index: 9;
-    flex-shrink: 0;
   }
 
   .stop-all-btn:hover {

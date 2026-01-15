@@ -47,23 +47,8 @@
     border-radius: 0 3px 3px 0;
     font-size: 10px;
     font-weight: 500;
-    position: sticky;
-    top: 0;
-    z-index: 10;
     height: 56px;
     box-sizing: border-box;
-    box-shadow: -3px 0 0 #1a1a1a, 3px 0 0 #1a1a1a;
-  }
-
-  .track-header::after {
-    content: '';
-    position: absolute;
-    bottom: -3px;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: #1a1a1a;
-    pointer-events: none;
   }
 
   .track-name {

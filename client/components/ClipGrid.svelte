@@ -148,8 +148,8 @@
 </script>
 
 <div class="grid-scroll" bind:this={element} onscroll={onScroll}>
-  <div class="grid" style="--cols: {tracks.length}">
-    <!-- Track headers -->
+  <!-- Sticky track headers row with background -->
+  <div class="sticky-row track-headers-row" style="--cols: {tracks.length}">
     {#each tracks as track (track.id)}
       <TrackHeader
         {track}
@@ -158,8 +158,10 @@
         onArm={() => onArm(track.id)}
       />
     {/each}
+  </div>
 
-    <!-- Stop buttons row (sticky) -->
+  <!-- Sticky stop buttons row with background -->
+  <div class="sticky-row stop-buttons-row" style="--cols: {tracks.length}">
     {#each tracks as track (track.id)}
       <button
         class="clip-stop"
@@ -168,8 +170,10 @@
         title="Stop {track.name}"
       >■</button>
     {/each}
+  </div>
 
-    <!-- Clip grid -->
+  <!-- Clip grid -->
+  <div class="grid" style="--cols: {tracks.length}">
     {#each scenes as scene, sceneIndex (scene.id)}
       {@const sceneColor = intToHex(scene.color)}
       {#each tracks as track, trackIndex (track.id)}
@@ -210,6 +214,27 @@
     display: none;
   }
 
+  .sticky-row {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), minmax(80px, 1fr));
+    gap: 3px;
+    min-width: fit-content;
+    background: #1a1a1a;
+    padding: 0 3px;
+    position: sticky;
+    z-index: 10;
+  }
+
+  .track-headers-row {
+    top: 0;
+    padding-bottom: 3px;
+  }
+
+  .stop-buttons-row {
+    top: 59px; /* Below track header (56px) + gap (3px) */
+    padding-bottom: 3px;
+  }
+
   .grid {
     display: grid;
     grid-template-columns: repeat(var(--cols), minmax(80px, 1fr));
@@ -232,10 +257,6 @@
     font-size: 12px;
     cursor: pointer;
     transition: all 0.1s;
-    position: sticky;
-    top: 59px; /* Below track header (56px) + gap (3px) */
-    z-index: 9;
-    box-shadow: 0 3px 0 #1a1a1a, 0 -3px 0 #1a1a1a, 3px 0 0 #1a1a1a, -3px 0 0 #1a1a1a;
   }
 
   .clip-stop:hover {
