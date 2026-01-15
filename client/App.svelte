@@ -76,6 +76,12 @@
   } | null>(null);
   let dragOverDelete = $state(false);
 
+  // Tempo drag state for tap-and-drag control
+  let tempoDragState = $state<{
+    startX: number;
+    startTempo: number;
+  } | null>(null);
+
   // Compute valid drop targets based on clip type and track type
   function isValidDropTarget(trackIndex: number, sceneIndex: number): boolean {
     if (!dragState || !session) return false;
@@ -189,8 +195,16 @@
     // Connect
     connect();
 
+    // Window event listeners for tempo drag
+    const onWindowMouseMove = (e: MouseEvent) => handleTempoMouseMove(e);
+    const onWindowMouseUp = () => handleTempoMouseUp();
+    window.addEventListener('mousemove', onWindowMouseMove);
+    window.addEventListener('mouseup', onWindowMouseUp);
+
     return () => {
       disconnect();
+      window.removeEventListener('mousemove', onWindowMouseMove);
+      window.removeEventListener('mouseup', onWindowMouseUp);
     };
   });
 
@@ -311,6 +325,30 @@
 
   function handleRecord() {
     send({ type: 'transport/record' });
+  }
+
+  // Tempo drag handlers
+  function handleTempoMouseDown(e: MouseEvent) {
+    tempoDragState = {
+      startX: e.clientX,
+      startTempo: tempo,
+    };
+    e.preventDefault();
+  }
+
+  function handleTempoMouseMove(e: MouseEvent) {
+    if (!tempoDragState) return;
+
+    const deltaX = e.clientX - tempoDragState.startX;
+    // Fine sensitivity: ~0.15 BPM per pixel
+    const deltaTempo = deltaX * 0.15;
+    const newTempo = Math.max(20, Math.min(999, tempoDragState.startTempo + deltaTempo));
+
+    send({ type: 'transport/tempo', bpm: newTempo });
+  }
+
+  function handleTempoMouseUp() {
+    tempoDragState = null;
   }
 
   function handleMute(trackId: number) {
@@ -441,42 +479,43 @@
 <div class="app">
   <header class="header">
     <div class="header-left">
+      <button class="help-btn" title="Help" onclick={() => showHelpModal = true}>?</button>
+    </div>
+    <div class="header-center">
       <div class="playhead-section">
-        <span class="label">Position</span>
         <span class="playhead-value">{formatBeatTime(beatTime)}</span>
       </div>
-      <div class="tempo-section">
-        <span class="label">Tempo</span>
-        <span class="tempo-value">{tempo.toFixed(2)}</span>
+      <div class="transport">
+        <div class="transport-buttons">
+          <button class="transport-btn play" class:active={isPlaying} title="Play" onclick={handlePlay}>
+            <span class="icon">▶</span>
+          </button>
+          <button class="transport-btn stop" title="Stop" onclick={handleStop}>
+            <span class="icon">■</span>
+          </button>
+          <button class="transport-btn record" class:active={isRecording} title="Record" onclick={handleRecord}>
+            <span class="icon">●</span>
+          </button>
+        </div>
       </div>
-    </div>
-    <div class="transport">
-      <span class="label">Transport</span>
-      <div class="transport-buttons">
-        <button class="transport-btn stop" title="Stop" onclick={handleStop}>
-          <span class="icon">■</span>
-        </button>
-        <button class="transport-btn play" class:active={isPlaying} title="Play" onclick={handlePlay}>
-          <span class="icon">▶</span>
-        </button>
-        <button class="transport-btn record" class:active={isRecording} title="Record" onclick={handleRecord}>
-          <span class="icon">●</span>
-        </button>
+      <div class="tempo-section">
+        <span
+          class="tempo-value"
+          class:dragging={tempoDragState !== null}
+          onmousedown={handleTempoMouseDown}
+        >{tempo.toFixed(2)}</span>
+        <span class="tempo-suffix">BPM</span>
       </div>
     </div>
     <div class="header-right">
       <div class="connection-status">
-        <span class="label">Status</span>
-        <div class="indicators">
-          <span class="status-indicator" class:connected={connectionState === 'connected'} title="Bridge connection">
-            <span class="dot"></span>Bridge
-          </span>
-          <span class="status-indicator" class:connected={abletonConnected} title="Ableton connection">
-            <span class="dot"></span>Live
-          </span>
-        </div>
+        <span class="status-indicator" class:connected={connectionState === 'connected'} title="Bridge connection">
+          <span class="dot"></span>Bridge
+        </span>
+        <span class="status-indicator" class:connected={abletonConnected} title="Ableton connection">
+          <span class="dot"></span>Live
+        </span>
       </div>
-      <button class="help-btn" title="Help" onclick={() => showHelpModal = true}>?</button>
     </div>
   </header>
 
@@ -672,6 +711,12 @@
     flex: 1;
   }
 
+  .header-center {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+  }
+
   .header-right {
     display: flex;
     align-items: center;
@@ -703,26 +748,6 @@
   }
 
   .connection-status {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: center;
-    gap: 3px;
-    padding: 6px 10px;
-    background: #1a1a1a;
-    border-radius: 4px;
-    border: 1px solid #333;
-  }
-
-  .connection-status .label {
-    font-size: 9px;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .connection-status .indicators {
-    display: flex;
     gap: 6px;
   }
 
@@ -948,13 +973,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 47px;
+    height: 28px;
     box-sizing: border-box;
     background: #2a2a2a;
     border: 1px solid #333;
     border-radius: 3px;
     color: #666;
-    font-size: 14px;
+    font-size: 12px;
     cursor: pointer;
     transition: all 0.1s;
     position: sticky;
@@ -980,7 +1005,7 @@
   .scene-column .clip-stop.stop-all {
     position: sticky;
     top: 59px; /* Below scene header (56px) + gap (3px) */
-    height: 47px;
+    height: 28px;
     z-index: 9;
   }
 
@@ -1198,25 +1223,6 @@
     transform: scale(0.95);
   }
 
-  .transport {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    padding: 6px 10px;
-    background: #1a1a1a;
-    border-radius: 4px;
-    border: 1px solid #333;
-  }
-
-  .transport .label {
-    font-size: 9px;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
   .transport-buttons {
     display: flex;
     gap: 4px;
@@ -1281,34 +1287,41 @@
   }
 
   .playhead-section,
-  .tempo-section {
+  .tempo-section,
+  .transport,
+  .connection-status {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 3px;
-    padding: 6px 10px;
+    align-items: center;
+    gap: 4px;
+    height: 42px;
+    padding: 0 10px;
     background: #1a1a1a;
     border-radius: 4px;
     border: 1px solid #333;
-  }
-
-  .playhead-section .label,
-  .tempo-section .label {
-    font-size: 9px;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    box-sizing: border-box;
   }
 
   .playhead-value,
-  .tempo-value {
+  .tempo-value,
+  .tempo-suffix {
     font-size: 15px;
     font-weight: 500;
     font-variant-numeric: tabular-nums;
     font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
     color: #ff9944;
-    letter-spacing: 0.5px;
+  }
+
+  .tempo-suffix {
+    color: #888;
+  }
+
+  .tempo-value {
+    cursor: ew-resize;
+    user-select: none;
+  }
+
+  .tempo-value.dragging {
+    color: #ffbb66;
   }
 
   /* ============================================
