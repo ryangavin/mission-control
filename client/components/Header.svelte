@@ -147,7 +147,7 @@
         <span class="tempo-suffix">BPM</span>
       </span>
       <button class="group-item" class:active={metronome} title="Metronome" onclick={onMetronome}>
-        <span class="metronome-icon">● ○</span>
+        <span class="metronome-icon"><span>●</span><span>○</span></span>
       </button>
       <select class="group-item group-select" title="Clip Trigger Quantization" value={quantization} onchange={handleQuantization}>
         {#each QUANTIZATION_OPTIONS as opt (opt.value)}
@@ -182,10 +182,12 @@
     </div>
   </div>
   <div class="header-right">
-    <ConnectionStatus
-      bridgeConnected={connectionState === 'connected'}
-      {abletonConnected}
-    />
+    <div class="status-wrapper">
+      <ConnectionStatus
+        bridgeConnected={connectionState === 'connected'}
+        {abletonConnected}
+      />
+    </div>
     <button class="header-box help-btn" title="Help" onclick={onShowHelp}>?</button>
   </div>
 </header>
@@ -267,6 +269,7 @@
 
   .header-group {
     overflow: hidden;
+    flex-shrink: 0;
   }
 
   .group-item {
@@ -313,6 +316,11 @@
   .group-select:hover {
     background: #2a2a2a;
     color: #fff;
+  }
+
+  .transport-btn {
+    min-width: 32px;
+    flex-shrink: 0;
   }
 
   .transport-btn .icon {
@@ -371,6 +379,8 @@
 
   .metronome-icon {
     font-size: 12px;
+    display: flex;
+    gap: 2px;
   }
 
   .loop-btn {
@@ -380,6 +390,46 @@
   .loop-btn i {
     font-size: 12px;
     pointer-events: none;
+  }
+
+  /* Responsive: hide app title at medium widths */
+  @media (max-width: 900px) {
+    .app-title {
+      display: none;
+    }
+  }
+
+  /* Responsive: hide connection status at narrow widths */
+  @media (max-width: 820px) {
+    .status-wrapper {
+      display: none;
+    }
+  }
+
+  /* Responsive: hide logo and help at very narrow widths */
+  @media (max-width: 620px) {
+    .app-brand {
+      display: none;
+    }
+
+    .help-btn {
+      display: none;
+    }
+  }
+
+  /* Responsive: hide BPM suffix at smallest widths */
+  @media (max-width: 600px) {
+    .tempo-suffix {
+      display: none;
+    }
+
+    .header-center {
+      gap: 6px;
+    }
+
+    .metronome-icon {
+      flex-direction: column;
+    }
   }
 
 </style>
