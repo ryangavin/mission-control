@@ -518,28 +518,30 @@
       <button class="help-btn" title="Help" onclick={() => showHelpModal = true}>?</button>
     </div>
     <div class="header-center">
-      <button class="header-btn" title="Tap Tempo" onclick={handleTapTempo}>TAP</button>
-      <div class="tempo-section">
-        <span
-          class="tempo-value"
-          class:dragging={tempoDragState !== null}
-          onmousedown={handleTempoMouseDown}
-        >{tempo.toFixed(2)}</span>
-        <span class="tempo-suffix">BPM</span>
+      <div class="header-group">
+        <button class="group-item" title="Tap Tempo" onclick={handleTapTempo}>TAP</button>
+        <span class="group-item tempo-item">
+          <span
+            class="tempo-value"
+            class:dragging={tempoDragState !== null}
+            onmousedown={handleTempoMouseDown}
+          >{tempo.toFixed(2)}</span>
+          <span class="tempo-suffix">BPM</span>
+        </span>
+        <button class="group-item" class:active={metronome} title="Metronome" onclick={handleMetronome}>
+          <span class="metronome-icon">● ○</span>
+        </button>
+        <select class="group-item group-select" title="Clip Trigger Quantization" value={quantization} onchange={handleQuantization}>
+          {#each QUANTIZATION_OPTIONS as opt}
+            <option value={opt.value}>{opt.label}</option>
+          {/each}
+        </select>
       </div>
-      <button class="header-btn" class:active={metronome} title="Metronome" onclick={handleMetronome}>
-        <span class="metronome-icon">● ○</span>
-      </button>
-      <select class="header-select" title="Clip Trigger Quantization" value={quantization} onchange={handleQuantization}>
-        {#each QUANTIZATION_OPTIONS as opt}
-          <option value={opt.value}>{opt.label}</option>
-        {/each}
-      </select>
-      <div class="playhead-section">
-        <span class="playhead-value">{formatBeatTime(beatTime)}</span>
-      </div>
-      <div class="transport">
-        <div class="transport-buttons">
+      <div class="header-group">
+        <span class="group-item playhead-item">
+          <span class="playhead-value">{formatBeatTime(beatTime)}</span>
+        </span>
+        <div class="group-item transport-item">
           <button class="transport-btn play" class:active={isPlaying} title="Play" onclick={handlePlay}>
             <span class="icon">▶</span>
           </button>
@@ -1331,9 +1333,6 @@
     box-shadow: 0 0 8px rgba(255, 68, 68, 0.3);
   }
 
-  .playhead-section,
-  .tempo-section,
-  .transport,
   .connection-status {
     display: flex;
     align-items: center;
@@ -1346,15 +1345,25 @@
     box-sizing: border-box;
   }
 
-  .header-btn {
+  .header-group {
+    display: flex;
+    align-items: center;
+    height: 42px;
+    background: #1a1a1a;
+    border-radius: 4px;
+    border: 1px solid #333;
+    overflow: hidden;
+  }
+
+  .group-item {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 42px;
+    height: 100%;
     padding: 0 12px;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 4px;
+    background: transparent;
+    border: none;
+    border-right: 1px solid #333;
     color: #888;
     font-size: 11px;
     font-weight: 600;
@@ -1362,51 +1371,53 @@
     transition: all 0.1s;
   }
 
-  .header-btn:hover {
+  .group-item:last-child {
+    border-right: none;
+  }
+
+  button.group-item:hover {
     background: #2a2a2a;
     color: #fff;
-    border-color: #444;
   }
 
-  .header-btn:active {
-    transform: scale(0.97);
+  button.group-item:active {
+    background: #222;
   }
 
-  .header-btn.active {
+  button.group-item.active {
     background: #2a3a2a;
-    border-color: #4a5a4a;
     color: #4f4;
   }
 
-  .header-btn .icon {
-    font-size: 16px;
+  .group-select {
+    padding: 0 8px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .group-select:hover {
+    background: #2a2a2a;
+    color: #fff;
+  }
+
+  .tempo-item {
+    gap: 4px;
+    cursor: default;
+  }
+
+  .playhead-item {
+    cursor: default;
+  }
+
+  .transport-item {
+    display: flex;
+    gap: 4px;
+    padding: 0 8px;
+    cursor: default;
   }
 
   .metronome-icon {
     font-size: 12px;
-  }
-
-  .header-select {
-    height: 42px;
-    padding: 0 8px;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 4px;
-    color: #888;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    outline: none;
-  }
-
-  .header-select:hover {
-    background: #2a2a2a;
-    color: #fff;
-    border-color: #444;
-  }
-
-  .header-select:focus {
-    border-color: #555;
   }
 
   .playhead-value,
