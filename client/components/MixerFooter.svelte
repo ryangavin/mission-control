@@ -36,10 +36,23 @@
 
   // Faders area height (not total footer height)
   const MIN_FADERS_HEIGHT = 0;
-  const MAX_FADERS_HEIGHT = 150;
   const COLLAPSE_THRESHOLD = 40;
 
+  // Max height is ~40% of viewport (2/5 of screen)
+  let maxFadersHeight = $state(Math.round(window.innerHeight * 0.4));
   let fadersHeight = $state(100);
+
+  // Update max height on window resize
+  $effect(() => {
+    const handleResize = () => {
+      maxFadersHeight = Math.round(window.innerHeight * 0.4);
+      if (fadersHeight > maxFadersHeight) {
+        fadersHeight = maxFadersHeight;
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  });
   let collapsed = $derived(fadersHeight < COLLAPSE_THRESHOLD);
 
   // Drag state
@@ -65,7 +78,7 @@
 
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     const deltaY = dragStartY - clientY;
-    const newHeight = Math.max(MIN_FADERS_HEIGHT, Math.min(MAX_FADERS_HEIGHT, dragStartHeight + deltaY));
+    const newHeight = Math.max(MIN_FADERS_HEIGHT, Math.min(maxFadersHeight, dragStartHeight + deltaY));
 
     fadersHeight = newHeight;
   }
@@ -336,25 +349,32 @@
 
   .volume-slider {
     flex: 1;
-    width: 4px;
+    width: 8px;
     min-height: 20px;
-    -webkit-appearance: slider-vertical;
-    appearance: slider-vertical;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
     writing-mode: vertical-lr;
     direction: rtl;
-    background: #333;
+  }
+
+  .volume-slider::-webkit-slider-runnable-track {
+    width: 8px;
+    height: 100%;
+    background: #444;
     border-radius: 2px;
-    cursor: pointer;
   }
 
   .volume-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 16px;
-    height: 8px;
+    width: 20px;
+    height: 10px;
     background: #888;
     border-radius: 2px;
     cursor: pointer;
+    margin-left: -6px;
   }
 
   .volume-slider::-webkit-slider-thumb:hover {
@@ -372,21 +392,28 @@
   .pan-slider {
     flex: 1;
     min-width: 0;
-    height: 4px;
+    height: 8px;
     -webkit-appearance: none;
     appearance: none;
-    background: #333;
-    border-radius: 2px;
+    background: transparent;
     cursor: pointer;
+  }
+
+  .pan-slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 8px;
+    background: #444;
+    border-radius: 2px;
   }
 
   .pan-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 10px;
-    height: 10px;
+    width: 14px;
+    height: 14px;
+    margin-top: -3px;
     background: #888;
-    border-radius: 50%;
+    border-radius: 2px;
     cursor: pointer;
   }
 
