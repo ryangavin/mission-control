@@ -37,10 +37,23 @@
   // Faders area height (not total footer height)
   const MIN_FADERS_HEIGHT = 0;
   const COLLAPSE_THRESHOLD = 40;
+  const STORAGE_KEY = 'mixer-footer-height';
+
+  // Load saved height or use default
+  function loadSavedHeight(): number {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = parseInt(saved, 10);
+      if (!isNaN(parsed) && parsed >= MIN_FADERS_HEIGHT) {
+        return parsed;
+      }
+    }
+    return 100;
+  }
 
   // Max height is ~40% of viewport (2/5 of screen)
   let maxFadersHeight = $state(Math.round(window.innerHeight * 0.4));
-  let fadersHeight = $state(100);
+  let fadersHeight = $state(loadSavedHeight());
 
   // Update max height on window resize
   $effect(() => {
@@ -90,6 +103,9 @@
     window.removeEventListener('mouseup', handleDragEnd);
     window.removeEventListener('touchmove', handleDragMove);
     window.removeEventListener('touchend', handleDragEnd);
+
+    // Save height preference
+    localStorage.setItem(STORAGE_KEY, String(fadersHeight));
   }
 
   // Scroll sync between faders and buttons areas
