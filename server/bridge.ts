@@ -211,6 +211,13 @@ export class Bridge {
         return;
       }
 
+      // Handle session resync (force re-fetch from Ableton)
+      if (message.type === 'session/resync') {
+        this.synced = false;
+        this.handleSessionRequest(ws);
+        return;
+      }
+
       // Handle clip move (requires multiple OSC calls)
       if (message.type === 'clip/move') {
         this.handleClipMove(message.srcTrack, message.srcScene, message.dstTrack, message.dstScene);
@@ -226,6 +233,7 @@ export class Bridge {
       // Convert client message to OSC and send to Ableton
       const oscMessage = this.clientMessageToOSC(message as ClientMessage);
       if (oscMessage) {
+        this.log(`Sending OSC: ${oscMessage.address} ${JSON.stringify(oscMessage.args)}`);
         this.sendOSC(oscMessage);
 
         // After stop, poll beat time to catch position reset (e.g., double-stop returns to 0)
@@ -314,6 +322,8 @@ export class Bridge {
         return { address: '/live/clip_slot/delete_clip', args: [message.trackId, message.sceneId] };
       case 'scene/fire':
         return { address: '/live/scene/fire', args: [message.sceneId] };
+      case 'scene/create':
+        return { address: '/live/song/create_scene', args: [message.index ?? -1] };
       case 'track/stop':
         return { address: '/live/track/stop_all_clips', args: [message.trackId] };
       case 'transport/play':

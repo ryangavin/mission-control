@@ -91,6 +91,7 @@ export type ClientMessage =
   | { type: 'clip/fire'; trackId: number; sceneId: number }
   | { type: 'clip/stop'; trackId: number; sceneId: number }
   | { type: 'scene/fire'; sceneId: number }
+  | { type: 'scene/create'; index?: number }
   | { type: 'track/stop'; trackId: number }
   | { type: 'transport/play' }
   | { type: 'transport/stop' }

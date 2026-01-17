@@ -202,6 +202,14 @@
     send({ type: 'scene/fire', sceneId });
   }
 
+  function handleAddScene() {
+    send({ type: 'scene/create' });
+    // Force re-sync after a short delay to pick up the new scene
+    setTimeout(() => {
+      send({ type: 'session/resync' });
+    }, 100);
+  }
+
   function handleStopAll() {
     tracks.forEach(t => send({ type: 'track/stop', trackId: t.id }));
   }
@@ -331,6 +339,7 @@
           {scenes}
           onSceneLaunch={handleSceneLaunch}
           onStopAll={handleStopAll}
+          onAddScene={handleAddScene}
           onScroll={handleSceneScroll}
         />
       </div>

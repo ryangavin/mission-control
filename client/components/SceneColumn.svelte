@@ -6,10 +6,11 @@
     scenes: Scene[];
     onSceneLaunch: (sceneId: number) => void;
     onStopAll: () => void;
+    onAddScene: () => void;
     onScroll?: () => void;
   }
 
-  let { scenes, onSceneLaunch, onStopAll, onScroll }: Props = $props();
+  let { scenes, onSceneLaunch, onStopAll, onAddScene, onScroll }: Props = $props();
 
   // Expose element for scroll sync via bindable
   let element = $state<HTMLDivElement | null>(null);
@@ -32,7 +33,10 @@
 >
   <!-- Sticky header row with background -->
   <div class="sticky-row header-row">
-    <div class="scene-header">Scene</div>
+    <div class="scene-header">
+      <span>Master</span>
+      <button class="add-scene-btn" onclick={onAddScene} title="Add Scene"><i class="fa-solid fa-plus"></i></button>
+    </div>
   </div>
 
   <!-- Sticky stop button row with background -->
@@ -96,14 +100,18 @@
   .scene-header {
     padding: 6px;
     background: #1e1e1e;
+    border-left: 3px solid #666;
+    border-radius: 0 3px 3px 0;
     font-size: 10px;
-    text-align: center;
-    color: #888;
+    font-weight: 500;
+    color: #fff;
     height: 56px;
     box-sizing: border-box;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
     justify-content: center;
+    gap: 3px;
   }
 
   .stop-all-btn {
@@ -180,5 +188,29 @@
 
   .scene-btn:hover .scene-play {
     opacity: 1;
+  }
+
+  .add-scene-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 24px;
+    max-height: 28px;
+    padding: 4px 2px;
+    box-sizing: border-box;
+    background: #3d3d3d;
+    border: 1px solid #555;
+    border-radius: 3px;
+    color: #888;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+
+  .add-scene-btn:hover {
+    background: #4d4d4d;
+    color: #fff;
   }
 </style>
