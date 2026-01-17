@@ -376,6 +376,32 @@
     overscroll-behavior: none;
   }
 
+  :global(.stop-btn) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 28px;
+    box-sizing: border-box;
+    background: #3d2d2d;
+    border: 1px solid #5d3d3d;
+    border-radius: 4px;
+    color: #ff8888;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+
+  :global(.stop-btn:hover) {
+    background: #4d3d3d;
+    border-color: #ff6666;
+  }
+
+  :global(.stop-btn:active) {
+    transform: scale(0.97);
+  }
+
   .app {
     display: flex;
     flex-direction: column;

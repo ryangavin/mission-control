@@ -41,7 +41,7 @@
 
   <!-- Sticky stop button row with background -->
   <div class="sticky-row stop-row">
-    <button class="stop-all-btn" onclick={onStopAll} title="Stop All Clips">
+    <button class="stop-btn" onclick={onStopAll} title="Stop All Clips">
       ■ All
     </button>
   </div>
@@ -95,32 +95,6 @@
   .stop-row {
     top: 59px; /* Below scene header (56px) + gap (3px) */
     padding-bottom: 3px;
-  }
-
-  .stop-all-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 28px;
-    box-sizing: border-box;
-    background: #3d2d2d;
-    border: 1px solid #5d3d3d;
-    border-radius: 4px;
-    color: #ff8888;
-    font-size: 11px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.1s;
-  }
-
-  .stop-all-btn:hover {
-    background: #4d3d3d;
-    border-color: #ff6666;
-  }
-
-  .stop-all-btn:active {
-    transform: scale(0.95);
   }
 
   .scene-btn {

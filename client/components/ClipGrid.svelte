@@ -164,8 +164,7 @@
   <div class="sticky-row stop-buttons-row" style="--cols: {tracks.length}">
     {#each tracks as track (track.id)}
       <button
-        class="clip-stop"
-        style="--color: {intToHex(track.color)}"
+        class="stop-btn"
         onclick={() => onTrackStop(track.id)}
         title="Stop {track.name}"
       >■</button>
@@ -246,28 +245,4 @@
     padding: 0 3px 3px 3px;
   }
 
-  .clip-stop {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 28px;
-    box-sizing: border-box;
-    background: #3d2d2d;
-    border: 1px solid #5d3d3d;
-    border-radius: 4px;
-    color: #ff8888;
-    font-size: 11px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.1s;
-  }
-
-  .clip-stop:hover {
-    background: #4d3d3d;
-    border-color: #ff6666;
-  }
-
-  .clip-stop:active {
-    transform: scale(0.97);
-  }
 </style>
