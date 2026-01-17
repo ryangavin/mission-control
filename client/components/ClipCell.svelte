@@ -75,6 +75,7 @@
     box-sizing: border-box;
     background: color-mix(in srgb, var(--color) 20%, #2d2d2d);
     border: 1px solid color-mix(in srgb, var(--color) 40%, #222);
+    border-top: 3px solid var(--color);
     border-radius: 3px;
     color: #fff;
     font-size: 9px;
@@ -98,7 +99,7 @@
     align-items: center;
     justify-content: center;
     background: color-mix(in srgb, var(--scene-color, #666) 8%, #2a2a2a);
-    border-color: color-mix(in srgb, var(--scene-color, #666) 20%, #222);
+    border: 1px solid color-mix(in srgb, var(--scene-color, #666) 20%, #222);
     box-shadow: none;
     opacity: 0.7;
   }

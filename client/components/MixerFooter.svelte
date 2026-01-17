@@ -331,9 +331,8 @@
     flex-direction: column;
     gap: 4px;
     height: 100%;
-    padding: 4px 4px 4px 4px;
+    padding: 4px;
     background: #1e1e1e;
-    border-left: 3px solid var(--color, #888);
     border-radius: 3px 3px 0 0;
     box-sizing: border-box;
   }
@@ -455,9 +454,9 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding: 4px 4px 4px 4px;
+    padding: 4px;
     background: #1e1e1e;
-    border-left: 3px solid var(--color, #888);
+    border-bottom: 3px solid var(--color, #888);
     border-radius: 0 0 3px 3px;
     box-sizing: border-box;
   }

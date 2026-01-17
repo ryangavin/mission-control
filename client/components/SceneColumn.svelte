@@ -92,7 +92,7 @@
     flex-shrink: 0;
     background: color-mix(in srgb, var(--scene-color, #666) 10%, #2d2d2d);
     border: none;
-    border-left: 3px solid var(--scene-color, #666);
+    border-top: 3px solid var(--scene-color, #666);
     border-radius: 3px;
     color: #fff;
     font-size: 10px;

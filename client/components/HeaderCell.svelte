@@ -30,8 +30,8 @@
     gap: 3px;
     padding: 6px;
     background: #1e1e1e;
-    border-left: 3px solid var(--color);
-    border-radius: 0 3px 3px 0;
+    border-top: 3px solid var(--color);
+    border-radius: 3px;
     font-size: 10px;
     font-weight: 500;
     height: 56px;
