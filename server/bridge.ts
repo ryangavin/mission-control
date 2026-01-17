@@ -497,6 +497,31 @@ export class Bridge {
       return this.session.setClipPlayingStatus(trackId, sceneId, isPlaying, isTriggered, isRecording);
     }
 
+    // Structure updates - track/scene count changed
+    if (address === '/live/song/get/num_tracks' || address === '/live/song/get/num_scenes') {
+      const currentStructure = this.sync.getStructure();
+      const newValue = args[0] as number;
+      const isTrackChange = address === '/live/song/get/num_tracks';
+      const changed = isTrackChange
+        ? newValue !== currentStructure.numTracks
+        : newValue !== currentStructure.numScenes;
+
+      if (changed) {
+        this.log(`Structure change detected: ${isTrackChange ? 'tracks' : 'scenes'} ${isTrackChange ? currentStructure.numTracks : currentStructure.numScenes} -> ${newValue}`);
+        // Trigger async resync and broadcast structure patch when done
+        this.sync.checkStructureChanges().then((didChange) => {
+          if (didChange) {
+            const newStructure = this.sync.getStructure();
+            this.broadcastToClients({
+              type: 'patch',
+              payload: { kind: 'structure', numTracks: newStructure.numTracks, numScenes: newStructure.numScenes }
+            });
+          }
+        });
+      }
+      return null;
+    }
+
     // Clip slot updates - when a clip is created/deleted, update listeners
     if (address === '/live/clip_slot/get/has_clip' && args.length >= 3) {
       const trackId = args[0] as number;

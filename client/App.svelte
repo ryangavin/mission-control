@@ -8,6 +8,7 @@
   import LoadingState from './components/LoadingState.svelte';
   import ClipGrid from './components/ClipGrid.svelte';
   import SceneColumn from './components/SceneColumn.svelte';
+  import MixerFooter from './components/MixerFooter.svelte';
   import DeleteZone from './components/DeleteZone.svelte';
   import Footer from './components/Footer.svelte';
   import InstallBanner from './components/InstallBanner.svelte';
@@ -31,6 +32,7 @@
   // Component refs for scroll sync
   let clipGridRef = $state<ClipGrid | null>(null);
   let sceneColumnRef = $state<SceneColumn | null>(null);
+  let mixerFooterRef = $state<MixerFooter | null>(null);
 
   // Delete zone drag state
   let dragOverDelete = $state(false);
@@ -125,6 +127,10 @@
       const gridEl = clipGridRef.getElement();
       if (gridEl) {
         sceneColumnRef.setScrollTop(gridEl.scrollTop);
+        // Also sync horizontal scroll with mixer footer
+        if (mixerFooterRef) {
+          mixerFooterRef.setScrollLeft(gridEl.scrollLeft);
+        }
       }
     }
   }
@@ -134,6 +140,16 @@
       const sceneEl = sceneColumnRef.getElement();
       if (sceneEl) {
         clipGridRef.setScrollTop(sceneEl.scrollTop);
+      }
+    }
+  }
+
+  function handleMixerScroll() {
+    if (mixerFooterRef && clipGridRef) {
+      const mixerEl = mixerFooterRef.getElement();
+      const gridEl = clipGridRef.getElement();
+      if (mixerEl && gridEl) {
+        gridEl.scrollLeft = mixerEl.scrollLeft;
       }
     }
   }
@@ -235,6 +251,24 @@
     }
   }
 
+  function handleVolume(trackId: number, value: number) {
+    send({ type: 'mixer/volume', trackId, value });
+  }
+
+  function handlePan(trackId: number, value: number) {
+    send({ type: 'mixer/pan', trackId, value });
+  }
+
+  function handleMasterVolume(value: number) {
+    // Master track is typically ID 0 or a special ID
+    // For now, we'll use a placeholder - this may need adjustment
+    send({ type: 'mixer/volume', trackId: -1, value });
+  }
+
+  function handleMasterPan(value: number) {
+    send({ type: 'mixer/pan', trackId: -1, value });
+  }
+
   function handleClipMove(srcTrack: number, srcScene: number, dstTrack: number, dstScene: number) {
     send({
       type: 'clip/move',
@@ -326,10 +360,6 @@
           {session}
           {beatTime}
           onClipClick={handleClipClick}
-          onTrackStop={handleTrackStop}
-          onMute={handleMute}
-          onSolo={handleSolo}
-          onArm={handleArm}
           onClipMove={handleClipMove}
           onScroll={handleGridScroll}
         />
@@ -338,11 +368,26 @@
           bind:this={sceneColumnRef}
           {scenes}
           onSceneLaunch={handleSceneLaunch}
-          onStopAll={handleStopAll}
-          onAddScene={handleAddScene}
           onScroll={handleSceneScroll}
         />
       </div>
+
+      <MixerFooter
+        bind:this={mixerFooterRef}
+        {tracks}
+        masterVolume={0.85}
+        masterPan={0}
+        onVolume={handleVolume}
+        onPan={handlePan}
+        onMute={handleMute}
+        onSolo={handleSolo}
+        onArm={handleArm}
+        onStop={handleTrackStop}
+        onMasterVolume={handleMasterVolume}
+        onMasterPan={handleMasterPan}
+        onStopAll={handleStopAll}
+        onScroll={handleMixerScroll}
+      />
 
       <DeleteZone
         isVisible={isDragging}

@@ -6,12 +6,10 @@
   interface Props {
     scenes: Scene[];
     onSceneLaunch: (sceneId: number) => void;
-    onStopAll: () => void;
-    onAddScene: () => void;
     onScroll?: () => void;
   }
 
-  let { scenes, onSceneLaunch, onStopAll, onAddScene, onScroll }: Props = $props();
+  let { scenes, onSceneLaunch, onScroll }: Props = $props();
 
   // Expose element for scroll sync via bindable
   let element = $state<HTMLDivElement | null>(null);
@@ -34,16 +32,7 @@
 >
   <!-- Sticky header row with background -->
   <div class="sticky-row header-row">
-    <HeaderCell name="Master">
-      <button class="control-btn" onclick={onAddScene} title="Add Scene"><i class="fa-solid fa-plus"></i></button>
-    </HeaderCell>
-  </div>
-
-  <!-- Sticky stop button row with background -->
-  <div class="sticky-row stop-row">
-    <button class="stop-btn" onclick={onStopAll} title="Stop All Clips">
-      ■ All
-    </button>
+    <HeaderCell name="Master" />
   </div>
 
   {#each scenes as scene, sceneIndex (scene.id)}
@@ -89,11 +78,6 @@
 
   .header-row {
     top: 0;
-    padding-bottom: 3px;
-  }
-
-  .stop-row {
-    top: 59px; /* Below scene header (56px) + gap (3px) */
     padding-bottom: 3px;
   }
 

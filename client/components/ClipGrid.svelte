@@ -9,10 +9,6 @@
     session: SessionState;
     beatTime: number;
     onClipClick: (trackId: number, sceneId: number) => void;
-    onTrackStop: (trackId: number) => void;
-    onMute: (trackId: number) => void;
-    onSolo: (trackId: number) => void;
-    onArm: (trackId: number) => void;
     onClipMove: (srcTrack: number, srcScene: number, dstTrack: number, dstScene: number) => void;
     onScroll?: () => void;
   }
@@ -21,10 +17,6 @@
     session,
     beatTime,
     onClipClick,
-    onTrackStop,
-    onMute,
-    onSolo,
-    onArm,
     onClipMove,
     onScroll,
   }: Props = $props();
@@ -151,23 +143,7 @@
   <!-- Sticky track headers row with background -->
   <div class="sticky-row track-headers-row" style="--cols: {tracks.length}">
     {#each tracks as track (track.id)}
-      <TrackHeader
-        {track}
-        onMute={() => onMute(track.id)}
-        onSolo={() => onSolo(track.id)}
-        onArm={() => onArm(track.id)}
-      />
-    {/each}
-  </div>
-
-  <!-- Sticky stop buttons row with background -->
-  <div class="sticky-row stop-buttons-row" style="--cols: {tracks.length}">
-    {#each tracks as track (track.id)}
-      <button
-        class="stop-btn"
-        onclick={() => onTrackStop(track.id)}
-        title="Stop {track.name}"
-      >■</button>
+      <TrackHeader {track} />
     {/each}
   </div>
 
@@ -228,11 +204,6 @@
 
   .track-headers-row {
     top: 0;
-    padding-bottom: 3px;
-  }
-
-  .stop-buttons-row {
-    top: 59px; /* Below track header (56px) + gap (3px) */
     padding-bottom: 3px;
   }
 

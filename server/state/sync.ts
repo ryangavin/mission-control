@@ -273,6 +273,10 @@ export class SyncManager {
     this.callbacks.sendOSC(song.startListenPunchOut());
     this.callbacks.sendOSC(song.startListenLoop());
 
+    // Structure listeners (track/scene count changes)
+    this.callbacks.sendOSC(song.startListenNumTracks());
+    this.callbacks.sendOSC(song.startListenNumScenes());
+
     // View listeners
     this.callbacks.sendOSC(view.startListenSelectedTrack());
     this.callbacks.sendOSC(view.startListenSelectedScene());
@@ -353,6 +357,8 @@ export class SyncManager {
     this.callbacks.sendOSC(song.stopListenPunchIn());
     this.callbacks.sendOSC(song.stopListenPunchOut());
     this.callbacks.sendOSC(song.stopListenLoop());
+    this.callbacks.sendOSC(song.stopListenNumTracks());
+    this.callbacks.sendOSC(song.stopListenNumScenes());
 
     // View
     this.callbacks.sendOSC(view.stopListenSelectedTrack());

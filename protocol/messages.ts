@@ -387,8 +387,20 @@ export const song = {
   /** Get number of tracks */
   getNumTracks: (): OSCMessage => ({ address: '/live/song/get/num_tracks', args: [] }),
 
+  /** Start listening to track count changes */
+  startListenNumTracks: (): OSCMessage => ({ address: '/live/song/start_listen/num_tracks', args: [] }),
+
+  /** Stop listening to track count changes */
+  stopListenNumTracks: (): OSCMessage => ({ address: '/live/song/stop_listen/num_tracks', args: [] }),
+
   /** Get number of scenes */
   getNumScenes: (): OSCMessage => ({ address: '/live/song/get/num_scenes', args: [] }),
+
+  /** Start listening to scene count changes */
+  startListenNumScenes: (): OSCMessage => ({ address: '/live/song/start_listen/num_scenes', args: [] }),
+
+  /** Stop listening to scene count changes */
+  stopListenNumScenes: (): OSCMessage => ({ address: '/live/song/stop_listen/num_scenes', args: [] }),
 
   /** Get all track names */
   getTrackNames: (): OSCMessage => ({ address: '/live/song/get/track_names', args: [] }),

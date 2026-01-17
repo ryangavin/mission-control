@@ -8,19 +8,25 @@
   }
 
   let { name, color = '#666', children }: Props = $props();
+
+  // Check if we have children to render
+  let hasControls = $derived(children !== undefined);
 </script>
 
-<div class="header-cell" style="--color: {color}">
+<div class="header-cell" class:compact={!hasControls} style="--color: {color}">
   <span class="header-name">{name}</span>
-  <div class="header-controls">
-    {@render children?.()}
-  </div>
+  {#if hasControls}
+    <div class="header-controls">
+      {@render children?.()}
+    </div>
+  {/if}
 </div>
 
 <style>
   .header-cell {
     display: flex;
     flex-direction: column;
+    justify-content: center;
     gap: 3px;
     padding: 6px;
     background: #1e1e1e;
@@ -30,6 +36,10 @@
     font-weight: 500;
     height: 56px;
     box-sizing: border-box;
+  }
+
+  .header-cell.compact {
+    height: 32px;
   }
 
   .header-name {
