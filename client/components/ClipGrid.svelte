@@ -252,19 +252,19 @@
     justify-content: center;
     height: 28px;
     box-sizing: border-box;
-    background: #2a2a2a;
-    border: 1px solid #333;
-    border-radius: 3px;
-    color: #666;
-    font-size: 12px;
+    background: #3d2d2d;
+    border: 1px solid #5d3d3d;
+    border-radius: 4px;
+    color: #ff8888;
+    font-size: 11px;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.1s;
   }
 
   .clip-stop:hover {
-    background: #3d2d2d;
-    border-color: #664444;
-    color: #ff8888;
+    background: #4d3d3d;
+    border-color: #ff6666;
   }
 
   .clip-stop:active {
