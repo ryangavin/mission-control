@@ -268,7 +268,11 @@
     </div>
     <div class="buttons-master">
       <div class="button-strip master">
-        <div class="control-buttons-spacer"></div>
+        <div class="control-buttons">
+          <button class="control-btn placeholder" disabled>M</button>
+          <button class="control-btn placeholder" disabled>S</button>
+          <button class="control-btn placeholder" disabled>●</button>
+        </div>
         <button class="stop-btn" onclick={onStopAll} title="Stop All Clips">■ All</button>
       </div>
     </div>
@@ -460,7 +464,7 @@
   .buttons-master {
     width: 80px;
     min-width: 80px;
-    padding: 0 3px 3px 3px;
+    padding: 0 3px 6px 3px;
     flex-shrink: 0;
   }
 
@@ -477,14 +481,19 @@
 
   .button-strip.master {
     --color: #888;
-    border-bottom: none;
     border-left: 3px solid var(--color);
+    border-bottom: none;
     border-radius: 0 3px 3px 3px;
+    padding-bottom: 7px; /* 4px base + 3px to align with track color borders */
+  }
+
+  .button-strip.master .stop-btn {
+    margin-bottom: 3px;
   }
 
   .fader-strip.master {
     border-left: 3px solid #888;
-    border-radius: 0 3px 0 0;
+    border-radius: 3px 3px 0 0;
   }
 
   .control-buttons {
@@ -492,8 +501,8 @@
     gap: 2px;
   }
 
-  .control-buttons-spacer {
-    height: 26px;
+  .control-btn.placeholder {
+    visibility: hidden;
   }
 
   .control-btn {
