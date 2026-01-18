@@ -30,6 +30,7 @@ export class Bridge {
   private sync: SyncManager;
   private syncInProgress = false;
   private synced = false;
+  private resyncPending = false;  // Set when a new set loads during an ongoing sync
   private beatTimeInterval: ReturnType<typeof setInterval> | null = null;
 
   // Connection check state
@@ -415,7 +416,13 @@ export class Bridge {
       this.sync.stopListeners(true);  // Stop listeners silently
       this.synced = false;
       this.broadcastToClients({ type: 'session_reset' });  // Tell clients to show loading
-      this.triggerSync();
+      // If a sync is already in progress, mark that we need to resync when it completes
+      if (this.syncInProgress) {
+        this.log('Sync in progress, marking resync pending...');
+        this.resyncPending = true;
+      } else {
+        this.triggerSync();
+      }
       return;
     }
 
@@ -732,6 +739,12 @@ export class Bridge {
       this.broadcastToClients({ type: 'error', message: `Sync failed: ${error}` });
     } finally {
       this.syncInProgress = false;
+      // If a new set was loaded during this sync, trigger another sync
+      if (this.resyncPending) {
+        this.log('Resync pending, triggering new sync...');
+        this.resyncPending = false;
+        this.triggerSync();
+      }
     }
   }
 
