@@ -385,6 +385,16 @@ export class Bridge {
       return;
     }
 
+    // Handle startup signal (new Live Set loaded)
+    if (message.address === '/live/startup') {
+      this.log('New Live Set loaded, triggering full resync...');
+      this.sync.stopListeners(true);  // Stop listeners silently
+      this.synced = false;
+      this.broadcastToClients({ type: 'session_reset' });  // Tell clients to show loading
+      this.triggerSync();
+      return;
+    }
+
     // First, check if this is a response to a sync query
     const wasQueryResponse = this.sync.handleOSCResponse(message.address, message.args);
     if (wasQueryResponse) {

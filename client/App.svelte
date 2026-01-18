@@ -98,6 +98,11 @@
           syncProgress = null;
           break;
 
+        case 'session_reset':
+          console.log('[app] Session reset (new Live Set loading)');
+          session = null;
+          break;
+
         case 'sync_phase':
           syncPhase = msg.phase;
           syncProgress = msg.progress ?? null;

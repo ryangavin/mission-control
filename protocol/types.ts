@@ -125,6 +125,7 @@ export type PatchPayload =
 
 export type ServerMessage =
   | { type: 'session'; payload: SessionState }
+  | { type: 'session_reset' }
   | { type: 'patch'; payload: PatchPayload }
   | { type: 'connected'; abletonConnected: boolean }
   | { type: 'sync_phase'; phase: string; progress?: number }
