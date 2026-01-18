@@ -81,7 +81,7 @@
   .volume-slider::-webkit-slider-runnable-track {
     width: 6px;
     height: 100%;
-    background: linear-gradient(to top, #5dade2 var(--value, 0%), #444 var(--value, 0%));
+    background: linear-gradient(to top, #ff9944 var(--value, 0%), #444 var(--value, 0%));
     border-radius: 2px;
   }
 
@@ -93,8 +93,7 @@
     background: #888;
     border-radius: 2px;
     cursor: pointer;
-    margin-left: -6px;
-    opacity: 1;
+    margin-left: -7px;
   }
 
   .volume-slider::-webkit-slider-thumb:hover {
@@ -110,7 +109,7 @@
   }
 
   .volume-slider::-moz-range-progress {
-    background: #5dade2;
+    background: #ff9944;
     border-radius: 2px;
   }
 
@@ -121,7 +120,6 @@
     border-radius: 2px;
     border: none;
     cursor: pointer;
-    opacity: 1;
   }
 
   .volume-slider::-moz-range-thumb:hover {

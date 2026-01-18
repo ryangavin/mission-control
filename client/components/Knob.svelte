@@ -120,7 +120,7 @@
 <style>
   .knob {
     --track-color: #3a3a3a;
-    --value-color: #5dade2;
+    --value-color: #ff9944;
     --body-color: #2a2a2a;
     --border-color: #444;
 
@@ -175,7 +175,7 @@
   }
 
   .knob:not(.disabled):hover {
-    --value-color: #7ec8e8;
+    --value-color: #ffbb66;
   }
 
   .knob-body {

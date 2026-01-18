@@ -133,6 +133,18 @@
     fadersHeight = rawHeight < minFadersHeight ? 0 : rawHeight;
   }
 
+  function handleKeyDown(e: KeyboardEvent) {
+    const step = e.shiftKey ? 50 : 10;
+    if (e.key === 'ArrowUp') {
+      fadersHeight = Math.min(maxFadersHeight, fadersHeight + step);
+      e.preventDefault();
+    } else if (e.key === 'ArrowDown') {
+      const rawHeight = fadersHeight - step;
+      fadersHeight = rawHeight < minFadersHeight ? 0 : rawHeight;
+      e.preventDefault();
+    }
+  }
+
   function handleDragEnd() {
     isDragging = false;
 
@@ -205,6 +217,7 @@
     class:dragging={isDragging}
     onmousedown={handleDragStart}
     ontouchstart={handleDragStart}
+    onkeydown={handleKeyDown}
     role="separator"
     tabindex="0"
     aria-orientation="horizontal"
@@ -253,27 +266,9 @@
           </div>
         {/each}
       </div>
+      <!-- Master fader hidden until AbletonOSC supports it -->
       <div class="faders-master">
-        <div class="fader-strip master">
-          <div class="volume-section">
-            <VolumeFader
-              value={masterVolume}
-              onchange={onMasterVolume}
-            />
-          </div>
-          <div class="pan-section">
-            <input
-              type="range"
-              class="pan-slider"
-              min="-50"
-              max="50"
-              value={masterPan * 50}
-              style="--pan-start: {50 + Math.min(0, masterPan * 50)}%; --pan-end: {50 + Math.max(0, masterPan * 50)}%"
-              oninput={handleMasterPanInput}
-              title="Master Pan"
-            />
-          </div>
-        </div>
+        <div class="fader-strip master"></div>
       </div>
     </div>
   {/if}
@@ -442,12 +437,11 @@
     height: 6px;
     -webkit-appearance: none;
     appearance: none;
-    /* Show blue fill from center to current pan position */
     background: linear-gradient(
       to right,
       #444 var(--pan-start, 50%),
-      #5dade2 var(--pan-start, 50%),
-      #5dade2 var(--pan-end, 50%),
+      #ff9944 var(--pan-start, 50%),
+      #ff9944 var(--pan-end, 50%),
       #444 var(--pan-end, 50%)
     );
     border-radius: 2px;
