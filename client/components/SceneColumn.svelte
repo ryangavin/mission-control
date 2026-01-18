@@ -5,11 +5,15 @@
 
   interface Props {
     scenes: Scene[];
+    masterColor: number;
     onSceneLaunch: (sceneId: number) => void;
     onScroll?: () => void;
   }
 
-  let { scenes, onSceneLaunch, onScroll }: Props = $props();
+  let { scenes, masterColor, onSceneLaunch, onScroll }: Props = $props();
+
+  // Convert master track color to hex
+  let masterColorHex = $derived(intToHex(masterColor));
 
   // Expose element for scroll sync via bindable
   let element = $state<HTMLDivElement | null>(null);
@@ -32,7 +36,7 @@
 >
   <!-- Sticky header row with background -->
   <div class="sticky-row header-row">
-    <HeaderCell name="Master" borderPosition="left" />
+    <HeaderCell name="Master" color={masterColorHex} borderPosition="left" />
   </div>
 
   {#each scenes as scene, sceneIndex (scene.id)}
@@ -46,6 +50,9 @@
       <span class="scene-play">▶</span>
     </button>
   {/each}
+
+  <!-- Spacer for add scene row alignment -->
+  <div class="add-row-spacer"></div>
 </div>
 
 <style>
@@ -55,7 +62,7 @@
     width: 80px;
     min-width: 80px;
     flex-shrink: 0;
-    background: #1a1a1a;
+    background: #222;
     padding: 0 3px 3px 3px;
     overflow-y: auto;
     overflow-x: hidden;
@@ -71,7 +78,7 @@
   .sticky-row {
     position: sticky;
     z-index: 10;
-    background: #1a1a1a;
+    background: #222;
     flex-shrink: 0;
   }
 
@@ -128,6 +135,12 @@
 
   .scene-btn:hover .scene-play {
     opacity: 1;
+  }
+
+  .add-row-spacer {
+    height: 47px;
+    flex-shrink: 0;
+    margin-top: 15px;
   }
 
 </style>

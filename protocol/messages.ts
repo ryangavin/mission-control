@@ -584,6 +584,84 @@ export const view = {
 };
 
 // =============================================================================
+// Master Track API
+// =============================================================================
+
+export const masterTrack = {
+  /** Get master track color (RGB integer) */
+  getColor: (): OSCMessage => ({
+    address: '/live/master/get/color',
+    args: []
+  }),
+
+  /** Set master track color */
+  setColor: (color: number): OSCMessage => ({
+    address: '/live/master/set/color',
+    args: [color]
+  }),
+
+  /** Start listening to master color changes */
+  startListenColor: (): OSCMessage => ({
+    address: '/live/master/start_listen/color',
+    args: []
+  }),
+
+  /** Stop listening to master color changes */
+  stopListenColor: (): OSCMessage => ({
+    address: '/live/master/stop_listen/color',
+    args: []
+  }),
+
+  /** Get master track volume (0.0-1.0, 0.85 = 0dB) */
+  getVolume: (): OSCMessage => ({
+    address: '/live/master/get/output_meter_level',
+    args: []
+  }),
+
+  /** Set master track volume */
+  setVolume: (value: number): OSCMessage => ({
+    address: '/live/master/set/volume',
+    args: [value]
+  }),
+
+  /** Start listening to master volume changes */
+  startListenVolume: (): OSCMessage => ({
+    address: '/live/master/start_listen/volume',
+    args: []
+  }),
+
+  /** Stop listening to master volume changes */
+  stopListenVolume: (): OSCMessage => ({
+    address: '/live/master/stop_listen/volume',
+    args: []
+  }),
+
+  /** Get master track panning (-1.0 to 1.0) */
+  getPan: (): OSCMessage => ({
+    address: '/live/master/get/panning',
+    args: []
+  }),
+
+  /** Set master track panning */
+  setPan: (value: number): OSCMessage => ({
+    address: '/live/master/set/panning',
+    args: [value]
+  }),
+
+  /** Start listening to master pan changes */
+  startListenPan: (): OSCMessage => ({
+    address: '/live/master/start_listen/panning',
+    args: []
+  }),
+
+  /** Stop listening to master pan changes */
+  stopListenPan: (): OSCMessage => ({
+    address: '/live/master/stop_listen/panning',
+    args: []
+  }),
+};
+
+// =============================================================================
 // Track API
 // =============================================================================
 

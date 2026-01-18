@@ -544,7 +544,11 @@ export class SyncManager {
         this.setupTrackListeners(t);
       }
     } else if (newNumTracks < this.numTracks) {
-      // Tracks were deleted - just update structure
+      // Tracks were deleted - stop listeners for removed tracks
+      for (let t = newNumTracks; t < this.numTracks; t++) {
+        this.stopTrackListeners(t);
+      }
+      // Update structure
       this.session.setStructure(newNumTracks, this.numScenes);
     }
 
@@ -567,7 +571,13 @@ export class SyncManager {
         }
       }
     } else if (newNumScenes < this.numScenes) {
-      // Scenes were deleted - just update structure
+      // Scenes were deleted - stop clip slot listeners for removed scenes
+      for (let t = 0; t < newNumTracks; t++) {
+        for (let s = newNumScenes; s < this.numScenes; s++) {
+          this.callbacks.sendOSC(clipSlot.stopListenHasClip(t, s));
+        }
+      }
+      // Update structure
       this.session.setStructure(newNumTracks, newNumScenes);
     }
 
@@ -593,6 +603,24 @@ export class SyncManager {
     // Set up clip slot listeners for this track
     for (let s = 0; s < this.numScenes; s++) {
       this.callbacks.sendOSC(clipSlot.startListenHasClip(trackIndex, s));
+    }
+  }
+
+  /**
+   * Stop listeners for a single track (when track is deleted)
+   */
+  private stopTrackListeners(trackIndex: number): void {
+    this.callbacks.sendOSC(track.stopListenVolume(trackIndex));
+    this.callbacks.sendOSC(track.stopListenPan(trackIndex));
+    this.callbacks.sendOSC(track.stopListenMute(trackIndex));
+    this.callbacks.sendOSC(track.stopListenSolo(trackIndex));
+    this.callbacks.sendOSC(track.stopListenArm(trackIndex));
+    this.callbacks.sendOSC(track.stopListenPlayingSlot(trackIndex));
+    this.callbacks.sendOSC(track.stopListenFiredSlot(trackIndex));
+
+    // Stop clip slot listeners for this track
+    for (let s = 0; s < this.numScenes; s++) {
+      this.callbacks.sendOSC(clipSlot.stopListenHasClip(trackIndex, s));
     }
   }
 }

@@ -20,6 +20,8 @@ use tauri_plugin_autostart::MacosLauncher;
 #[cfg(not(debug_assertions))]
 use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+#[cfg(not(debug_assertions))]
+use tauri_plugin_updater::UpdaterExt;
 #[allow(unused_imports)]
 use tauri_plugin_shell::process::CommandChild;
 #[allow(unused_imports)]
@@ -75,6 +77,7 @@ fn main() {
             MacosLauncher::LaunchAgent,
             Some(vec![]),
         ))
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(AppState {
             bridge_process: Mutex::new(None),
         })
@@ -92,14 +95,15 @@ fn main() {
 
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
 
-            // Only show autostart option in release builds
+            // Only show autostart and updates options in release builds
             #[cfg(not(debug_assertions))]
             let menu = {
                 let autostart_manager = app.autolaunch();
                 let autostart_enabled = autostart_manager.is_enabled().unwrap_or(false);
                 let autostart = CheckMenuItem::with_id(app, "autostart", "Start Automatically", true, autostart_enabled, None::<&str>)?;
+                let check_updates = MenuItem::with_id(app, "check_updates", "Check for Updates...", true, None::<&str>)?;
                 let separator3 = PredefinedMenuItem::separator(app)?;
-                Menu::with_items(app, &[&open_ui, &show_qr, &separator1, &install_script, &separator2, &autostart, &separator3, &quit])?
+                Menu::with_items(app, &[&open_ui, &show_qr, &separator1, &install_script, &separator2, &autostart, &check_updates, &separator3, &quit])?
             };
 
             #[cfg(debug_assertions)]
@@ -131,6 +135,19 @@ fn main() {
 
             #[cfg(debug_assertions)]
             println!("[dev] Skipping sidecar - run `bun run server/standalone.ts` manually");
+
+            // Check for updates on startup (release only)
+            #[cfg(not(debug_assertions))]
+            {
+                let handle = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    // Small delay to let app fully initialize
+                    tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+                    if let Err(e) = check_for_updates(handle, false).await {
+                        eprintln!("Update check failed: {}", e);
+                    }
+                });
+            }
 
             Ok(())
         })
@@ -274,6 +291,15 @@ fn handle_menu_event(app: &AppHandle, id: &str) {
                 }
             }
         }
+        #[cfg(not(debug_assertions))]
+        "check_updates" => {
+            let handle = app.clone();
+            tauri::async_runtime::spawn(async move {
+                if let Err(e) = check_for_updates(handle, true).await {
+                    eprintln!("Update check failed: {}", e);
+                }
+            });
+        }
         "quit" => {
             stop_bridge(app);
             app.exit(0);
@@ -324,6 +350,71 @@ fn stop_bridge(app: &AppHandle) {
             println!("Bridge stopped");
         }
     }
+}
+
+#[cfg(not(debug_assertions))]
+async fn check_for_updates(app: AppHandle, manual: bool) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let updater = app.updater()?;
+
+    match updater.check().await {
+        Ok(Some(update)) => {
+            println!("Update available: {}", update.version);
+
+            let should_update = app.dialog()
+                .message(format!(
+                    "Version {} is available (you have {}).\n\nWould you like to install it now?",
+                    update.version,
+                    env!("CARGO_PKG_VERSION")
+                ))
+                .title("Update Available")
+                .ok_button_label("Install")
+                .cancel_button_label("Later")
+                .blocking_show();
+
+            if should_update {
+                println!("Downloading update...");
+
+                // Download and install with progress callbacks
+                update.download_and_install(
+                    |downloaded, total| {
+                        if let Some(total) = total {
+                            let percent = (downloaded as f64 / total as f64 * 100.0) as u32;
+                            println!("Downloading: {}%", percent);
+                        }
+                    },
+                    || {
+                        println!("Download complete, installing...");
+                    }
+                ).await?;
+
+                println!("Update installed, restarting...");
+                app.restart();
+            }
+        }
+        Ok(None) => {
+            println!("No updates available");
+            if manual {
+                app.dialog()
+                    .message("You're running the latest version.")
+                    .title("No Updates")
+                    .kind(MessageDialogKind::Info)
+                    .blocking_show();
+            }
+        }
+        Err(e) => {
+            eprintln!("Update check error: {}", e);
+            if manual {
+                app.dialog()
+                    .message(format!("Failed to check for updates:\n\n{}", e))
+                    .title("Update Error")
+                    .kind(MessageDialogKind::Error)
+                    .blocking_show();
+            }
+            return Err(e.into());
+        }
+    }
+
+    Ok(())
 }
 
 fn get_remote_scripts_path() -> Result<PathBuf, String> {

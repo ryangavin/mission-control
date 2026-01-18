@@ -15,6 +15,7 @@ export {
   application,
   song,
   view,
+  masterTrack,
   track,
   clipSlot,
   clip,

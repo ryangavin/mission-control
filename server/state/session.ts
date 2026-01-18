@@ -9,6 +9,7 @@ import type {
   Scene,
   ClipSlot,
   Clip,
+  MasterTrack,
   PatchPayload,
 } from '../../protocol';
 
@@ -211,6 +212,31 @@ export class SessionManager {
   }
 
   // ==========================================================================
+  // Master Track Updates
+  // ==========================================================================
+
+  getMasterTrack(): MasterTrack {
+    return this.state.masterTrack;
+  }
+
+  updateMasterTrack(updates: Partial<MasterTrack>): PatchPayload {
+    Object.assign(this.state.masterTrack, updates);
+    return { kind: 'masterTrack', masterTrack: this.state.masterTrack };
+  }
+
+  setMasterTrackColor(color: number): PatchPayload {
+    return this.updateMasterTrack({ color });
+  }
+
+  setMasterTrackVolume(volume: number): PatchPayload {
+    return this.updateMasterTrack({ volume });
+  }
+
+  setMasterTrackPan(pan: number): PatchPayload {
+    return this.updateMasterTrack({ pan });
+  }
+
+  // ==========================================================================
   // Clip Slot Updates
   // ==========================================================================
 
@@ -269,6 +295,7 @@ export class SessionManager {
       beatTime: 0,
       tracks: [],
       scenes: [],
+      masterTrack: { color: 0, volume: 0.85, pan: 0 },
       selectedTrack: 0,
       selectedScene: 0,
     };

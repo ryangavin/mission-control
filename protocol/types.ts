@@ -12,8 +12,15 @@ export interface SessionState {
   beatTime: number;  // Current song time in beats
   tracks: Track[];
   scenes: Scene[];
+  masterTrack: MasterTrack;
   selectedTrack: number;
   selectedScene: number;
+}
+
+export interface MasterTrack {
+  color: number;
+  volume: number;
+  pan: number;
 }
 
 export interface Track {
@@ -120,6 +127,7 @@ export type PatchPayload =
   | { kind: 'track'; trackIndex: number; track: Track }
   | { kind: 'clip'; trackIndex: number; sceneIndex: number; clipSlot: ClipSlot }
   | { kind: 'scene'; sceneIndex: number; scene: Scene }
+  | { kind: 'masterTrack'; masterTrack: MasterTrack }
   | { kind: 'selection'; selectedTrack?: number; selectedScene?: number }
   | { kind: 'structure'; numTracks: number; numScenes: number };
 

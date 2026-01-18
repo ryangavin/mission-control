@@ -10,6 +10,7 @@
     beatTime: number;
     onClipClick: (trackId: number, sceneId: number) => void;
     onClipMove: (srcTrack: number, srcScene: number, dstTrack: number, dstScene: number) => void;
+    onAddScene: () => void;
     onScroll?: () => void;
   }
 
@@ -18,6 +19,7 @@
     beatTime,
     onClipClick,
     onClipMove,
+    onAddScene,
     onScroll,
   }: Props = $props();
 
@@ -173,6 +175,15 @@
         />
       {/each}
     {/each}
+
+  </div>
+
+  <!-- Add scene button - outside grid so it can be sticky -->
+  <div class="add-scene-row">
+    <button class="add-scene-btn" onclick={onAddScene}>
+      <i class="fa-solid fa-plus"></i>
+      <span>Add New Scene</span>
+    </button>
   </div>
 </div>
 
@@ -184,7 +195,6 @@
     scrollbar-width: none;
     -ms-overflow-style: none;
     overscroll-behavior: none;
-    box-shadow: inset -20px 0 20px -10px rgba(0, 0, 0, 0.7);
   }
 
   .grid-scroll::-webkit-scrollbar {
@@ -214,6 +224,45 @@
     min-width: fit-content;
     background: #1a1a1a;
     padding: 0 3px 3px 3px;
+  }
+
+  .add-scene-row {
+    position: sticky;
+    left: 0;
+    padding: 12px 20px 3px 20px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .add-scene-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 200px;
+    height: 47px;
+    box-sizing: border-box;
+    background: #2d2d2d;
+    border: 1px dashed #555;
+    border-radius: 3px;
+    color: #888;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+
+  .add-scene-btn i {
+    font-size: 16px;
+  }
+
+  .add-scene-btn:hover {
+    background: #3d3d3d;
+    border-color: #777;
+    color: #fff;
+  }
+
+  .add-scene-btn:active {
+    transform: scale(0.98);
   }
 
 </style>

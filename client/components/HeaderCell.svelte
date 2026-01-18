@@ -30,7 +30,7 @@
     justify-content: center;
     gap: 3px;
     padding: 6px;
-    background: #1e1e1e;
+    background: #2a2a2a;
     border-top: 3px solid var(--color);
     border-radius: 3px;
     font-size: 10px;

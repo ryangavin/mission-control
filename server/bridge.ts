@@ -38,6 +38,10 @@ export class Bridge {
   private readonly CONNECTION_CHECK_INTERVAL = 5000; // Check every 5 seconds
   private readonly PING_TIMEOUT = 2000; // 2 second timeout for ping response
 
+  // Structure polling (since AbletonOSC doesn't support num_tracks/num_scenes listeners)
+  private structurePollInterval: ReturnType<typeof setInterval> | null = null;
+  private readonly STRUCTURE_POLL_INTERVAL = 1000; // Check every 1 second
+
   constructor(options: BridgeOptions) {
     this.config = options.config;
     this.log = options.onLog || console.log;
@@ -157,6 +161,9 @@ export class Bridge {
 
     // Stop connection checking
     this.stopConnectionChecking();
+
+    // Stop structure polling
+    this.stopStructurePolling();
 
     // Stop beat time polling
     this.stopBeatTimePolling();
@@ -299,6 +306,9 @@ export class Bridge {
       this.sync.setupListeners();
       this.synced = true;
 
+      // Start polling for structure changes
+      this.startStructurePolling();
+
       // Broadcast session to all clients
       this.broadcastToClients({ type: 'session', payload: this.session.getState() });
     } catch (error) {
@@ -374,9 +384,12 @@ export class Bridge {
    * Handle an incoming OSC message from Ableton
    */
   private handleOSCMessage(message: { address: string; args: unknown[] }): void {
-    // Log volume/pan updates for debugging
-    if (message.address.includes('/volume') || message.address.includes('/panning')) {
-      this.log(`OSC <- ${message.address} ${JSON.stringify(message.args)}`);
+    // Skip logging common polling messages to reduce noise
+    const isPollingMessage = message.address.includes('/num_tracks') ||
+                             message.address.includes('/num_scenes') ||
+                             message.address === '/live/test';
+    if (!isPollingMessage) {
+      // this.log(`OSC <- ${message.address} ${JSON.stringify(message.args)}`);
     }
 
     // Check for ping response (connection test)
@@ -459,6 +472,17 @@ export class Bridge {
       return this.session.setSelectedScene(args[0] as number);
     }
 
+    // Master track updates
+    if (address === '/live/master/get/color') {
+      return this.session.setMasterTrackColor(args[0] as number);
+    }
+    if (address === '/live/master/get/volume') {
+      return this.session.setMasterTrackVolume(args[0] as number);
+    }
+    if (address === '/live/master/get/panning') {
+      return this.session.setMasterTrackPan(args[0] as number);
+    }
+
     // Track updates - format: [trackId, value]
     if (address === '/live/track/get/volume' && args.length >= 2) {
       return this.session.setTrackVolume(args[0] as number, args[1] as number);
@@ -511,6 +535,7 @@ export class Bridge {
 
     // Structure updates - track/scene count changed
     if (address === '/live/song/get/num_tracks' || address === '/live/song/get/num_scenes') {
+      this.log(`OSC <- ${address} ${JSON.stringify(args)}`);
       const currentStructure = this.sync.getStructure();
       const newValue = args[0] as number;
       const isTrackChange = address === '/live/song/get/num_tracks';
@@ -522,14 +547,18 @@ export class Bridge {
         this.log(`Structure change detected: ${isTrackChange ? 'tracks' : 'scenes'} ${isTrackChange ? currentStructure.numTracks : currentStructure.numScenes} -> ${newValue}`);
         // Trigger async resync and broadcast structure patch when done
         this.sync.checkStructureChanges().then((didChange) => {
+          this.log(`Structure sync complete, didChange=${didChange}`);
           if (didChange) {
             const newStructure = this.sync.getStructure();
+            this.log(`Broadcasting structure patch: ${newStructure.numTracks} tracks, ${newStructure.numScenes} scenes`);
             this.broadcastToClients({
               type: 'patch',
               payload: { kind: 'structure', numTracks: newStructure.numTracks, numScenes: newStructure.numScenes }
             });
           }
         });
+      } else {
+        this.log(`Structure unchanged: ${isTrackChange ? 'tracks' : 'scenes'} still ${newValue}`);
       }
       return null;
     }
@@ -661,6 +690,7 @@ export class Bridge {
       // Reset sync state when disconnected
       if (!connected) {
         this.synced = false;
+        this.stopStructurePolling();
       } else if (this.clients.size > 0 && !this.synced) {
         // Auto-sync when Ableton reconnects and we have waiting clients
         this.triggerSync();
@@ -679,6 +709,7 @@ export class Bridge {
       await this.sync.performInitialSync();
       this.sync.setupListeners();
       this.synced = true;
+      this.startStructurePolling();
       this.broadcastToClients({ type: 'session', payload: this.session.getState() });
     } catch (error) {
       this.log(`Sync failed: ${error}`);
@@ -757,6 +788,44 @@ export class Bridge {
     if (this.pendingPing) {
       clearTimeout(this.pendingPing.timeout);
       this.pendingPing = null;
+    }
+  }
+
+  /**
+   * Start polling for structure changes (track/scene count)
+   * AbletonOSC doesn't support listeners for num_tracks/num_scenes
+   */
+  private startStructurePolling(): void {
+    if (this.structurePollInterval) return;
+
+    const poll = async () => {
+      if (!this.synced || !this.abletonConnected) return;
+
+      try {
+        const didChange = await this.sync.checkStructureChanges();
+        if (didChange) {
+          const newStructure = this.sync.getStructure();
+          this.log(`Structure change detected: ${newStructure.numTracks} tracks, ${newStructure.numScenes} scenes`);
+          // Broadcast full session since structure changed significantly
+          this.broadcastToClients({ type: 'session', payload: this.session.getState() });
+        }
+      } catch (error) {
+        this.log(`Structure poll error: ${error}`);
+      }
+    };
+
+    this.structurePollInterval = setInterval(poll, this.STRUCTURE_POLL_INTERVAL);
+    this.log(`Structure polling started (every ${this.STRUCTURE_POLL_INTERVAL}ms)`);
+  }
+
+  /**
+   * Stop polling for structure changes
+   */
+  private stopStructurePolling(): void {
+    if (this.structurePollInterval) {
+      clearInterval(this.structurePollInterval);
+      this.structurePollInterval = null;
+      this.log('Structure polling stopped');
     }
   }
 }

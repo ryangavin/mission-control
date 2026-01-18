@@ -73,6 +73,10 @@
         if (patch.selectedScene !== undefined) session.selectedScene = patch.selectedScene;
         break;
 
+      case 'masterTrack':
+        session.masterTrack = patch.masterTrack;
+        break;
+
       case 'structure':
         console.log('[app] Structure changed, requesting new session');
         send({ type: 'session/request' });
@@ -225,10 +229,7 @@
 
   function handleAddScene() {
     send({ type: 'scene/create' });
-    // Force re-sync after a short delay to pick up the new scene
-    setTimeout(() => {
-      send({ type: 'session/resync' });
-    }, 100);
+    // Server will detect structure change and broadcast patch automatically
   }
 
   function handleStopAll() {
@@ -366,12 +367,14 @@
           {beatTime}
           onClipClick={handleClipClick}
           onClipMove={handleClipMove}
+          onAddScene={handleAddScene}
           onScroll={handleGridScroll}
         />
 
         <SceneColumn
           bind:this={sceneColumnRef}
           {scenes}
+          masterColor={session.masterTrack?.color ?? 0}
           onSceneLaunch={handleSceneLaunch}
           onScroll={handleSceneScroll}
         />
@@ -471,5 +474,19 @@
     flex: 1;
     display: flex;
     overflow: hidden;
+    position: relative;
+  }
+
+  /* Shadow cast from SceneColumn onto ClipGrid */
+  .grid-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 83px; /* SceneColumn width (80px) + left padding (3px) */
+    bottom: 0;
+    width: 20px;
+    background: linear-gradient(to left, rgba(0, 0, 0, 0.5), transparent);
+    pointer-events: none;
+    z-index: 15;
   }
 </style>
