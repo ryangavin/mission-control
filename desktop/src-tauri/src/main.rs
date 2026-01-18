@@ -5,9 +5,13 @@ use std::fs;
 use std::net::UdpSocket;
 use std::path::PathBuf;
 use std::sync::Mutex;
+use qrcode::QrCode;
+use image::Luma;
+use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{TrayIconBuilder, TrayIconEvent},
+    webview::WebviewWindowBuilder,
     AppHandle, Manager, RunEvent,
 };
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
@@ -29,6 +33,29 @@ fn get_local_ip() -> Option<String> {
     socket.connect("8.8.8.8:80").ok()?;
     let addr = socket.local_addr().ok()?;
     Some(addr.ip().to_string())
+}
+
+/// Generate a QR code as base64-encoded PNG
+fn generate_qr_code_base64(data: &str) -> Result<String, String> {
+    use image::ImageEncoder;
+
+    let code = QrCode::new(data.as_bytes())
+        .map_err(|e| format!("Failed to create QR code: {}", e))?;
+
+    let image = code.render::<Luma<u8>>()
+        .min_dimensions(300, 300)
+        .build();
+
+    let mut png_bytes: Vec<u8> = Vec::new();
+    let encoder = image::codecs::png::PngEncoder::new(&mut png_bytes);
+    encoder.write_image(
+        image.as_raw(),
+        image.width(),
+        image.height(),
+        image::ExtendedColorType::L8,
+    ).map_err(|e| format!("Failed to encode PNG: {}", e))?;
+
+    Ok(BASE64.encode(&png_bytes))
 }
 
 struct AppState {
@@ -105,20 +132,76 @@ fn handle_menu_event(app: &AppHandle, id: &str) {
             }
         }
         "show_qr" => {
-            // Generate QR code URL and open in browser
+            // If QR window already exists, focus it
+            if let Some(window) = app.get_webview_window("qr") {
+                let _ = window.set_focus();
+                return;
+            }
+
+            // Generate QR code and show in window
             let url = if let Some(ip) = get_local_ip() {
                 format!("http://{}:{}", ip, UI_PORT)
             } else {
                 format!("http://localhost:{}", UI_PORT)
             };
 
-            let qr_url = format!(
-                "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={}",
-                urlencoding::encode(&url)
-            );
+            match generate_qr_code_base64(&url) {
+                Ok(base64_png) => {
+                    let html = format!(r#"
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <style>
+                                body {{
+                                    margin: 0;
+                                    display: flex;
+                                    flex-direction: column;
+                                    align-items: center;
+                                    justify-content: center;
+                                    height: 100vh;
+                                    background: #1a1a1a;
+                                    color: #fff;
+                                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                                }}
+                                img {{
+                                    border-radius: 8px;
+                                }}
+                                p {{
+                                    margin-top: 16px;
+                                    font-size: 14px;
+                                    color: #888;
+                                }}
+                            </style>
+                        </head>
+                        <body>
+                            <img src="data:image/png;base64,{}" width="300" height="300" />
+                            <p>{}</p>
+                        </body>
+                        </html>
+                    "#, base64_png, url);
 
-            if let Err(e) = open::that(&qr_url) {
-                eprintln!("Failed to open QR code: {}", e);
+                    let data_url = format!("data:text/html,{}", urlencoding::encode(&html));
+                    match WebviewWindowBuilder::new(app, "qr", tauri::WebviewUrl::External(data_url.parse().unwrap()))
+                        .title("Connect on Mobile")
+                        .inner_size(350.0, 420.0)
+                        .resizable(false)
+                        .center()
+                        .build()
+                    {
+                        Ok(_) => {}
+                        Err(e) => {
+                            eprintln!("Failed to create QR window: {}", e);
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Failed to generate QR code: {}", e);
+                    app.dialog()
+                        .message(format!("Failed to generate QR code:\n\n{}", e))
+                        .title("Error")
+                        .kind(MessageDialogKind::Error)
+                        .blocking_show();
+                }
             }
         }
         "install_script" => {
