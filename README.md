@@ -14,7 +14,9 @@ Launch clips and control Ableton Live from any browser. Inspired by the legendar
 - **Real-time Sync** — Instant bidirectional updates between Ableton and the UI
 - **Visual Feedback** — Color-coded clips, playback progress indicators, playing states
 
-## Download
+## Quick Start
+
+### 1. Download
 
 | Platform | Download |
 |----------|----------|
@@ -23,12 +25,6 @@ Launch clips and control Ableton Live from any browser. Inspired by the legendar
 | **Windows** | [Mission Control Setup.exe](https://github.com/ryangavin/mission-control/releases/latest/download/Mission.Control_x64-setup.exe) |
 
 Or try the [edge build](https://github.com/ryangavin/mission-control/releases/tag/edge) for bleeding edge updates on every commit.
-
-## Quick Start
-
-### 1. Download
-
-Grab the latest release for your platform from [GitHub Releases](https://github.com/ryangavin/mission-control/releases/latest).
 
 ### 2. Install the Remote Script
 
