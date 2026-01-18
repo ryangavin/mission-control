@@ -44,7 +44,12 @@ In Ableton Live, go to **Preferences → Link, Tempo & MIDI → Control Surface*
 
 ### 4. Connect
 
-Open a Live Set. Click the tray icon → **Show UI**. The connection status indicator will turn green when connected.
+Open a Live Set, then click the tray icon:
+
+- **Open Mission Control** — Opens the UI in a browser on this computer
+- **Connect on Mobile** — Shows a QR code to connect from a phone or tablet on the same network
+
+The connection status indicator will turn green when connected.
 
 ## Requirements
 
