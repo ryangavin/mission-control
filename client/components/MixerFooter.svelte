@@ -246,6 +246,7 @@
     onmousedown={handleDragStart}
     ontouchstart={handleDragStart}
     role="separator"
+    tabindex="0"
     aria-orientation="horizontal"
     aria-label="Resize mixer"
   >
