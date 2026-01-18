@@ -13,13 +13,13 @@
 </script>
 
 {#if collapsed}
-  <footer class="footer collapsed" onclick={() => collapsed = false}>
+  <button type="button" class="footer collapsed" onclick={() => collapsed = false}>
     <div class="collapsed-content">
       <i class="fa-solid fa-rocket app-icon"></i>
       <span class="app-title">Mission Control</span>
       <i class="fa-solid fa-chevron-up chevron"></i>
     </div>
-  </footer>
+  </button>
 {:else}
   <footer class="footer">
     <ConnectionStatus {bridgeConnected} {abletonConnected} />

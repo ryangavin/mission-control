@@ -37,7 +37,7 @@
     <div class="modal">
       <div class="modal-header">
         <h2>Mission Control Help</h2>
-        <button class="close-btn" onclick={onClose}>x</button>
+        <button class="close-btn" onclick={onClose} aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <div class="tabs">
@@ -138,10 +138,11 @@
                 <a href="https://github.com/ryangavin/mission-control" target="_blank" rel="noopener" class="about-btn">
                   <i class="fa-brands fa-github"></i> GitHub
                 </a>
-                <a href="https://github.com/ideoforms/AbletonOSC" target="_blank" rel="noopener" class="about-btn">
-                  AbletonOSC
+                <a href="https://ko-fi.com/ryangavin" target="_blank" rel="noopener" class="about-btn donate">
+                  <i class="fa-solid fa-heart"></i> Donate
                 </a>
               </div>
+              <p class="credits">Powered by <a href="https://github.com/ideoforms/AbletonOSC" target="_blank" rel="noopener">AbletonOSC</a></p>
 
               <div class="about-footer">
                 <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener" class="license">GPL-3.0</a>
@@ -196,15 +197,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     background: #1a1a1a;
     border: 1px solid #333;
     border-radius: 4px;
     color: #888;
     cursor: pointer;
-    font-size: 16px;
-    line-height: 1;
+    font-size: 12px;
     transition: all 0.1s;
   }
 
@@ -242,7 +242,7 @@
 
   .modal-content {
     flex: 1;
-    overflow-y: auto;
+    overflow-y: scroll;
     padding: 20px;
   }
 
@@ -339,7 +339,7 @@
   .about-section {
     display: flex;
     gap: 24px;
-    padding: 0;
+    padding: 0 12px 0 0;
   }
 
   .about-left {
@@ -355,6 +355,8 @@
     flex: 2;
     display: flex;
     flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .app-icon {
@@ -375,6 +377,7 @@
 
   .about-links {
     display: flex;
+    flex-wrap: wrap;
     gap: 12px;
     margin: 20px 0;
   }
@@ -396,6 +399,26 @@
   .about-btn:hover {
     background: #2a2a2a;
     color: #fff;
+  }
+
+  .about-btn.donate {
+    border-color: #ff6b6b44;
+    color: #ff6b6b;
+  }
+
+  .about-btn.donate:hover {
+    background: #ff6b6b22;
+    border-color: #ff6b6b;
+  }
+
+  .credits {
+    font-size: 12px;
+    color: #666;
+    margin: 0;
+  }
+
+  .credits a {
+    color: #ff9944;
   }
 
   .about-footer {

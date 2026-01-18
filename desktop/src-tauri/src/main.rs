@@ -154,9 +154,16 @@ fn main() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(|app, event| {
-            if let RunEvent::Exit = event {
-                // Stop bridge on exit
-                stop_bridge(app);
+            match event {
+                RunEvent::ExitRequested { api, .. } => {
+                    // Prevent app from exiting when windows are closed (tray-only app)
+                    api.prevent_exit();
+                }
+                RunEvent::Exit => {
+                    // Stop bridge on exit
+                    stop_bridge(app);
+                }
+                _ => {}
             }
         });
 }

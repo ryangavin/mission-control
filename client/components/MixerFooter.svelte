@@ -23,8 +23,8 @@
 
   let {
     tracks,
-    masterVolume,
-    masterPan,
+    masterVolume: _masterVolume,
+    masterPan: _masterPan,
     onVolume,
     onPan,
     onSend,
@@ -32,8 +32,8 @@
     onSolo,
     onArm,
     onStop,
-    onMasterVolume,
-    onMasterPan,
+    onMasterVolume: _onMasterVolume,
+    onMasterPan: _onMasterPan,
     onStopAll,
     onScroll,
   }: Props = $props();
@@ -199,32 +199,20 @@
     onPan(trackId, value);
   }
 
-  function handleMasterPanInput(e: Event) {
-    let value = parseFloat((e.target as HTMLInputElement).value) / 50;
-    // Snap to center if within threshold
-    if (Math.abs(value) < 0.08) {
-      value = 0;
-      (e.target as HTMLInputElement).value = '0';
-    }
-    onMasterPan(value);
-  }
 </script>
 
 <div class="mixer-footer">
-  <!-- Resize handle -->
-  <div
+  <button
+    type="button"
     class="resize-handle"
     class:dragging={isDragging}
     onmousedown={handleDragStart}
     ontouchstart={handleDragStart}
     onkeydown={handleKeyDown}
-    role="separator"
-    tabindex="0"
-    aria-orientation="horizontal"
     aria-label="Resize mixer"
   >
-    <div class="grip"></div>
-  </div>
+    <span class="grip"></span>
+  </button>
 
   <!-- Faders area: resizable, can be hidden -->
   {#if !collapsed}
@@ -307,7 +295,7 @@
         <div class="control-buttons">
           <button class="control-btn placeholder" disabled>M</button>
           <button class="control-btn placeholder" disabled>S</button>
-          <button class="control-btn placeholder" disabled><i class="fa-solid fa-circle"></i></button>
+          <button class="control-btn placeholder" disabled aria-label="Arm"><i class="fa-solid fa-circle"></i></button>
         </div>
         <button class="stop-btn" onclick={onStopAll} title="Stop All Clips"><i class="fa-solid fa-stop"></i> All</button>
       </div>
@@ -328,8 +316,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
     height: 10px;
     background: #1e1e1e;
+    border: none;
+    padding: 0;
     cursor: ns-resize;
     user-select: none;
     touch-action: none;
