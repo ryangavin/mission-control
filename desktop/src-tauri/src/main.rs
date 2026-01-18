@@ -9,11 +9,16 @@ use qrcode::QrCode;
 use image::Luma;
 use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 use tauri::{
-    menu::{Menu, MenuItem},
+    menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{TrayIconBuilder, TrayIconEvent},
     webview::WebviewWindowBuilder,
     AppHandle, Manager, RunEvent,
 };
+#[cfg(not(debug_assertions))]
+use tauri::menu::CheckMenuItem;
+use tauri_plugin_autostart::MacosLauncher;
+#[cfg(not(debug_assertions))]
+use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 #[allow(unused_imports)]
 use tauri_plugin_shell::process::CommandChild;
@@ -66,6 +71,10 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_autostart::init(
+            MacosLauncher::LaunchAgent,
+            Some(vec![]),
+        ))
         .manage(AppState {
             bridge_process: Mutex::new(None),
         })
@@ -77,11 +86,23 @@ fn main() {
             // Build tray menu
             let open_ui = MenuItem::with_id(app, "open_ui", "Open Mission Control", true, None::<&str>)?;
             let show_qr = MenuItem::with_id(app, "show_qr", "Connect on Mobile", true, None::<&str>)?;
-            let separator1 = MenuItem::with_id(app, "sep1", "─────────────", false, None::<&str>)?;
+            let separator1 = PredefinedMenuItem::separator(app)?;
             let install_script = MenuItem::with_id(app, "install_script", "Install AbletonOSC", true, None::<&str>)?;
-            let separator2 = MenuItem::with_id(app, "sep2", "─────────────", false, None::<&str>)?;
+            let separator2 = PredefinedMenuItem::separator(app)?;
+
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
 
+            // Only show autostart option in release builds
+            #[cfg(not(debug_assertions))]
+            let menu = {
+                let autostart_manager = app.autolaunch();
+                let autostart_enabled = autostart_manager.is_enabled().unwrap_or(false);
+                let autostart = CheckMenuItem::with_id(app, "autostart", "Start Automatically", true, autostart_enabled, None::<&str>)?;
+                let separator3 = PredefinedMenuItem::separator(app)?;
+                Menu::with_items(app, &[&open_ui, &show_qr, &separator1, &install_script, &separator2, &autostart, &separator3, &quit])?
+            };
+
+            #[cfg(debug_assertions)]
             let menu = Menu::with_items(app, &[&open_ui, &show_qr, &separator1, &install_script, &separator2, &quit])?;
 
             // Create tray icon with custom rocket icon
@@ -223,6 +244,21 @@ fn handle_menu_event(app: &AppHandle, id: &str) {
                         .title("Installation Failed")
                         .kind(MessageDialogKind::Error)
                         .blocking_show();
+                }
+            }
+        }
+        #[cfg(not(debug_assertions))]
+        "autostart" => {
+            let autostart_manager = app.autolaunch();
+            let is_enabled = autostart_manager.is_enabled().unwrap_or(false);
+
+            if is_enabled {
+                if let Err(e) = autostart_manager.disable() {
+                    eprintln!("Failed to disable autostart: {}", e);
+                }
+            } else {
+                if let Err(e) = autostart_manager.enable() {
+                    eprintln!("Failed to enable autostart: {}", e);
                 }
             }
         }
