@@ -284,6 +284,7 @@ export class SyncManager {
     // Track-level listeners
     for (let t = 0; t < this.numTracks; t++) {
       this.callbacks.sendOSC(track.startListenVolume(t));
+      this.callbacks.sendOSC(track.startListenPan(t));
       this.callbacks.sendOSC(track.startListenMute(t));
       this.callbacks.sendOSC(track.startListenSolo(t));
       this.callbacks.sendOSC(track.startListenArm(t));
@@ -367,6 +368,7 @@ export class SyncManager {
     // Tracks
     for (let t = 0; t < this.numTracks; t++) {
       this.callbacks.sendOSC(track.stopListenVolume(t));
+      this.callbacks.sendOSC(track.stopListenPan(t));
       this.callbacks.sendOSC(track.stopListenMute(t));
       this.callbacks.sendOSC(track.stopListenSolo(t));
       this.callbacks.sendOSC(track.stopListenArm(t));
@@ -581,6 +583,7 @@ export class SyncManager {
    */
   private setupTrackListeners(trackIndex: number): void {
     this.callbacks.sendOSC(track.startListenVolume(trackIndex));
+    this.callbacks.sendOSC(track.startListenPan(trackIndex));
     this.callbacks.sendOSC(track.startListenMute(trackIndex));
     this.callbacks.sendOSC(track.startListenSolo(trackIndex));
     this.callbacks.sendOSC(track.startListenArm(trackIndex));

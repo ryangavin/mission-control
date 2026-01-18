@@ -289,8 +289,7 @@
     align-items: center;
     justify-content: center;
     height: 10px;
-    background: #1a1a1a;
-    border-bottom: 1px solid #333;
+    background: #1e1e1e;
     cursor: ns-resize;
     user-select: none;
     touch-action: none;
@@ -298,7 +297,7 @@
 
   .resize-handle:hover,
   .resize-handle.dragging {
-    background: #252525;
+    background: #282828;
   }
 
   .grip {

@@ -374,8 +374,10 @@ export class Bridge {
    * Handle an incoming OSC message from Ableton
    */
   private handleOSCMessage(message: { address: string; args: unknown[] }): void {
-    // Logging disabled for now
-    // this.log(`OSC <- ${message.address} ${JSON.stringify(message.args)}`);
+    // Log volume/pan updates for debugging
+    if (message.address.includes('/volume') || message.address.includes('/panning')) {
+      this.log(`OSC <- ${message.address} ${JSON.stringify(message.args)}`);
+    }
 
     // Check for ping response (connection test)
     if (message.address === '/live/test') {
