@@ -37,6 +37,7 @@
     font-weight: 500;
     height: 56px;
     box-sizing: border-box;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
   }
 
   .header-cell.compact {

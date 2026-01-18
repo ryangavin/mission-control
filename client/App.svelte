@@ -489,8 +489,8 @@
     top: 0;
     right: 83px; /* SceneColumn width (80px) + left padding (3px) */
     bottom: 0;
-    width: 20px;
-    background: linear-gradient(to left, rgba(0, 0, 0, 0.5), transparent);
+    width: 32px;
+    background: linear-gradient(to left, rgba(0, 0, 0, 0.3), transparent);
     pointer-events: none;
     z-index: 15;
   }

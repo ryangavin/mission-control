@@ -193,7 +193,7 @@
     transform: translateX(-50%);
     font-size: 9px;
     font-weight: 500;
-    color: #666;
+    color: #fff;
     line-height: 1;
   }
 </style>

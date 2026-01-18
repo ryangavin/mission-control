@@ -82,9 +82,9 @@
 
   let fadersHeight = $state(loadSavedHeight());
 
-  // Ensure height meets minimum when sends change
+  // Ensure height meets minimum when sends change (but only if not collapsed)
   $effect(() => {
-    if (fadersHeight < minFadersHeight) {
+    if (fadersHeight > 0 && fadersHeight < minFadersHeight) {
       fadersHeight = minFadersHeight;
     }
   });
@@ -101,7 +101,38 @@
     return () => window.removeEventListener('resize', handleResize);
   });
 
-  let collapsed = $derived(fadersHeight < minFadersHeight);
+  let collapsed = $derived(fadersHeight === 0);
+
+  // Volume tick marks - linear dB spacing
+  // 0dB = 85%, +6dB = 100%
+  // Same rate above and below: 2.5% per dB
+  const dbToPos = (db: number) => {
+    return 85 + db * 2.5;
+  };
+
+  // Thumb is 10px tall, so 5px offset at each end
+  const THUMB_OFFSET = 5;
+
+  // Convert dB to slider percentage
+  // Known points: +6dB=100%, 0dB=85%, -60dB=3%
+  // Above 0: 2.5% per dB (15% / 6dB)
+  // Below 0: 1.367% per dB (82% / 60dB)
+  const dbToSliderPct = (db: number) => {
+    if (db >= 0) {
+      return 85 + db * 2.5;
+    }
+    return 85 + db * (82 / 60);
+  };
+
+  const volumeTicks = $derived(() => {
+    const ticks = [
+      { db: '6', pct: dbToSliderPct(6), zero: false },    // +6dB = 100%
+      { db: '0', pct: dbToSliderPct(0), zero: true },     // 0dB = 85%
+      { db: '60', pct: dbToSliderPct(-60), zero: false }, // -60dB = 3%
+    ];
+
+    return ticks;
+  });
 
   // Drag state
   let isDragging = $state(false);
@@ -126,9 +157,10 @@
 
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     const deltaY = dragStartY - clientY;
-    const newHeight = Math.max(minFadersHeight, Math.min(maxFadersHeight, dragStartHeight + deltaY));
+    const rawHeight = Math.max(0, Math.min(maxFadersHeight, dragStartHeight + deltaY));
 
-    fadersHeight = newHeight;
+    // Snap to collapsed as soon as we go below minimum
+    fadersHeight = rawHeight < minFadersHeight ? 0 : rawHeight;
   }
 
   function handleDragEnd() {
@@ -181,7 +213,12 @@
   }
 
   function handlePanInput(trackId: number, e: Event) {
-    const value = parseFloat((e.target as HTMLInputElement).value) / 50;
+    let value = parseFloat((e.target as HTMLInputElement).value) / 50;
+    // Snap to center if within threshold
+    if (Math.abs(value) < 0.08) {
+      value = 0;
+      (e.target as HTMLInputElement).value = '0';
+    }
     onPan(trackId, value);
   }
 
@@ -191,7 +228,12 @@
   }
 
   function handleMasterPanInput(e: Event) {
-    const value = parseFloat((e.target as HTMLInputElement).value) / 50;
+    let value = parseFloat((e.target as HTMLInputElement).value) / 50;
+    // Snap to center if within threshold
+    if (Math.abs(value) < 0.08) {
+      value = 0;
+      (e.target as HTMLInputElement).value = '0';
+    }
     onMasterPan(value);
   }
 </script>
@@ -228,16 +270,29 @@
                 {/each}
               </div>
               <div class="volume-section">
-                <input
-                  type="range"
-                  class="volume-slider"
-                  min="0"
-                  max="100"
-                  value={Math.round(track.volume * 100)}
-                  oninput={(e) => handleVolumeInput(track.id, e)}
-                  title="Volume"
-                  orient="vertical"
-                />
+                <div class="slider-with-ticks">
+                  <input
+                    type="range"
+                    class="volume-slider"
+                    min="0"
+                    max="100"
+                    value={Math.round(track.volume * 100)}
+                    style="--value: {track.volume * 100}%"
+                    oninput={(e) => handleVolumeInput(track.id, e)}
+                    title="Volume"
+                    orient="vertical"
+                  />
+                  <div class="volume-ticks">
+                    {#each volumeTicks() as tick}
+                      {@const offset = 5 * (1 - tick.pct / 50)}
+                      <div
+                        class="tick"
+                        class:zero={tick.zero}
+                        style="bottom: calc({tick.pct}% + {offset}px)"
+                      ><span>{tick.db}</span></div>
+                    {/each}
+                  </div>
+                </div>
               </div>
               <div class="fader-spacer"></div>
             </div>
@@ -248,6 +303,7 @@
                 min="-50"
                 max="50"
                 value={track.pan * 50}
+                style="--pan-start: {50 + Math.min(0, track.pan * 50)}%; --pan-end: {50 + Math.max(0, track.pan * 50)}%"
                 oninput={(e) => handlePanInput(track.id, e)}
                 title="Pan"
               />
@@ -264,6 +320,7 @@
               min="0"
               max="100"
               value={Math.round(masterVolume * 100)}
+              style="--value: {masterVolume * 100}%"
               oninput={handleMasterVolumeInput}
               title="Master Volume"
               orient="vertical"
@@ -276,6 +333,7 @@
               min="-50"
               max="50"
               value={masterPan * 50}
+              style="--pan-start: {50 + Math.min(0, masterPan * 50)}%; --pan-end: {50 + Math.max(0, masterPan * 50)}%"
               oninput={handleMasterPanInput}
               title="Master Pan"
             />
@@ -419,22 +477,71 @@
     min-height: 0;
   }
 
+  .slider-with-ticks {
+    flex: 1;
+    position: relative;
+    display: flex;
+    min-height: 0;
+  }
+
+
   .sends-section {
     flex: 1;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
   }
 
   .fader-spacer {
     flex: 1;
+    display: flex;
+    min-height: 0;
   }
+
+  .volume-ticks {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    left: 100%;
+    margin-left: 4px;
+    width: 30px;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .tick {
+    position: absolute;
+    left: -3px;
+    width: 5px;
+    height: 1px;
+    background: #666;
+    transform: translateY(50%);
+  }
+
+  .tick.zero {
+    background: #fff;
+  }
+
+  .tick span {
+    position: absolute;
+    left: 7px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 9px;
+    color: #888;
+    white-space: nowrap;
+  }
+
+  .tick.zero span {
+    color: #fff;
+  }
+
 
   .volume-slider {
     flex: 1;
-    width: 8px;
+    width: 6px;
     min-height: 20px;
     -webkit-appearance: none;
     appearance: none;
@@ -442,12 +549,14 @@
     cursor: pointer;
     writing-mode: vertical-lr;
     direction: rtl;
+    position: relative;
+    z-index: 2;
   }
 
   .volume-slider::-webkit-slider-runnable-track {
-    width: 8px;
+    width: 6px;
     height: 100%;
-    background: #444;
+    background: linear-gradient(to top, #5dade2 var(--value, 0%), #444 var(--value, 0%));
     border-radius: 2px;
   }
 
@@ -460,9 +569,37 @@
     border-radius: 2px;
     cursor: pointer;
     margin-left: -6px;
+    opacity: 1;
   }
 
   .volume-slider::-webkit-slider-thumb:hover {
+    background: #fff;
+  }
+
+  /* Firefox support */
+  .volume-slider::-moz-range-track {
+    width: 6px;
+    height: 100%;
+    background: #444;
+    border-radius: 2px;
+  }
+
+  .volume-slider::-moz-range-progress {
+    background: #5dade2;
+    border-radius: 2px;
+  }
+
+  .volume-slider::-moz-range-thumb {
+    width: 20px;
+    height: 10px;
+    background: #888;
+    border-radius: 2px;
+    border: none;
+    cursor: pointer;
+    opacity: 1;
+  }
+
+  .volume-slider::-moz-range-thumb:hover {
     background: #fff;
   }
 
@@ -477,17 +614,25 @@
   .pan-slider {
     flex: 1;
     min-width: 0;
-    height: 8px;
+    height: 6px;
     -webkit-appearance: none;
     appearance: none;
-    background: transparent;
+    /* Show blue fill from center to current pan position */
+    background: linear-gradient(
+      to right,
+      #444 var(--pan-start, 50%),
+      #5dade2 var(--pan-start, 50%),
+      #5dade2 var(--pan-end, 50%),
+      #444 var(--pan-end, 50%)
+    );
+    border-radius: 2px;
     cursor: pointer;
   }
 
   .pan-slider::-webkit-slider-runnable-track {
     width: 100%;
-    height: 8px;
-    background: #444;
+    height: 6px;
+    background: transparent;
     border-radius: 2px;
   }
 
@@ -496,13 +641,34 @@
     appearance: none;
     width: 14px;
     height: 14px;
-    margin-top: -3px;
+    margin-top: -4px;
     background: #888;
     border-radius: 2px;
     cursor: pointer;
   }
 
   .pan-slider::-webkit-slider-thumb:hover {
+    background: #fff;
+  }
+
+  /* Firefox pan slider support */
+  .pan-slider::-moz-range-track {
+    width: 100%;
+    height: 6px;
+    background: #444;
+    border-radius: 2px;
+  }
+
+  .pan-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    background: #888;
+    border-radius: 2px;
+    border: none;
+    cursor: pointer;
+  }
+
+  .pan-slider::-moz-range-thumb:hover {
     background: #fff;
   }
 
