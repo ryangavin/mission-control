@@ -25,6 +25,7 @@ export class SyncManager {
   private queryTimeout = 5000; // 5 second timeout for queries
   private numTracks = 0;
   private numScenes = 0;
+  private numReturnTracks = 0;
   private listenersActive = false;
 
   constructor(session: SessionManager, callbacks: SyncCallbacks) {
@@ -53,6 +54,8 @@ export class SyncManager {
         this.queryOSC(song.getLoop()),
         this.queryOSC(song.getNumTracks()),
         this.queryOSC(song.getNumScenes()),
+        // Note: num_return_tracks is not supported by AbletonOSC
+        // We detect return tracks by probing sends in syncTrack
       ]);
 
       // Validate we got valid responses from Ableton
@@ -62,6 +65,7 @@ export class SyncManager {
 
       this.numTracks = numTracks;
       this.numScenes = numScenes;
+      // numReturnTracks will be detected during track sync by probing sends
 
       this.callbacks.onLog(`Found ${numTracks} tracks, ${numScenes} scenes`);
 
@@ -122,6 +126,7 @@ export class SyncManager {
    * Sync a single track's properties
    */
   private async syncTrack(trackIndex: number): Promise<void> {
+    // Query basic track properties
     const [name, color, volume, pan, mute, solo, arm, playingSlot, firedSlot, hasMidiInput, hasAudioInput] = await Promise.all([
       this.queryOSC(track.getName(trackIndex)),
       this.queryOSC(track.getColor(trackIndex)),
@@ -136,6 +141,31 @@ export class SyncManager {
       this.queryOSC(track.getHasAudioInput(trackIndex)),
     ]);
 
+    // Query sends by probing - AbletonOSC doesn't have num_return_tracks
+    // So we probe sends 0-7 and keep the ones that return valid values
+    const sends: number[] = [];
+    const MAX_SENDS = 8;
+    const sendPromises = [];
+    for (let s = 0; s < MAX_SENDS; s++) {
+      sendPromises.push(this.queryOSC(track.getSend(trackIndex, s)));
+    }
+    const sendValues = await Promise.all(sendPromises);
+
+    // Only keep consecutive valid sends (stop at first undefined)
+    for (const val of sendValues) {
+      if (typeof val === 'number') {
+        sends.push(val);
+      } else {
+        break; // Stop at first invalid/undefined
+      }
+    }
+
+    // Update numReturnTracks based on first track's sends (they should all have same count)
+    if (trackIndex === 0 && sends.length > 0) {
+      this.numReturnTracks = sends.length;
+      this.callbacks.onLog(`[DEBUG] Detected ${sends.length} return tracks from send probing`);
+    }
+
     this.session.updateTrack(trackIndex, {
       name: name || `Track ${trackIndex + 1}`,
       color: color || 0,
@@ -148,6 +178,7 @@ export class SyncManager {
       firedSlotIndex: firedSlot ?? -1,
       hasMidiInput: !!hasMidiInput,
       hasAudioInput: !!hasAudioInput,
+      sends,
     });
   }
 
@@ -290,6 +321,10 @@ export class SyncManager {
       this.callbacks.sendOSC(track.startListenArm(t));
       this.callbacks.sendOSC(track.startListenPlayingSlot(t));
       this.callbacks.sendOSC(track.startListenFiredSlot(t));
+      // Send listeners for each return track
+      for (let s = 0; s < this.numReturnTracks; s++) {
+        this.callbacks.sendOSC(track.startListenSend(t, s));
+      }
     }
 
     // Clip slot listeners - listen to has_clip changes on ALL slots for live looping
@@ -374,6 +409,10 @@ export class SyncManager {
       this.callbacks.sendOSC(track.stopListenArm(t));
       this.callbacks.sendOSC(track.stopListenPlayingSlot(t));
       this.callbacks.sendOSC(track.stopListenFiredSlot(t));
+      // Stop send listeners
+      for (let s = 0; s < this.numReturnTracks; s++) {
+        this.callbacks.sendOSC(track.stopListenSend(t, s));
+      }
     }
 
     // Clip slots
@@ -447,6 +486,10 @@ export class SyncManager {
     if (address.includes('/clip/')) {
       return args.length >= 3 ? args[2] : args[0];
     }
+    // For track send responses: [trackId, sendId, value]
+    if (address.includes('/track/get/send')) {
+      return args.length >= 3 ? args[2] : args[0];
+    }
     // For track responses: [trackId, value]
     if (address.includes('/track/')) {
       return args.length >= 2 ? args[1] : args[0];
@@ -483,6 +526,10 @@ export class SyncManager {
 
     // For track/clip queries, args include the track/scene ID followed by the value
     // We need to extract just the ID portion for matching
+    if (address.includes('/track/get/send') && args.length >= 3) {
+      // /live/track/get/send returns [trackId, sendId, value]
+      return `${parts.join('_')}_${args[0]}_${args[1]}`;
+    }
     if (address.includes('/track/') && args.length > 1) {
       // /live/track/get/volume returns [trackId, value]
       return `${parts.join('_')}_${args[0]}`;
@@ -600,6 +647,11 @@ export class SyncManager {
     this.callbacks.sendOSC(track.startListenPlayingSlot(trackIndex));
     this.callbacks.sendOSC(track.startListenFiredSlot(trackIndex));
 
+    // Set up send listeners
+    for (let s = 0; s < this.numReturnTracks; s++) {
+      this.callbacks.sendOSC(track.startListenSend(trackIndex, s));
+    }
+
     // Set up clip slot listeners for this track
     for (let s = 0; s < this.numScenes; s++) {
       this.callbacks.sendOSC(clipSlot.startListenHasClip(trackIndex, s));
@@ -617,6 +669,11 @@ export class SyncManager {
     this.callbacks.sendOSC(track.stopListenArm(trackIndex));
     this.callbacks.sendOSC(track.stopListenPlayingSlot(trackIndex));
     this.callbacks.sendOSC(track.stopListenFiredSlot(trackIndex));
+
+    // Stop send listeners
+    for (let s = 0; s < this.numReturnTracks; s++) {
+      this.callbacks.sendOSC(track.stopListenSend(trackIndex, s));
+    }
 
     // Stop clip slot listeners for this track
     for (let s = 0; s < this.numScenes; s++) {

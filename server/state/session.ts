@@ -187,6 +187,25 @@ export class SessionManager {
     return this.updateTrack(trackIndex, { color });
   }
 
+  setTrackSend(trackIndex: number, sendIndex: number, value: number): PatchPayload | null {
+    const track = this.state.tracks[trackIndex];
+    if (!track) return null;
+
+    // Ensure sends array is large enough
+    while (track.sends.length <= sendIndex) {
+      track.sends.push(0);
+    }
+
+    // Only update and return patch if value actually changed
+    const currentValue = track.sends[sendIndex];
+    if (Math.abs(currentValue - value) < 0.0001) {
+      return null; // No change
+    }
+
+    track.sends[sendIndex] = value;
+    return { kind: 'track', trackIndex, track };
+  }
+
   // ==========================================================================
   // Scene Updates
   // ==========================================================================
@@ -320,6 +339,7 @@ export class SessionManager {
       clips,
       hasMidiInput: false,
       hasAudioInput: false,
+      sends: [],
     };
   }
 

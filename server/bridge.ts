@@ -42,6 +42,10 @@ export class Bridge {
   private structurePollInterval: ReturnType<typeof setInterval> | null = null;
   private readonly STRUCTURE_POLL_INTERVAL = 1000; // Check every 1 second
 
+  // Send polling (since AbletonOSC doesn't support send listeners)
+  private sendPollInterval: ReturnType<typeof setInterval> | null = null;
+  private readonly SEND_POLL_INTERVAL = 500; // Check every 500ms
+
   constructor(options: BridgeOptions) {
     this.config = options.config;
     this.log = options.onLog || console.log;
@@ -164,6 +168,9 @@ export class Bridge {
 
     // Stop structure polling
     this.stopStructurePolling();
+
+    // Stop send polling
+    this.stopSendPolling();
 
     // Stop beat time polling
     this.stopBeatTimePolling();
@@ -306,8 +313,9 @@ export class Bridge {
       this.sync.setupListeners();
       this.synced = true;
 
-      // Start polling for structure changes
+      // Start polling for structure changes and sends
       this.startStructurePolling();
+      this.startSendPolling();
 
       // Broadcast session to all clients
       this.broadcastToClients({ type: 'session', payload: this.session.getState() });
@@ -360,6 +368,8 @@ export class Bridge {
         return { address: '/live/track/set/volume', args: [message.trackId, message.value] };
       case 'mixer/pan':
         return { address: '/live/track/set/panning', args: [message.trackId, message.value] };
+      case 'mixer/send':
+        return { address: '/live/track/set/send', args: [message.trackId, message.sendIndex, message.value] };
       case 'mixer/mute':
         return { address: '/live/track/set/mute', args: [message.trackId, message.muted ? 1 : 0] };
       case 'mixer/solo':
@@ -387,6 +397,7 @@ export class Bridge {
     // Skip logging common polling messages to reduce noise
     const isPollingMessage = message.address.includes('/num_tracks') ||
                              message.address.includes('/num_scenes') ||
+                             message.address.includes('/track/get/send') ||
                              message.address === '/live/test';
     if (!isPollingMessage) {
       // this.log(`OSC <- ${message.address} ${JSON.stringify(message.args)}`);
@@ -504,6 +515,9 @@ export class Bridge {
     }
     if (address === '/live/track/get/fired_slot_index' && args.length >= 2) {
       return this.session.setTrackFiredSlot(args[0] as number, args[1] as number);
+    }
+    if (address === '/live/track/get/send' && args.length >= 3) {
+      return this.session.setTrackSend(args[0] as number, args[1] as number, args[2] as number);
     }
 
     // Clip updates - handle both formats:
@@ -691,6 +705,7 @@ export class Bridge {
       if (!connected) {
         this.synced = false;
         this.stopStructurePolling();
+        this.stopSendPolling();
       } else if (this.clients.size > 0 && !this.synced) {
         // Auto-sync when Ableton reconnects and we have waiting clients
         this.triggerSync();
@@ -710,6 +725,7 @@ export class Bridge {
       this.sync.setupListeners();
       this.synced = true;
       this.startStructurePolling();
+      this.startSendPolling();
       this.broadcastToClients({ type: 'session', payload: this.session.getState() });
     } catch (error) {
       this.log(`Sync failed: ${error}`);
@@ -826,6 +842,41 @@ export class Bridge {
       clearInterval(this.structurePollInterval);
       this.structurePollInterval = null;
       this.log('Structure polling stopped');
+    }
+  }
+
+  /**
+   * Start polling for send values (AbletonOSC doesn't support send listeners)
+   */
+  private startSendPolling(): void {
+    if (this.sendPollInterval) return;
+
+    const poll = () => {
+      if (!this.synced || !this.abletonConnected) return;
+
+      const state = this.session.getState();
+      const numReturnTracks = state.tracks[0]?.sends?.length ?? 0;
+
+      // Poll all sends for all tracks
+      for (let t = 0; t < state.tracks.length; t++) {
+        for (let s = 0; s < numReturnTracks; s++) {
+          this.sendOSC({ address: '/live/track/get/send', args: [t, s] });
+        }
+      }
+    };
+
+    this.sendPollInterval = setInterval(poll, this.SEND_POLL_INTERVAL);
+    this.log(`Send polling started (every ${this.SEND_POLL_INTERVAL}ms)`);
+  }
+
+  /**
+   * Stop polling for send values
+   */
+  private stopSendPolling(): void {
+    if (this.sendPollInterval) {
+      clearInterval(this.sendPollInterval);
+      this.sendPollInterval = null;
+      this.log('Send polling stopped');
     }
   }
 }

@@ -73,6 +73,11 @@ export interface NumScenesResponse {
   count: number;
 }
 
+export interface NumReturnTracksResponse {
+  type: 'num_return_tracks';
+  count: number;
+}
+
 export interface TrackNamesResponse {
   type: 'track_names';
   names: string[];

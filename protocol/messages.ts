@@ -402,6 +402,9 @@ export const song = {
   /** Stop listening to scene count changes */
   stopListenNumScenes: (): OSCMessage => ({ address: '/live/song/stop_listen/num_scenes', args: [] }),
 
+  /** Get number of return tracks */
+  getNumReturnTracks: (): OSCMessage => ({ address: '/live/song/get/num_return_tracks', args: [] }),
+
   /** Get all track names */
   getTrackNames: (): OSCMessage => ({ address: '/live/song/get/track_names', args: [] }),
 

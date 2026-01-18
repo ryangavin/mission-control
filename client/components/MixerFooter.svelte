@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Track } from '../../protocol';
   import { intToHex } from '../lib/colorUtils';
+  import Knob from './Knob.svelte';
 
   interface Props {
     tracks: Track[];
@@ -8,6 +9,7 @@
     masterPan: number;
     onVolume: (trackId: number, value: number) => void;
     onPan: (trackId: number, value: number) => void;
+    onSend: (trackId: number, sendIndex: number, value: number) => void;
     onMute: (trackId: number) => void;
     onSolo: (trackId: number) => void;
     onArm: (trackId: number) => void;
@@ -24,6 +26,7 @@
     masterPan,
     onVolume,
     onPan,
+    onSend,
     onMute,
     onSolo,
     onArm,
@@ -34,26 +37,57 @@
     onScroll,
   }: Props = $props();
 
+  // Send knob layout constants
+  const KNOB_SIZE = 28;
+  const KNOB_GAP = 10;
+  const KNOB_LABEL_OVERFLOW = 8; // label extends below knob
+
+  // Number of sends comes from track data (all tracks have same number)
+  const numSends = $derived(tracks[0]?.sends?.length ?? 0);
+
+  // Debug logging
+  $effect(() => {
+    console.log('[MixerFooter] tracks:', tracks.length);
+    console.log('[MixerFooter] numSends:', numSends);
+    if (tracks[0]) {
+      console.log('[MixerFooter] track[0].sends:', tracks[0].sends);
+    }
+  });
+
+  // Calculate minimum height needed to display all sends
+  const minSendsHeight = $derived(
+    numSends > 0
+      ? numSends * KNOB_SIZE + (numSends - 1) * KNOB_GAP + KNOB_LABEL_OVERFLOW
+      : 0
+  );
+
   // Faders area height (not total footer height)
-  const MIN_FADERS_HEIGHT = 0;
-  const COLLAPSE_THRESHOLD = 100;
+  const minFadersHeight = $derived(Math.max(minSendsHeight + 30, 80)); // add padding for pan slider
   const STORAGE_KEY = 'mixer-footer-height';
 
-  // Load saved height or use default
+  // Max height is ~40% of viewport (2/5 of screen)
+  let maxFadersHeight = $state(Math.round(window.innerHeight * 0.4));
+
+  // Load saved height from storage
   function loadSavedHeight(): number {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = parseInt(saved, 10);
-      if (!isNaN(parsed) && parsed >= MIN_FADERS_HEIGHT) {
+      if (!isNaN(parsed) && parsed >= 80) {
         return parsed;
       }
     }
-    return 100;
+    return 100; // default
   }
 
-  // Max height is ~40% of viewport (2/5 of screen)
-  let maxFadersHeight = $state(Math.round(window.innerHeight * 0.4));
   let fadersHeight = $state(loadSavedHeight());
+
+  // Ensure height meets minimum when sends change
+  $effect(() => {
+    if (fadersHeight < minFadersHeight) {
+      fadersHeight = minFadersHeight;
+    }
+  });
 
   // Update max height on window resize
   $effect(() => {
@@ -66,7 +100,8 @@
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   });
-  let collapsed = $derived(fadersHeight < COLLAPSE_THRESHOLD);
+
+  let collapsed = $derived(fadersHeight < minFadersHeight);
 
   // Drag state
   let isDragging = $state(false);
@@ -91,7 +126,7 @@
 
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     const deltaY = dragStartY - clientY;
-    const newHeight = Math.max(MIN_FADERS_HEIGHT, Math.min(maxFadersHeight, dragStartHeight + deltaY));
+    const newHeight = Math.max(minFadersHeight, Math.min(maxFadersHeight, dragStartHeight + deltaY));
 
     fadersHeight = newHeight;
   }
@@ -181,17 +216,30 @@
       <div class="faders-tracks" bind:this={fadersTracksEl} onscroll={handleFadersScroll} style="--cols: {tracks.length}">
         {#each tracks as track (track.id)}
           <div class="fader-strip" style="--color: {intToHex(track.color)}">
-            <div class="volume-section">
-              <input
-                type="range"
-                class="volume-slider"
-                min="0"
-                max="100"
-                value={Math.round(track.volume * 100)}
-                oninput={(e) => handleVolumeInput(track.id, e)}
-                title="Volume"
-                orient="vertical"
-              />
+            <div class="fader-content">
+              <div class="sends-section">
+                {#each track.sends as sendValue, sendIndex}
+                  <Knob
+                    value={sendValue}
+                    onchange={(v) => onSend(track.id, sendIndex, v)}
+                    size={28}
+                    label={String.fromCharCode(65 + sendIndex)}
+                  />
+                {/each}
+              </div>
+              <div class="volume-section">
+                <input
+                  type="range"
+                  class="volume-slider"
+                  min="0"
+                  max="100"
+                  value={Math.round(track.volume * 100)}
+                  oninput={(e) => handleVolumeInput(track.id, e)}
+                  title="Volume"
+                  orient="vertical"
+                />
+              </div>
+              <div class="fader-spacer"></div>
             </div>
             <div class="pan-section">
               <input
@@ -356,6 +404,12 @@
     box-sizing: border-box;
   }
 
+  .fader-content {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+  }
+
   .volume-section {
     flex: 1;
     display: flex;
@@ -363,6 +417,19 @@
     align-items: center;
     gap: 2px;
     min-height: 0;
+  }
+
+  .sends-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .fader-spacer {
+    flex: 1;
   }
 
   .volume-slider {

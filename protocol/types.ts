@@ -37,6 +37,7 @@ export interface Track {
   clips: ClipSlot[];
   hasMidiInput: boolean;     // true for MIDI tracks
   hasAudioInput: boolean;    // true for Audio tracks
+  sends: number[];           // send levels (0-1) for each return track
 }
 
 export interface Scene {
@@ -112,6 +113,7 @@ export type ClientMessage =
   | { type: 'transport/quantization'; value: number }
   | { type: 'mixer/volume'; trackId: number; value: number }
   | { type: 'mixer/pan'; trackId: number; value: number }
+  | { type: 'mixer/send'; trackId: number; sendIndex: number; value: number }
   | { type: 'mixer/mute'; trackId: number; muted: boolean }
   | { type: 'mixer/solo'; trackId: number; soloed: boolean }
   | { type: 'mixer/arm'; trackId: number; armed: boolean }

@@ -16,6 +16,7 @@ import type {
   MetronomeResponse,
   NumTracksResponse,
   NumScenesResponse,
+  NumReturnTracksResponse,
   TrackNamesResponse,
   SongTimeResponse,
   SignatureResponse,
@@ -165,6 +166,9 @@ export function parseOSCResponse(message: RawOSCMessage): ParseResult {
   }
   if (address === '/live/song/get/num_scenes') {
     return parseNumScenesResponse(args);
+  }
+  if (address === '/live/song/get/num_return_tracks') {
+    return parseNumReturnTracksResponse(args);
   }
   if (address === '/live/song/get/track_names') {
     return parseTrackNamesResponse(args);
@@ -403,6 +407,10 @@ function parseNumTracksResponse(args: OSCValue[]): NumTracksResponse {
 
 function parseNumScenesResponse(args: OSCValue[]): NumScenesResponse {
   return { type: 'num_scenes', count: getNumber(args, 0) };
+}
+
+function parseNumReturnTracksResponse(args: OSCValue[]): NumReturnTracksResponse {
+  return { type: 'num_return_tracks', count: getNumber(args, 0) };
 }
 
 function parseTrackNamesResponse(args: OSCValue[]): TrackNamesResponse {

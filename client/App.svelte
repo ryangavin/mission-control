@@ -265,6 +265,10 @@
     send({ type: 'mixer/pan', trackId, value });
   }
 
+  function handleSend(trackId: number, sendIndex: number, value: number) {
+    send({ type: 'mixer/send', trackId, sendIndex, value });
+  }
+
   function handleMasterVolume(value: number) {
     // Master track is typically ID 0 or a special ID
     // For now, we'll use a placeholder - this may need adjustment
@@ -387,6 +391,7 @@
         masterPan={0}
         onVolume={handleVolume}
         onPan={handlePan}
+        onSend={handleSend}
         onMute={handleMute}
         onSolo={handleSolo}
         onArm={handleArm}
