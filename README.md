@@ -1,6 +1,6 @@
 # Mission Control
 
-Launch clips and control Ableton Live from any browser. Inspired by the legendary [Novation Launchpad](https://amzn.to/4by97mP).
+Launch clips and control Ableton Live from any browser. Inspired by the legendary [Novation Launchpad](https://amzn.to/4by97mP). See the **[User Manual](docs/MANUAL.md)** for detailed usage instructions.
 
 ![Mission Control Screenshot](docs/screenshot.png)
 
@@ -43,10 +43,6 @@ In Ableton Live, go to **Preferences → Link, Tempo & MIDI → Control Surface*
 ### 4. Connect
 
 Open a Live Set. Click the tray icon → **Show UI**. The connection status indicator will turn green when connected.
-
-## Documentation
-
-For detailed usage instructions, see the **[User Manual](docs/MANUAL.md)**.
 
 ## Requirements
 
