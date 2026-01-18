@@ -63,7 +63,7 @@
     min-width: 80px;
     flex-shrink: 0;
     background: #222;
-    padding: 0 3px 3px 3px;
+    padding: 0 3px 3px 0;
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: none;

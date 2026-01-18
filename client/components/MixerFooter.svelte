@@ -460,6 +460,7 @@
     background: #1e1e1e;
     border-radius: 3px 3px 0 0;
     box-sizing: border-box;
+    overflow: hidden;
   }
 
   .fader-content {
