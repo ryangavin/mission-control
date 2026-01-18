@@ -2,6 +2,7 @@
   import type { Track } from '../../protocol';
   import { intToHex } from '../lib/colorUtils';
   import Knob from './Knob.svelte';
+  import VolumeFader from './VolumeFader.svelte';
 
   interface Props {
     tracks: Track[];
@@ -103,37 +104,6 @@
 
   let collapsed = $derived(fadersHeight === 0);
 
-  // Volume tick marks - linear dB spacing
-  // 0dB = 85%, +6dB = 100%
-  // Same rate above and below: 2.5% per dB
-  const dbToPos = (db: number) => {
-    return 85 + db * 2.5;
-  };
-
-  // Thumb is 10px tall, so 5px offset at each end
-  const THUMB_OFFSET = 5;
-
-  // Convert dB to slider percentage
-  // Known points: +6dB=100%, 0dB=85%, -60dB=3%
-  // Above 0: 2.5% per dB (15% / 6dB)
-  // Below 0: 1.367% per dB (82% / 60dB)
-  const dbToSliderPct = (db: number) => {
-    if (db >= 0) {
-      return 85 + db * 2.5;
-    }
-    return 85 + db * (82 / 60);
-  };
-
-  const volumeTicks = $derived(() => {
-    const ticks = [
-      { db: '6', pct: dbToSliderPct(6), zero: false },    // +6dB = 100%
-      { db: '0', pct: dbToSliderPct(0), zero: true },     // 0dB = 85%
-      { db: '60', pct: dbToSliderPct(-60), zero: false }, // -60dB = 3%
-    ];
-
-    return ticks;
-  });
-
   // Drag state
   let isDragging = $state(false);
   let dragStartY = $state(0);
@@ -207,11 +177,6 @@
     }
   }
 
-  function handleVolumeInput(trackId: number, e: Event) {
-    const value = parseFloat((e.target as HTMLInputElement).value) / 100;
-    onVolume(trackId, value);
-  }
-
   function handlePanInput(trackId: number, e: Event) {
     let value = parseFloat((e.target as HTMLInputElement).value) / 50;
     // Snap to center if within threshold
@@ -220,11 +185,6 @@
       (e.target as HTMLInputElement).value = '0';
     }
     onPan(trackId, value);
-  }
-
-  function handleMasterVolumeInput(e: Event) {
-    const value = parseFloat((e.target as HTMLInputElement).value) / 100;
-    onMasterVolume(value);
   }
 
   function handleMasterPanInput(e: Event) {
@@ -271,29 +231,10 @@
                 {/each}
               </div>
               <div class="volume-section">
-                <div class="slider-with-ticks">
-                  <input
-                    type="range"
-                    class="volume-slider"
-                    min="0"
-                    max="100"
-                    value={Math.round(track.volume * 100)}
-                    style="--value: {track.volume * 100}%"
-                    oninput={(e) => handleVolumeInput(track.id, e)}
-                    title="Volume"
-                    orient="vertical"
-                  />
-                  <div class="volume-ticks">
-                    {#each volumeTicks() as tick}
-                      {@const offset = 5 * (1 - tick.pct / 50)}
-                      <div
-                        class="tick"
-                        class:zero={tick.zero}
-                        style="bottom: calc({tick.pct}% + {offset}px)"
-                      ><span>{tick.db}</span></div>
-                    {/each}
-                  </div>
-                </div>
+                <VolumeFader
+                  value={track.volume}
+                  onchange={(v) => onVolume(track.id, v)}
+                />
               </div>
               <div class="fader-spacer"></div>
             </div>
@@ -315,16 +256,9 @@
       <div class="faders-master">
         <div class="fader-strip master">
           <div class="volume-section">
-            <input
-              type="range"
-              class="volume-slider"
-              min="0"
-              max="100"
-              value={Math.round(masterVolume * 100)}
-              style="--value: {masterVolume * 100}%"
-              oninput={handleMasterVolumeInput}
-              title="Master Volume"
-              orient="vertical"
+            <VolumeFader
+              value={masterVolume}
+              onchange={onMasterVolume}
             />
           </div>
           <div class="pan-section">
@@ -479,14 +413,6 @@
     min-height: 0;
   }
 
-  .slider-with-ticks {
-    flex: 1;
-    position: relative;
-    display: flex;
-    min-height: 0;
-  }
-
-
   .sends-section {
     flex: 1;
     display: flex;
@@ -500,109 +426,6 @@
     flex: 1;
     display: flex;
     min-height: 0;
-  }
-
-  .volume-ticks {
-    position: absolute;
-    top: 2px;
-    bottom: 2px;
-    left: 100%;
-    margin-left: 4px;
-    width: 30px;
-    z-index: 0;
-    pointer-events: none;
-  }
-
-  .tick {
-    position: absolute;
-    left: -3px;
-    width: 5px;
-    height: 1px;
-    background: #666;
-    transform: translateY(50%);
-  }
-
-  .tick.zero {
-    background: #fff;
-  }
-
-  .tick span {
-    position: absolute;
-    left: 7px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 9px;
-    color: #888;
-    white-space: nowrap;
-  }
-
-  .tick.zero span {
-    color: #fff;
-  }
-
-
-  .volume-slider {
-    flex: 1;
-    width: 6px;
-    min-height: 20px;
-    -webkit-appearance: none;
-    appearance: none;
-    background: transparent;
-    cursor: pointer;
-    writing-mode: vertical-lr;
-    direction: rtl;
-    position: relative;
-    z-index: 2;
-  }
-
-  .volume-slider::-webkit-slider-runnable-track {
-    width: 6px;
-    height: 100%;
-    background: linear-gradient(to top, #5dade2 var(--value, 0%), #444 var(--value, 0%));
-    border-radius: 2px;
-  }
-
-  .volume-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 20px;
-    height: 10px;
-    background: #888;
-    border-radius: 2px;
-    cursor: pointer;
-    margin-left: -6px;
-    opacity: 1;
-  }
-
-  .volume-slider::-webkit-slider-thumb:hover {
-    background: #fff;
-  }
-
-  /* Firefox support */
-  .volume-slider::-moz-range-track {
-    width: 6px;
-    height: 100%;
-    background: #444;
-    border-radius: 2px;
-  }
-
-  .volume-slider::-moz-range-progress {
-    background: #5dade2;
-    border-radius: 2px;
-  }
-
-  .volume-slider::-moz-range-thumb {
-    width: 20px;
-    height: 10px;
-    background: #888;
-    border-radius: 2px;
-    border: none;
-    cursor: pointer;
-    opacity: 1;
-  }
-
-  .volume-slider::-moz-range-thumb:hover {
-    background: #fff;
   }
 
   .pan-section {
