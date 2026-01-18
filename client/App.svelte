@@ -270,13 +270,11 @@
   }
 
   function handleMasterVolume(value: number) {
-    // Master track is typically ID 0 or a special ID
-    // For now, we'll use a placeholder - this may need adjustment
-    send({ type: 'mixer/volume', trackId: -1, value });
+    send({ type: 'mixer/masterVolume', value });
   }
 
   function handleMasterPan(value: number) {
-    send({ type: 'mixer/pan', trackId: -1, value });
+    send({ type: 'mixer/masterPan', value });
   }
 
   function handleClipMove(srcTrack: number, srcScene: number, dstTrack: number, dstScene: number) {
@@ -353,6 +351,7 @@
     onTapTempo={handleTapTempo}
     onQuantization={(value) => send({ type: 'transport/quantization', value })}
     onTempoChange={(newTempo) => send({ type: 'transport/tempo', bpm: newTempo })}
+    onResync={() => send({ type: 'session/request' })}
   />
 
   <main class="main">
@@ -387,8 +386,8 @@
       <MixerFooter
         bind:this={mixerFooterRef}
         {tracks}
-        masterVolume={0.85}
-        masterPan={0}
+        masterVolume={session.masterTrack?.volume ?? 0.85}
+        masterPan={session.masterTrack?.pan ?? 0}
         onVolume={handleVolume}
         onPan={handlePan}
         onSend={handleSend}

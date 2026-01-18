@@ -47,7 +47,7 @@
       onclick={() => onSceneLaunch(scene.id)}
     >
       <span class="scene-name">{scene.name || `Scene ${sceneIndex + 1}`}</span>
-      <span class="scene-play">▶</span>
+      <i class="fa-solid fa-play scene-play"></i>
     </button>
   {/each}
 

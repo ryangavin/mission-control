@@ -369,6 +369,11 @@ export class Bridge {
         return { address: '/live/track/set/volume', args: [message.trackId, message.value] };
       case 'mixer/pan':
         return { address: '/live/track/set/panning', args: [message.trackId, message.value] };
+      case 'mixer/masterVolume':
+        // Try using "Master" string as track identifier
+        return { address: '/live/track/set/volume', args: ['Master', message.value] };
+      case 'mixer/masterPan':
+        return { address: '/live/track/set/panning', args: ['Master', message.value] };
       case 'mixer/send':
         return { address: '/live/track/set/send', args: [message.trackId, message.sendIndex, message.value] };
       case 'mixer/mute':

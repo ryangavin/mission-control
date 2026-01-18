@@ -113,6 +113,8 @@ export type ClientMessage =
   | { type: 'transport/quantization'; value: number }
   | { type: 'mixer/volume'; trackId: number; value: number }
   | { type: 'mixer/pan'; trackId: number; value: number }
+  | { type: 'mixer/masterVolume'; value: number }
+  | { type: 'mixer/masterPan'; value: number }
   | { type: 'mixer/send'; trackId: number; sendIndex: number; value: number }
   | { type: 'mixer/mute'; trackId: number; muted: boolean }
   | { type: 'mixer/solo'; trackId: number; soloed: boolean }

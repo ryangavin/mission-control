@@ -8,12 +8,8 @@
 </script>
 
 <div class="header-box connection-status">
-  <span class="status-indicator" class:connected={bridgeConnected} title="Bridge connection">
-    <span class="dot"></span>Bridge
-  </span>
-  <span class="status-indicator" class:connected={abletonConnected} title="Ableton connection">
-    <span class="dot"></span>Live
-  </span>
+  <span class="status-indicator" class:connected={bridgeConnected} title="Bridge connection">Bridge</span>
+  <span class="status-indicator" class:connected={abletonConnected} title="Ableton connection">Live</span>
 </div>
 
 <style>
@@ -32,27 +28,13 @@
   }
 
   .status-indicator {
-    display: flex;
-    align-items: center;
-    gap: 3px;
     font-size: 10px;
     font-weight: 500;
     color: #aa6666;
   }
 
-  .status-indicator .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #884444;
-  }
-
   .status-indicator.connected {
-    color: #44aa44;
-  }
-
-  .status-indicator.connected .dot {
-    background: #44ff44;
-    box-shadow: 0 0 6px #44ff44;
+    color: #44ff44;
+    text-shadow: 0 0 3px #44ff4488;
   }
 </style>

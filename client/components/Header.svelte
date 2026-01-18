@@ -42,6 +42,7 @@
     onTapTempo: () => void;
     onQuantization: (value: number) => void;
     onTempoChange: (tempo: number) => void;
+    onResync: () => void;
   }
 
   let {
@@ -67,6 +68,7 @@
     onTapTempo,
     onQuantization,
     onTempoChange,
+    onResync,
   }: Props = $props();
 
   // Tempo drag state for tap-and-drag control
@@ -147,7 +149,7 @@
         <span class="tempo-suffix">BPM</span>
       </span>
       <button class="group-item" class:active={metronome} title="Metronome" onclick={onMetronome}>
-        <span class="metronome-icon"><span>●</span><span>○</span></span>
+        <span class="metronome-icon"><i class="fa-solid fa-circle"></i><i class="fa-regular fa-circle"></i></span>
       </button>
       <select class="group-item group-select" title="Clip Trigger Quantization" value={quantization} onchange={handleQuantization}>
         {#each QUANTIZATION_OPTIONS as opt (opt.value)}
@@ -160,13 +162,13 @@
         <span class="playhead-value">{formatBeatTime(beatTime)}</span>
       </span>
       <button class="group-item transport-btn" class:active={isPlaying} title="Play" onclick={onPlay}>
-        <span class="icon">▶</span>
+        <i class="fa-solid fa-play icon"></i>
       </button>
       <button class="group-item transport-btn" title="Stop" onclick={onStop}>
-        <span class="icon">■</span>
+        <i class="fa-solid fa-stop icon"></i>
       </button>
       <button class="group-item transport-btn record" class:active={isRecording} title="Record" onclick={onRecord}>
-        <span class="icon">●</span>
+        <i class="fa-solid fa-circle icon"></i>
       </button>
     </div>
     <div class="header-box header-group">
@@ -188,7 +190,12 @@
         {abletonConnected}
       />
     </div>
-    <button class="header-box help-btn" title="Help" onclick={onShowHelp}>?</button>
+    <button class="header-box help-btn" title="Resync" onclick={onResync}>
+      <i class="fa-solid fa-arrows-rotate"></i>
+    </button>
+    <button class="header-box help-btn" title="Help" onclick={onShowHelp}>
+      <i class="fa-solid fa-question"></i>
+    </button>
   </div>
 </header>
 
@@ -253,10 +260,9 @@
 
   .help-btn {
     justify-content: center;
-    padding: 0 12px;
+    width: 32px;
     color: #888;
     font-size: 12px;
-    font-weight: 600;
     cursor: pointer;
     transition: all 0.1s;
   }
@@ -323,7 +329,7 @@
   }
 
   .transport-btn .icon {
-    font-size: 10px;
+    font-size: 12px;
     pointer-events: none;
   }
 

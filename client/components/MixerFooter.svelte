@@ -296,9 +296,9 @@
               class:active={track.arm}
               onclick={() => onArm(track.id)}
               title="Arm"
-            >●</button>
+            ><i class="fa-solid fa-circle"></i></button>
           </div>
-          <button class="stop-btn" onclick={() => onStop(track.id)} title="Stop Track">■</button>
+          <button class="stop-btn" onclick={() => onStop(track.id)} title="Stop Track"><i class="fa-solid fa-stop"></i></button>
         </div>
       {/each}
     </div>
@@ -307,9 +307,9 @@
         <div class="control-buttons">
           <button class="control-btn placeholder" disabled>M</button>
           <button class="control-btn placeholder" disabled>S</button>
-          <button class="control-btn placeholder" disabled>●</button>
+          <button class="control-btn placeholder" disabled><i class="fa-solid fa-circle"></i></button>
         </div>
-        <button class="stop-btn" onclick={onStopAll} title="Stop All Clips">■ All</button>
+        <button class="stop-btn" onclick={onStopAll} title="Stop All Clips"><i class="fa-solid fa-stop"></i> All</button>
       </div>
     </div>
   </div>

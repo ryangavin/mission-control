@@ -56,9 +56,9 @@
   {/if}
   {#if clipState === 'empty'}
     {#if isArmed}
-      <span class="clip-icon record-ready">●</span>
+      <i class="fa-solid fa-circle clip-icon record-ready"></i>
     {:else}
-      <span class="clip-icon stop-ready">■</span>
+      <i class="fa-solid fa-stop clip-icon stop-ready"></i>
     {/if}
   {/if}
   {#if clipState !== 'empty'}
