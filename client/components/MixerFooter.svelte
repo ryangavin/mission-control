@@ -447,7 +447,7 @@
   .faders-master {
     width: 80px;
     min-width: 80px;
-    padding: 6px 3px 0 3px;
+    padding: 6px 3px 0 0;
     flex-shrink: 0;
   }
 
@@ -698,7 +698,7 @@
   .buttons-master {
     width: 80px;
     min-width: 80px;
-    padding: 0 3px 6px 3px;
+    padding: 0 3px 6px 0;
     flex-shrink: 0;
   }
 
