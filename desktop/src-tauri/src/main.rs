@@ -43,6 +43,10 @@ fn main() {
             bridge_process: Mutex::new(None),
         })
         .setup(|app| {
+            // Hide from dock, only show in system tray
+            #[cfg(target_os = "macos")]
+            app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+
             // Build tray menu
             let open_ui = MenuItem::with_id(app, "open_ui", "Open Mission Control", true, None::<&str>)?;
             let show_qr = MenuItem::with_id(app, "show_qr", "Connect on Mobile", true, None::<&str>)?;
