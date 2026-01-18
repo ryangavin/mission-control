@@ -4,16 +4,17 @@
   interface Props {
     name: string;
     color?: string;
+    borderPosition?: 'top' | 'left';
     children?: Snippet;
   }
 
-  let { name, color = '#666', children }: Props = $props();
+  let { name, color = '#666', borderPosition = 'top', children }: Props = $props();
 
   // Check if we have children to render
   let hasControls = $derived(children !== undefined);
 </script>
 
-<div class="header-cell" class:compact={!hasControls} style="--color: {color}">
+<div class="header-cell" class:compact={!hasControls} class:border-left={borderPosition === 'left'} style="--color: {color}">
   <span class="header-name">{name}</span>
   {#if hasControls}
     <div class="header-controls">
@@ -40,6 +41,12 @@
 
   .header-cell.compact {
     height: 32px;
+  }
+
+  .header-cell.border-left {
+    border-top: none;
+    border-left: 3px solid var(--color);
+    border-radius: 3px;
   }
 
   .header-name {

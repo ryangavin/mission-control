@@ -32,7 +32,7 @@
 >
   <!-- Sticky header row with background -->
   <div class="sticky-row header-row">
-    <HeaderCell name="Master" />
+    <HeaderCell name="Master" borderPosition="left" />
   </div>
 
   {#each scenes as scene, sceneIndex (scene.id)}
@@ -56,7 +56,6 @@
     min-width: 80px;
     flex-shrink: 0;
     background: #1a1a1a;
-    border-left: 1px solid #333;
     padding: 0 3px 3px 3px;
     overflow-y: auto;
     overflow-x: hidden;
@@ -92,7 +91,7 @@
     flex-shrink: 0;
     background: color-mix(in srgb, var(--scene-color, #666) 10%, #2d2d2d);
     border: none;
-    border-top: 3px solid var(--scene-color, #666);
+    border-left: 3px solid var(--scene-color, #666);
     border-radius: 3px;
     color: #fff;
     font-size: 10px;

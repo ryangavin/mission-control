@@ -200,7 +200,6 @@
     gap: 6px;
     padding: calc(6px + env(safe-area-inset-top, 0px)) 6px 6px;
     background: #151515;
-    border-bottom: 1px solid #333;
     flex-shrink: 0;
   }
 

@@ -36,7 +36,7 @@
 
   // Faders area height (not total footer height)
   const MIN_FADERS_HEIGHT = 0;
-  const COLLAPSE_THRESHOLD = 40;
+  const COLLAPSE_THRESHOLD = 100;
   const STORAGE_KEY = 'mixer-footer-height';
 
   // Load saved height or use default
@@ -290,6 +290,7 @@
     justify-content: center;
     height: 10px;
     background: #1a1a1a;
+    border-bottom: 1px solid #333;
     cursor: ns-resize;
     user-select: none;
     touch-action: none;
@@ -338,7 +339,6 @@
     width: 80px;
     min-width: 80px;
     padding: 6px 3px 0 3px;
-    border-left: 1px solid #333;
     flex-shrink: 0;
   }
 
@@ -461,8 +461,7 @@
   .buttons-master {
     width: 80px;
     min-width: 80px;
-    padding: 0 3px 6px 3px;
-    border-left: 1px solid #333;
+    padding: 0 3px 3px 3px;
     flex-shrink: 0;
   }
 
@@ -479,6 +478,14 @@
 
   .button-strip.master {
     --color: #888;
+    border-bottom: none;
+    border-left: 3px solid var(--color);
+    border-radius: 0 3px 3px 3px;
+  }
+
+  .fader-strip.master {
+    border-left: 3px solid #888;
+    border-radius: 0 3px 0 0;
   }
 
   .control-buttons {
