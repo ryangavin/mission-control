@@ -40,6 +40,8 @@ Or manually: download [AbletonOSC](https://github.com/ideoforms/AbletonOSC) and 
 
 In Ableton Live, go to **Preferences → Link, Tempo & MIDI → Control Surface** and select **AbletonOSC**.
 
+![Selecting AbletonOSC in Ableton Live preferences](docs/ableton-osc-setup.png)
+
 ### 4. Connect
 
 Open a Live Set. Click the tray icon → **Show UI**. The connection status indicator will turn green when connected.
