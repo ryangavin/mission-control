@@ -44,6 +44,10 @@ In Ableton Live, go to **Preferences → Link, Tempo & MIDI → Control Surface*
 
 Open a Live Set. Click the tray icon → **Show UI**. The connection status indicator will turn green when connected.
 
+## Documentation
+
+For detailed usage instructions, see the **[User Manual](docs/MANUAL.md)**.
+
 ## Requirements
 
 - [Ableton Live](https://www.ableton.com/live/) 10, 11, or 12
