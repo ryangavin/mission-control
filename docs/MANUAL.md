@@ -32,6 +32,8 @@ Mission Control communicates with Ableton through a remote script called Ableton
    - Go to **Preferences** → **Link, Tempo & MIDI**
    - Under **Control Surface**, select **AbletonOSC**
 
+   ![Selecting AbletonOSC in Ableton Live preferences](ableton-osc-setup.png)
+
 3. **Connect**
    - Open or create a Live Set
    - Click the tray icon → **Open Mission Control**
