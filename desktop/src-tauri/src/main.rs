@@ -202,16 +202,28 @@ fn handle_menu_event(app: &AppHandle, id: &str) {
                     "#, base64_png, url);
 
                     let data_url = format!("data:text/html,{}", urlencoding::encode(&html));
-                    match WebviewWindowBuilder::new(app, "qr", tauri::WebviewUrl::External(data_url.parse().unwrap()))
-                        .title("Connect on Mobile")
-                        .inner_size(350.0, 420.0)
-                        .resizable(false)
-                        .center()
-                        .build()
-                    {
-                        Ok(_) => {}
+                    match data_url.parse() {
+                        Ok(parsed_url) => {
+                            match WebviewWindowBuilder::new(app, "qr", tauri::WebviewUrl::External(parsed_url))
+                                .title("Connect on Mobile")
+                                .inner_size(350.0, 420.0)
+                                .resizable(false)
+                                .center()
+                                .build()
+                            {
+                                Ok(_) => {}
+                                Err(e) => {
+                                    eprintln!("Failed to create QR window: {}", e);
+                                }
+                            }
+                        }
                         Err(e) => {
-                            eprintln!("Failed to create QR window: {}", e);
+                            eprintln!("Failed to parse data URL: {}", e);
+                            app.dialog()
+                                .message("Failed to create QR code window")
+                                .title("Error")
+                                .kind(MessageDialogKind::Error)
+                                .blocking_show();
                         }
                     }
                 }
@@ -287,7 +299,7 @@ fn start_bridge(app: &AppHandle) {
         Ok(cmd) => {
             match cmd.spawn() {
                 Ok((_, child)) => {
-                    println!("Bridge started on port {}", BRIDGE_PORT);
+                    println!("Bridge started on port {}", UI_PORT);
                     *process = Some(child);
                 }
                 Err(e) => {
