@@ -64,6 +64,10 @@ async function main() {
     console.log(`Updated ${file}`);
   }
 
+  // Update Cargo.lock to reflect new version
+  await $`cargo update --manifest-path desktop/src-tauri/Cargo.toml --package mission-control`;
+  console.log("Updated Cargo.lock");
+
   // Commit version bump
   await $`git add -A`;
   await $`git commit -m "Bump version to ${nextVersion}" -m "Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"`;
