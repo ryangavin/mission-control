@@ -124,7 +124,7 @@
   }
 </script>
 
-<header class="header">
+<header class="header hide-scrollbar">
   <div class="header-left">
     <div class="app-brand">
       <i class="fa-solid fa-rocket app-icon"></i>
@@ -190,10 +190,10 @@
         {abletonConnected}
       />
     </div>
-    <button class="header-box help-btn" title="Resync" onclick={onResync}>
+    <button class="btn-icon" title="Resync" onclick={onResync}>
       <i class="fa-solid fa-arrows-rotate"></i>
     </button>
-    <button class="header-box help-btn" title="Help" onclick={onShowHelp}>
+    <button class="btn-icon" title="Help" onclick={onShowHelp}>
       <i class="fa-solid fa-question"></i>
     </button>
   </div>
@@ -204,72 +204,49 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 6px;
-    padding: calc(6px + env(safe-area-inset-top, 0px)) 6px 6px;
-    background: #151515;
+    gap: var(--gap-md);
+    padding: calc(var(--gap-md) + env(safe-area-inset-top, 0px)) var(--gap-md) var(--gap-md);
+    background: var(--bg-darkest);
     flex-shrink: 0;
   }
 
   .header-left {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--gap-lg);
     flex: 1;
   }
 
   .app-brand {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--gap-lg);
   }
 
   .app-icon {
     font-size: 16px;
-    color: #ff9944;
+    color: var(--accent-primary);
     transform: rotate(-90deg);
   }
 
   .app-title {
     font-size: 14px;
     font-weight: 600;
-    color: #888;
+    color: var(--text-muted);
   }
 
   .header-center {
     display: flex;
     align-items: stretch;
-    gap: 12px;
+    gap: var(--gap-xl);
   }
 
   .header-right {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 8px;
+    gap: var(--gap-lg);
     flex: 1;
-  }
-
-  .header-box {
-    display: flex;
-    align-items: center;
-    height: 32px;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 4px;
-  }
-
-  .help-btn {
-    justify-content: center;
-    width: 32px;
-    color: #888;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.1s;
-  }
-
-  .help-btn:hover {
-    background: #2a2a2a;
-    color: #fff;
   }
 
   .header-group {
@@ -286,12 +263,12 @@
     background: transparent;
     border: none;
     border-radius: 0;
-    border-right: 1px solid #333;
-    color: #888;
+    border-right: 1px solid var(--border-subtle);
+    color: var(--text-muted);
     font-size: 10px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.1s;
+    transition: var(--transition-fast);
   }
 
   .group-item:last-child {
@@ -299,17 +276,17 @@
   }
 
   button.group-item:hover {
-    background: #2a2a2a;
-    color: #fff;
+    background: var(--bg-hover);
+    color: var(--text-primary);
   }
 
   button.group-item:active {
-    background: #222;
+    background: var(--bg-surface);
   }
 
   button.group-item.active {
-    background: #2a2218;
-    color: #ff9944;
+    background: var(--accent-primary-dim);
+    color: var(--accent-primary);
   }
 
   .group-select {
@@ -319,8 +296,8 @@
   }
 
   .group-select:hover {
-    background: #2a2a2a;
-    color: #fff;
+    background: var(--bg-hover);
+    color: var(--text-primary);
   }
 
   .transport-btn {
@@ -334,13 +311,13 @@
   }
 
   .transport-btn.active {
-    background: #2a2218;
-    color: #ff9944;
+    background: var(--accent-primary-dim);
+    color: var(--accent-primary);
   }
 
   .transport-btn.record.active {
-    background: #3a2a2a;
-    color: #f44;
+    background: var(--accent-record-dim);
+    color: var(--accent-record);
   }
 
   .tempo-item {
@@ -353,13 +330,13 @@
     font-weight: 500;
     font-variant-numeric: tabular-nums;
     font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
-    color: #ff9944;
+    color: var(--accent-primary);
     cursor: ew-resize;
     user-select: none;
   }
 
   .tempo-value.dragging {
-    color: #ffbb66;
+    color: var(--accent-primary-light);
   }
 
   .tempo-suffix {
@@ -367,7 +344,7 @@
     font-weight: 500;
     font-variant-numeric: tabular-nums;
     font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
-    color: #888;
+    color: var(--text-muted);
   }
 
   .playhead-item {
@@ -379,13 +356,13 @@
     font-weight: 500;
     font-variant-numeric: tabular-nums;
     font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
-    color: #ff9944;
+    color: var(--accent-primary);
   }
 
   .metronome-icon {
     font-size: 12px;
     display: flex;
-    gap: 2px;
+    gap: var(--gap-xs);
   }
 
   .loop-btn {
@@ -410,11 +387,6 @@
       gap: 0;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-    }
-
-    .header::-webkit-scrollbar {
-      display: none;
     }
 
     .header-left,

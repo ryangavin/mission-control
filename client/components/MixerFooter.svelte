@@ -217,7 +217,7 @@
   <!-- Faders area: resizable, can be hidden -->
   {#if !collapsed}
     <div class="faders-area" style="height: {fadersHeight}px">
-      <div class="faders-tracks" bind:this={fadersTracksEl} onscroll={handleFadersScroll} style="--cols: {tracks.length}">
+      <div class="faders-tracks hide-scrollbar" bind:this={fadersTracksEl} onscroll={handleFadersScroll} style="--cols: {tracks.length}">
         {#each tracks as track (track.id)}
           <div class="fader-strip" style="--color: {intToHex(track.color)}">
             <div class="fader-content">
@@ -263,7 +263,7 @@
 
   <!-- Buttons area: always visible, fixed height -->
   <div class="buttons-area">
-    <div class="buttons-tracks" bind:this={buttonsTracksEl} onscroll={handleButtonsScroll} style="--cols: {tracks.length}">
+    <div class="buttons-tracks hide-scrollbar" bind:this={buttonsTracksEl} onscroll={handleButtonsScroll} style="--cols: {tracks.length}">
       {#each tracks as track (track.id)}
         <div class="button-strip" style="--color: {intToHex(track.color)}">
           <div class="control-buttons">
@@ -307,8 +307,8 @@
   .mixer-footer {
     display: flex;
     flex-direction: column;
-    background: #151515;
-    border-top: 1px solid #333;
+    background: var(--bg-darkest);
+    border-top: 1px solid var(--border-subtle);
     flex-shrink: 0;
   }
 
@@ -318,7 +318,7 @@
     justify-content: center;
     width: 100%;
     height: 10px;
-    background: #1e1e1e;
+    background: var(--bg-medium);
     border: none;
     padding: 0;
     cursor: ns-resize;
@@ -328,19 +328,19 @@
 
   .resize-handle:hover,
   .resize-handle.dragging {
-    background: #282828;
+    background: var(--bg-hover);
   }
 
   .grip {
     width: 40px;
     height: 4px;
-    background: #444;
-    border-radius: 2px;
+    background: var(--border-medium);
+    border-radius: var(--radius-sm);
   }
 
   .resize-handle:hover .grip,
   .resize-handle.dragging .grip {
-    background: #666;
+    background: var(--text-subtle);
   }
 
   /* Faders area: resizable */
@@ -352,23 +352,17 @@
   .faders-tracks {
     display: grid;
     grid-template-columns: repeat(var(--cols), minmax(80px, 1fr));
-    gap: 3px;
+    gap: var(--gap-sm);
     flex: 1;
-    padding: 6px 3px 0 3px;
+    padding: var(--gap-md) var(--gap-sm) 0 var(--gap-sm);
     overflow-x: auto;
     overflow-y: hidden;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-
-  .faders-tracks::-webkit-scrollbar {
-    display: none;
   }
 
   .faders-master {
-    width: 80px;
-    min-width: 80px;
-    padding: 6px 3px 0 0;
+    width: var(--track-width);
+    min-width: var(--track-width);
+    padding: var(--gap-md) var(--gap-sm) 0 0;
     flex-shrink: 0;
   }
 
@@ -378,8 +372,8 @@
     gap: 4px;
     height: 100%;
     padding: 4px;
-    background: #1e1e1e;
-    border-radius: 3px 3px 0 0;
+    background: var(--bg-medium);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
     box-sizing: border-box;
     overflow: hidden;
   }
@@ -395,7 +389,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
+    gap: var(--gap-xs);
     min-height: 0;
   }
 
@@ -419,7 +413,7 @@
     align-items: center;
     flex-shrink: 0;
     min-width: 0;
-    padding: 3px 0;
+    padding: var(--gap-sm) 0;
   }
 
   .pan-slider {
@@ -430,12 +424,12 @@
     appearance: none;
     background: linear-gradient(
       to right,
-      #444 var(--pan-start, 50%),
-      #ff9944 var(--pan-start, 50%),
-      #ff9944 var(--pan-end, 50%),
-      #444 var(--pan-end, 50%)
+      var(--border-medium) var(--pan-start, 50%),
+      var(--accent-primary) var(--pan-start, 50%),
+      var(--accent-primary) var(--pan-end, 50%),
+      var(--border-medium) var(--pan-end, 50%)
     );
-    border-radius: 2px;
+    border-radius: var(--radius-xs, 2px);
     cursor: pointer;
   }
 
@@ -443,7 +437,7 @@
     width: 100%;
     height: 6px;
     background: transparent;
-    border-radius: 2px;
+    border-radius: var(--radius-xs, 2px);
   }
 
   .pan-slider::-webkit-slider-thumb {
@@ -452,34 +446,34 @@
     width: 14px;
     height: 14px;
     margin-top: -4px;
-    background: #888;
-    border-radius: 2px;
+    background: var(--text-muted);
+    border-radius: var(--radius-xs, 2px);
     cursor: pointer;
   }
 
   .pan-slider::-webkit-slider-thumb:hover {
-    background: #fff;
+    background: var(--text-primary);
   }
 
   /* Firefox pan slider support */
   .pan-slider::-moz-range-track {
     width: 100%;
     height: 6px;
-    background: #444;
-    border-radius: 2px;
+    background: var(--border-medium);
+    border-radius: var(--radius-xs, 2px);
   }
 
   .pan-slider::-moz-range-thumb {
     width: 14px;
     height: 14px;
-    background: #888;
-    border-radius: 2px;
+    background: var(--text-muted);
+    border-radius: var(--radius-xs, 2px);
     border: none;
     cursor: pointer;
   }
 
   .pan-slider::-moz-range-thumb:hover {
-    background: #fff;
+    background: var(--text-primary);
   }
 
   /* Buttons area: fixed, always visible */
@@ -491,23 +485,17 @@
   .buttons-tracks {
     display: grid;
     grid-template-columns: repeat(var(--cols), minmax(80px, 1fr));
-    gap: 3px;
+    gap: var(--gap-sm);
     flex: 1;
-    padding: 0 3px 6px 3px;
+    padding: 0 var(--gap-sm) var(--gap-md) var(--gap-sm);
     overflow-x: auto;
     overflow-y: hidden;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-
-  .buttons-tracks::-webkit-scrollbar {
-    display: none;
   }
 
   .buttons-master {
-    width: 80px;
-    min-width: 80px;
-    padding: 0 3px 6px 0;
+    width: var(--track-width);
+    min-width: var(--track-width);
+    padding: 0 var(--gap-sm) var(--gap-md) 0;
     flex-shrink: 0;
   }
 
@@ -516,74 +504,31 @@
     flex-direction: column;
     gap: 4px;
     padding: 4px;
-    background: #1e1e1e;
-    border-bottom: 3px solid var(--color, #888);
-    border-radius: 0 0 3px 3px;
+    background: var(--bg-medium);
+    border-bottom: 3px solid var(--color, var(--text-muted));
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
     box-sizing: border-box;
   }
 
   .button-strip.master {
-    --color: #888;
+    --color: var(--text-muted);
     border-left: 3px solid var(--color);
     border-bottom: none;
-    border-radius: 0 3px 3px 3px;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) var(--radius-sm);
     padding-bottom: 7px; /* 4px base + 3px to align with track color borders */
   }
 
   .button-strip.master .stop-btn {
-    margin-bottom: 3px;
+    margin-bottom: var(--gap-sm);
   }
 
   .fader-strip.master {
-    border-left: 3px solid #888;
-    border-radius: 3px 3px 0 0;
+    border-left: 3px solid var(--text-muted);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   }
 
   .control-buttons {
     display: flex;
-    gap: 2px;
-  }
-
-  .control-btn.placeholder {
-    visibility: hidden;
-  }
-
-  .control-btn {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 6px 2px;
-    font-size: 10px;
-    font-weight: 600;
-    border: 1px solid #555;
-    border-radius: 3px;
-    background: #3d3d3d;
-    color: #888;
-    cursor: pointer;
-    transition: all 0.1s;
-  }
-
-  .control-btn:hover {
-    background: #4d4d4d;
-    color: #fff;
-  }
-
-  .mute.active {
-    background: #b54;
-    border-color: #d65;
-    color: #fff;
-  }
-
-  .solo.active {
-    background: #b90;
-    border-color: #da2;
-    color: #fff;
-  }
-
-  .arm.active {
-    background: #b33;
-    border-color: #d44;
-    color: #fff;
+    gap: var(--gap-xs);
   }
 </style>

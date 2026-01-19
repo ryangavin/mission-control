@@ -13,28 +13,19 @@
 </div>
 
 <style>
-  .header-box {
-    display: flex;
-    align-items: center;
-    height: 32px;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 4px;
-  }
-
   .connection-status {
-    gap: 12px;
-    padding: 0 8px;
+    gap: var(--gap-xl);
+    padding: 0 var(--gap-lg);
   }
 
   .status-indicator {
     font-size: 10px;
     font-weight: 500;
-    color: #aa6666;
+    color: var(--accent-error-dim);
   }
 
   .status-indicator.connected {
-    color: #44ff44;
-    text-shadow: 0 0 3px #44ff4488;
+    color: var(--accent-success);
+    text-shadow: 0 0 3px var(--accent-success-dim);
   }
 </style>

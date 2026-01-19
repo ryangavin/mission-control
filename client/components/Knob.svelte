@@ -119,10 +119,10 @@
 
 <style>
   .knob {
-    --track-color: #3a3a3a;
-    --value-color: #ff9944;
-    --body-color: #2a2a2a;
-    --border-color: #444;
+    --track-color: var(--bg-active);
+    --value-color: var(--accent-primary);
+    --body-color: var(--bg-hover);
+    --knob-border-color: var(--border-medium);
 
     width: var(--size);
     height: var(--size);
@@ -144,7 +144,7 @@
   .knob-track {
     position: absolute;
     inset: 0;
-    border-radius: 50%;
+    border-radius: var(--radius-full);
     background: conic-gradient(
       from var(--start),
       var(--track-color) 0deg,
@@ -158,7 +158,7 @@
   .knob-value {
     position: absolute;
     inset: 0;
-    border-radius: 50%;
+    border-radius: var(--radius-full);
     background: conic-gradient(
       from var(--start),
       var(--value-color) 0deg,
@@ -181,9 +181,9 @@
   .knob-body {
     position: absolute;
     inset: 20%;
-    border-radius: 50%;
+    border-radius: var(--radius-full);
     background: var(--body-color);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--knob-border-color);
   }
 
   .knob-label {
@@ -193,7 +193,7 @@
     transform: translateX(-50%);
     font-size: 9px;
     font-weight: 500;
-    color: #fff;
+    color: var(--text-primary);
     line-height: 1;
   }
 </style>

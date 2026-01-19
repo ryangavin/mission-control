@@ -1,0 +1,104 @@
+/* Header box - shared container style for header elements */
+.header-box {
+  display: flex;
+  align-items: center;
+  height: var(--header-height);
+  background: var(--bg-dark);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+/* Square icon button (help, close, resync, etc.) */
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--button-height-md);
+  height: var(--button-height-md);
+  background: var(--bg-dark);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.btn-icon:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* Control button (M, S, arm, etc.) */
+.control-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 2px;
+  min-width: 20px;
+  min-height: 24px;
+  font-size: 10px;
+  font-weight: 600;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg-active);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.control-btn:hover {
+  background: var(--bg-highlight);
+  color: var(--text-primary);
+}
+
+.control-btn.active {
+  color: var(--text-primary);
+}
+
+.control-btn.mute.active {
+  background: #b54;
+  border-color: #d65;
+  color: var(--text-primary);
+}
+
+.control-btn.solo.active {
+  background: #b90;
+  border-color: #da2;
+  color: var(--text-primary);
+}
+
+.control-btn.arm.active {
+  background: #b33;
+  border-color: #d44;
+  color: var(--text-primary);
+}
+
+.control-btn.placeholder {
+  visibility: hidden;
+}
+
+/* Stop button */
+.stop-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  height: var(--button-height-sm);
+  background: var(--bg-active);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.stop-btn:hover {
+  background: #4a3333;
+  border-color: var(--accent-error);
+  color: var(--accent-error);
+}

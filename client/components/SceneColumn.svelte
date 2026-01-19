@@ -30,7 +30,7 @@
 </script>
 
 <div
-  class="scene-column"
+  class="scene-column flex-col hide-scrollbar"
   bind:this={element}
   onscroll={onScroll}
 >
@@ -46,7 +46,7 @@
       style="--scene-color: {sceneColor}"
       onclick={() => onSceneLaunch(scene.id)}
     >
-      <span class="scene-name">{scene.name || `Scene ${sceneIndex + 1}`}</span>
+      <span class="scene-name text-ellipsis">{scene.name || `Scene ${sceneIndex + 1}`}</span>
       <i class="fa-solid fa-play scene-play"></i>
     </button>
   {/each}
@@ -57,34 +57,26 @@
 
 <style>
   .scene-column {
-    display: flex;
-    flex-direction: column;
-    width: 80px;
-    min-width: 80px;
+    width: var(--track-width);
+    min-width: var(--track-width);
     flex-shrink: 0;
-    background: #222;
-    padding: 0 3px 3px 0;
+    background: var(--bg-surface);
+    padding: 0 var(--gap-sm) var(--gap-sm) 0;
     overflow-y: auto;
     overflow-x: hidden;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
     overscroll-behavior: none;
-  }
-
-  .scene-column::-webkit-scrollbar {
-    display: none;
   }
 
   .sticky-row {
     position: sticky;
     z-index: 10;
-    background: #222;
+    background: var(--bg-surface);
     flex-shrink: 0;
   }
 
   .header-row {
     top: 0;
-    padding-bottom: 3px;
+    padding-bottom: var(--gap-sm);
   }
 
   .scene-btn {
@@ -92,26 +84,26 @@
     align-items: center;
     justify-content: space-between;
     gap: 4px;
-    padding: 6px 8px;
-    height: 47px;
+    padding: var(--gap-md) var(--gap-lg);
+    height: var(--cell-height);
     box-sizing: border-box;
     flex-shrink: 0;
-    background: color-mix(in srgb, var(--scene-color, #666) 10%, #2d2d2d);
+    background: color-mix(in srgb, var(--scene-color, var(--text-subtle)) 10%, var(--bg-hover));
     border: none;
-    border-left: 3px solid var(--scene-color, #666);
-    border-radius: 3px;
-    color: #fff;
+    border-left: 3px solid var(--scene-color, var(--text-subtle));
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
     font-size: 10px;
     cursor: pointer;
     transition: background 0.1s;
   }
 
   .scene-btn + .scene-btn {
-    margin-top: 3px;
+    margin-top: var(--gap-sm);
   }
 
   .scene-btn:hover {
-    background: color-mix(in srgb, var(--scene-color, #666) 20%, #3d3d3d);
+    background: color-mix(in srgb, var(--scene-color, var(--text-subtle)) 20%, var(--bg-active));
   }
 
   .scene-btn:active {
@@ -120,9 +112,6 @@
 
   .scene-name {
     flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     text-align: left;
     font-size: 9px;
   }
@@ -138,7 +127,7 @@
   }
 
   .add-row-spacer {
-    height: 47px;
+    height: var(--cell-height);
     flex-shrink: 0;
     margin-top: 15px;
   }

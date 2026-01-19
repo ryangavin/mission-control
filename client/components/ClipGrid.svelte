@@ -141,7 +141,7 @@
   }
 </script>
 
-<div class="grid-scroll" bind:this={element} onscroll={onScroll}>
+<div class="grid-scroll hide-scrollbar" bind:this={element} onscroll={onScroll}>
   <!-- Sticky track headers row with background -->
   <div class="sticky-row track-headers-row" style="--cols: {tracks.length}">
     {#each tracks as track (track.id)}
@@ -180,7 +180,7 @@
 
   <!-- Add scene button - outside grid so it can be sticky -->
   <div class="add-scene-row">
-    <button class="add-scene-btn" onclick={onAddScene}>
+    <button class="add-scene-btn flex-center" onclick={onAddScene}>
       <i class="fa-solid fa-plus"></i>
       <span>Add New Scene</span>
     </button>
@@ -191,64 +191,55 @@
   .grid-scroll {
     flex: 1;
     overflow: auto;
-    background: #1a1a1a;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    background: var(--bg-dark);
     overscroll-behavior: none;
-  }
-
-  .grid-scroll::-webkit-scrollbar {
-    display: none;
   }
 
   .sticky-row {
     display: grid;
     grid-template-columns: repeat(var(--cols), minmax(80px, 1fr));
-    gap: 3px;
+    gap: var(--gap-sm);
     min-width: fit-content;
-    background: #1a1a1a;
-    padding: 0 3px;
+    background: var(--bg-dark);
+    padding: 0 var(--gap-sm);
     position: sticky;
     z-index: 10;
   }
 
   .track-headers-row {
     top: 0;
-    padding-bottom: 3px;
+    padding-bottom: var(--gap-sm);
   }
 
   .grid {
     display: grid;
     grid-template-columns: repeat(var(--cols), minmax(80px, 1fr));
-    gap: 3px;
+    gap: var(--gap-sm);
     min-width: fit-content;
-    background: #1a1a1a;
-    padding: 0 3px 3px 3px;
+    background: var(--bg-dark);
+    padding: 0 var(--gap-sm) var(--gap-sm) var(--gap-sm);
   }
 
   .add-scene-row {
     position: sticky;
     left: 0;
-    padding: 12px 20px 3px 20px;
+    padding: var(--gap-xl) 20px var(--gap-sm) 20px;
     display: flex;
     justify-content: center;
   }
 
   .add-scene-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+    gap: var(--gap-lg);
     width: 200px;
-    height: 47px;
+    height: var(--cell-height);
     box-sizing: border-box;
-    background: #2d2d2d;
-    border: 1px dashed #555;
-    border-radius: 3px;
-    color: #888;
+    background: var(--bg-hover);
+    border: 1px dashed var(--border-light);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
     font-size: 12px;
     cursor: pointer;
-    transition: all 0.1s;
+    transition: var(--transition-fast);
   }
 
   .add-scene-btn i {
@@ -256,9 +247,9 @@
   }
 
   .add-scene-btn:hover {
-    background: #3d3d3d;
+    background: var(--bg-active);
     border-color: #777;
-    color: #fff;
+    color: var(--text-primary);
   }
 
   .add-scene-btn:active {

@@ -33,11 +33,11 @@
 {#if isOpen}
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="modal-backdrop" onclick={handleBackdropClick}>
-    <div class="modal">
+  <div class="modal-backdrop flex-center" onclick={handleBackdropClick}>
+    <div class="modal flex-col">
       <div class="modal-header">
         <h2>Mission Control Help</h2>
-        <button class="close-btn" onclick={onClose} aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        <button class="btn-icon" onclick={onClose} aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <div class="tabs">
@@ -127,10 +127,10 @@
 
         {:else if activeTab === 'about'}
           <div class="section about-section">
-            <div class="about-left">
+            <div class="about-left flex-center">
               <img src={appIcon} alt="Mission Control" class="app-icon" />
             </div>
-            <div class="about-right">
+            <div class="about-right flex-col">
               <h3>Mission Control</h3>
               <p class="tagline">Web-based controller for Ableton Live</p>
 
@@ -161,21 +161,17 @@
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
     z-index: 1000;
   }
 
   .modal {
-    background: #1e1e1e;
-    border: 1px solid #333;
-    border-radius: 8px;
+    background: var(--bg-medium);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
     width: 90%;
     max-width: 600px;
+    height: 410px;
     max-height: 80vh;
-    display: flex;
-    flex-direction: column;
   }
 
   .modal-header {
@@ -183,39 +179,19 @@
     align-items: center;
     justify-content: space-between;
     padding: 16px 20px;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid var(--border-subtle);
   }
 
   .modal-header h2 {
     margin: 0;
     font-size: 18px;
     font-weight: 500;
-    color: #fff;
-  }
-
-  .close-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 4px;
-    color: #888;
-    cursor: pointer;
-    font-size: 12px;
-    transition: all 0.1s;
-  }
-
-  .close-btn:hover {
-    background: #2a2a2a;
-    color: #fff;
+    color: var(--text-primary);
   }
 
   .tabs {
     display: flex;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid var(--border-subtle);
     padding: 0 16px;
   }
 
@@ -223,7 +199,7 @@
     background: none;
     border: none;
     border-radius: 0;
-    color: #888;
+    color: var(--text-muted);
     padding: 12px 16px;
     cursor: pointer;
     font-size: 14px;
@@ -232,43 +208,50 @@
   }
 
   .tab:hover {
-    color: #fff;
+    color: var(--text-primary);
   }
 
   .tab.active {
-    color: #ff9944;
-    border-bottom-color: #ff9944;
+    color: var(--accent-primary);
+    border-bottom-color: var(--accent-primary);
   }
 
   .modal-content {
     flex: 1;
-    overflow-y: scroll;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
     padding: 20px;
+    min-height: 0;
+  }
+
+  .modal-content > .section {
+    flex: 1;
   }
 
   .section h3 {
     margin: 0 0 16px 0;
     font-size: 16px;
     font-weight: 500;
-    color: #fff;
+    color: var(--text-primary);
   }
 
   .section h4 {
     margin: 20px 0 8px 0;
     font-size: 14px;
     font-weight: 500;
-    color: #fff;
+    color: var(--text-primary);
   }
 
   .section p {
-    color: #aaa;
+    color: var(--text-secondary);
     font-size: 14px;
     line-height: 1.5;
     margin: 8px 0;
   }
 
   .section a {
-    color: #ff9944;
+    color: var(--accent-primary);
   }
 
   .steps {
@@ -292,9 +275,9 @@
     top: 0;
     width: 24px;
     height: 24px;
-    background: #333;
-    color: #888;
-    border-radius: 50%;
+    background: var(--border-subtle);
+    color: var(--text-muted);
+    border-radius: var(--radius-full);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -303,32 +286,32 @@
 
   .steps li strong {
     display: block;
-    color: #fff;
+    color: var(--text-primary);
     margin-bottom: 4px;
   }
 
   .steps li p {
     margin: 0;
-    color: #888;
+    color: var(--text-muted);
     font-size: 13px;
   }
 
   .issue {
     margin-bottom: 20px;
     padding: 12px;
-    background: #252525;
-    border-radius: 6px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-lg);
   }
 
   .issue h4 {
     margin: 0 0 8px 0;
-    color: #ff9944;
+    color: var(--accent-primary);
   }
 
   .issue ul {
     margin: 0;
     padding-left: 20px;
-    color: #aaa;
+    color: var(--text-secondary);
     font-size: 13px;
   }
 
@@ -336,25 +319,22 @@
     margin-bottom: 4px;
   }
 
-  .about-section {
+  .section.about-section {
     display: flex;
     gap: 24px;
-    padding: 0 12px 0 0;
+    padding: 0;
+    height: 100%;
+    box-sizing: border-box;
   }
 
   .about-left {
     flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #1a1a1a;
-    border-radius: 6px;
+    background: var(--bg-dark);
+    border-radius: var(--radius-lg);
   }
 
   .about-right {
     flex: 2;
-    display: flex;
-    flex-direction: column;
     min-width: 0;
     overflow: hidden;
   }
@@ -370,7 +350,7 @@
   }
 
   .tagline {
-    color: #888;
+    color: var(--text-muted);
     font-size: 14px;
     margin: 0;
   }
@@ -378,47 +358,47 @@
   .about-links {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: var(--gap-xl);
     margin: 20px 0;
   }
 
   .about-btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--gap-md);
     padding: 10px 20px;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 4px;
-    color: #ccc;
+    background: var(--bg-dark);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
     text-decoration: none;
     font-size: 14px;
-    transition: all 0.1s;
+    transition: var(--transition-fast);
   }
 
   .about-btn:hover {
-    background: #2a2a2a;
-    color: #fff;
+    background: var(--bg-hover);
+    color: var(--text-primary);
   }
 
   .about-btn.donate {
-    border-color: #ff6b6b44;
-    color: #ff6b6b;
+    border-color: var(--accent-donate);
+    color: var(--accent-donate);
   }
 
   .about-btn.donate:hover {
     background: #ff6b6b22;
-    border-color: #ff6b6b;
+    border-color: var(--accent-donate);
   }
 
   .credits {
     font-size: 12px;
-    color: #666;
+    color: var(--text-subtle);
     margin: 0;
   }
 
   .credits a {
-    color: #ff9944;
+    color: var(--accent-primary);
   }
 
   .about-footer {
@@ -427,63 +407,63 @@
     align-items: center;
     margin-top: auto;
     padding-top: 16px;
-    border-top: 1px solid #333;
+    border-top: 1px solid var(--border-subtle);
   }
 
   .license {
-    color: #555;
+    color: var(--border-light);
     font-size: 12px;
   }
 
   .license:hover {
-    color: #888;
+    color: var(--text-muted);
   }
 
   .version {
-    color: #555;
+    color: var(--border-light);
     font-size: 12px;
   }
 
   .nav-path {
     white-space: nowrap;
-    color: #666;
+    color: var(--text-subtle);
   }
 
   .nav-path code {
-    background: #333;
+    background: var(--border-subtle);
     padding: 2px 6px;
-    border-radius: 3px;
-    color: #ccc;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
     font-size: 12px;
     margin: 0 2px;
   }
 
   .path {
-    background: #252525;
+    background: var(--bg-elevated);
     padding: 8px 12px;
-    border-radius: 4px;
+    border-radius: var(--radius-md);
     font-size: 12px;
-    color: #888;
+    color: var(--text-muted);
     margin-top: 4px;
   }
 
   .path-note {
     font-size: 11px;
-    color: #666;
+    color: var(--text-subtle);
     font-style: italic;
     margin-top: 8px;
   }
 
   .steps li code {
-    background: #333;
+    background: var(--border-subtle);
     padding: 1px 5px;
-    border-radius: 3px;
-    color: #ccc;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
     font-size: 12px;
   }
 
   .recommended {
-    color: #ccc;
+    color: var(--text-secondary);
   }
 
   .manual-install {
@@ -492,13 +472,13 @@
   }
 
   .manual-install summary {
-    color: #aaa;
+    color: var(--text-secondary);
     cursor: pointer;
     user-select: none;
   }
 
   .manual-install summary:hover {
-    color: #ccc;
+    color: var(--text-secondary);
   }
 
   .manual-install p {

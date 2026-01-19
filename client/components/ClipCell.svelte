@@ -39,6 +39,7 @@
 
 <button
   class="clip {clipState}"
+  class:flex-center={clipState === 'empty'}
   class:armed={isArmed && clipState === 'empty'}
   class:dragging={isDragSource}
   class:drop-target={isDropTarget}
@@ -62,7 +63,7 @@
     {/if}
   {/if}
   {#if clipState !== 'empty'}
-    <span class="clip-name">{clipName}</span>
+    <span class="clip-name text-ellipsis">{clipName}</span>
   {/if}
 </button>
 
@@ -70,14 +71,14 @@
   .clip {
     position: relative;
     overflow: hidden;
-    padding: 8px 6px;
-    height: 47px;
+    padding: var(--gap-lg) var(--gap-md);
+    height: var(--cell-height);
     box-sizing: border-box;
-    background: color-mix(in srgb, var(--color) 20%, #2d2d2d);
-    border: 1px solid color-mix(in srgb, var(--color) 40%, #222);
+    background: color-mix(in srgb, var(--color) 20%, var(--bg-hover));
+    border: 1px solid color-mix(in srgb, var(--color) 40%, var(--border-dark));
     border-top: 3px solid var(--color);
-    border-radius: 3px;
-    color: #fff;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
     font-size: 9px;
     cursor: pointer;
     transition: background 0.1s, transform 0.1s;
@@ -86,7 +87,7 @@
   }
 
   .clip:hover {
-    background: color-mix(in srgb, var(--color) 40%, #3d3d3d);
+    background: color-mix(in srgb, var(--color) 40%, var(--bg-active));
   }
 
   .clip:active {
@@ -95,25 +96,22 @@
 
   /* Empty clip state */
   .clip.empty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: color-mix(in srgb, var(--scene-color, #666) 8%, #2a2a2a);
-    border: 1px solid color-mix(in srgb, var(--scene-color, #666) 20%, #222);
+    background: color-mix(in srgb, var(--scene-color, var(--text-subtle)) 8%, var(--bg-hover));
+    border: 1px solid color-mix(in srgb, var(--scene-color, var(--text-subtle)) 20%, var(--border-dark));
     box-shadow: none;
     opacity: 0.7;
   }
 
   .clip.empty:hover {
-    background: color-mix(in srgb, var(--scene-color, #666) 15%, #3a3a3a);
-    border-color: color-mix(in srgb, var(--scene-color, #666) 30%, #333);
+    background: color-mix(in srgb, var(--scene-color, var(--text-subtle)) 15%, var(--bg-active));
+    border-color: color-mix(in srgb, var(--scene-color, var(--text-subtle)) 30%, var(--border-subtle));
     opacity: 1;
   }
 
   /* Armed empty slot has subtle red tint */
   .clip.empty.armed {
-    background: color-mix(in srgb, #ff0000 8%, #2a2a2a);
-    border-color: color-mix(in srgb, #ff0000 20%, #333);
+    background: color-mix(in srgb, var(--accent-record) 8%, var(--bg-hover));
+    border-color: color-mix(in srgb, var(--accent-record) 20%, var(--border-subtle));
   }
 
   /* Has clip state */
@@ -127,19 +125,19 @@
 
   /* Playing state */
   .clip.playing {
-    background: color-mix(in srgb, #00ff00 25%, #2d2d2d);
-    border-color: #00ff00;
+    background: color-mix(in srgb, var(--accent-success) 25%, var(--bg-hover));
+    border-color: var(--accent-success);
     box-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
     cursor: pointer;
   }
 
   .clip.playing:hover {
-    background: color-mix(in srgb, #00ff00 35%, #2d2d2d);
+    background: color-mix(in srgb, var(--accent-success) 35%, var(--bg-hover));
   }
 
   /* Triggered state */
   .clip.triggered {
-    background: color-mix(in srgb, #ffff00 25%, #2d2d2d);
+    background: color-mix(in srgb, #ffff00 25%, var(--bg-hover));
     border-color: #ffff00;
     animation: blink 0.3s ease-in-out infinite;
     cursor: grab;
@@ -151,8 +149,8 @@
 
   /* Recording state */
   .clip.recording {
-    background: color-mix(in srgb, #ff0000 25%, #2d2d2d);
-    border-color: #ff0000;
+    background: color-mix(in srgb, var(--accent-record) 25%, var(--bg-hover));
+    border-color: var(--accent-record);
     box-shadow: 0 0 8px rgba(255, 0, 0, 0.4);
     animation: pulse 0.5s ease-in-out infinite;
     cursor: pointer;
@@ -168,7 +166,7 @@
   /* Valid drop target */
   .clip.drop-target {
     border: 2px dashed #4CAF50 !important;
-    background: color-mix(in srgb, #4CAF50 20%, #2d2d2d) !important;
+    background: color-mix(in srgb, #4CAF50 20%, var(--bg-hover)) !important;
     box-shadow: 0 0 12px rgba(76, 175, 80, 0.4);
   }
 
@@ -180,7 +178,7 @@
     right: 0;
     bottom: 0;
     background: rgba(76, 175, 80, 0.15);
-    border-radius: 2px;
+    border-radius: var(--radius-xs, 2px);
     pointer-events: none;
   }
 
@@ -210,7 +208,7 @@
     height: 3px;
     width: calc(var(--progress) * 100%);
     background: rgba(255, 255, 255, 0.6);
-    border-radius: 2px 0 0 2px;
+    border-radius: var(--radius-xs, 2px) 0 0 var(--radius-xs, 2px);
     transition: width 0.15s linear;
   }
 
@@ -230,22 +228,22 @@
   }
 
   .clip-icon.record-ready {
-    color: #aa4444;
+    color: var(--accent-error-dim);
     opacity: 0.6;
   }
 
   .clip-icon.stop-ready {
-    color: #666;
+    color: var(--text-subtle);
     opacity: 0.4;
   }
 
   .clip.empty:hover .clip-icon.record-ready {
-    color: #ff4444;
+    color: var(--accent-record);
     opacity: 1;
   }
 
   .clip.empty:hover .clip-icon.stop-ready {
-    color: #aaa;
+    color: var(--text-secondary);
     opacity: 0.8;
   }
 
@@ -254,9 +252,6 @@
     position: relative;
     z-index: 2;
     display: block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   /* Animations */

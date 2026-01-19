@@ -81,8 +81,8 @@
   .volume-slider::-webkit-slider-runnable-track {
     width: 6px;
     height: 100%;
-    background: linear-gradient(to top, #ff9944 var(--value, 0%), #444 var(--value, 0%));
-    border-radius: 2px;
+    background: linear-gradient(to top, var(--accent-primary) var(--value, 0%), var(--border-medium) var(--value, 0%));
+    border-radius: var(--radius-xs, 2px);
   }
 
   .volume-slider::-webkit-slider-thumb {
@@ -90,40 +90,40 @@
     appearance: none;
     width: 20px;
     height: 10px;
-    background: #888;
-    border-radius: 2px;
+    background: var(--text-muted);
+    border-radius: var(--radius-xs, 2px);
     cursor: pointer;
     margin-left: -7px;
   }
 
   .volume-slider::-webkit-slider-thumb:hover {
-    background: #fff;
+    background: var(--text-primary);
   }
 
   /* Firefox support */
   .volume-slider::-moz-range-track {
     width: 6px;
     height: 100%;
-    background: #444;
-    border-radius: 2px;
+    background: var(--border-medium);
+    border-radius: var(--radius-xs, 2px);
   }
 
   .volume-slider::-moz-range-progress {
-    background: #ff9944;
-    border-radius: 2px;
+    background: var(--accent-primary);
+    border-radius: var(--radius-xs, 2px);
   }
 
   .volume-slider::-moz-range-thumb {
     width: 20px;
     height: 10px;
-    background: #888;
-    border-radius: 2px;
+    background: var(--text-muted);
+    border-radius: var(--radius-xs, 2px);
     border: none;
     cursor: pointer;
   }
 
   .volume-slider::-moz-range-thumb:hover {
-    background: #fff;
+    background: var(--text-primary);
   }
 
   .volume-ticks {
@@ -142,12 +142,12 @@
     left: -3px;
     width: 5px;
     height: 1px;
-    background: #666;
+    background: var(--text-subtle);
     transform: translateY(50%);
   }
 
   .tick.zero {
-    background: #fff;
+    background: var(--text-primary);
   }
 
   .tick span {
@@ -156,11 +156,11 @@
     top: 50%;
     transform: translateY(-50%);
     font-size: 9px;
-    color: #888;
+    color: var(--text-muted);
     white-space: nowrap;
   }
 
   .tick.zero span {
-    color: #fff;
+    color: var(--text-primary);
   }
 </style>
