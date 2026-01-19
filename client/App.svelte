@@ -25,6 +25,7 @@
   let abletonConnected = $state(false);
   let syncPhase = $state<string | null>(null);
   let syncProgress = $state<number | null>(null);
+  let resyncing = $state(false);
 
   // Full session state
   let session = $state<SessionState | null>(null);
@@ -100,6 +101,7 @@
           session = msg.payload;
           syncPhase = null;
           syncProgress = null;
+          resyncing = false;
           break;
 
         case 'session_reset':
@@ -351,11 +353,11 @@
     onTapTempo={handleTapTempo}
     onQuantization={(value) => send({ type: 'transport/quantization', value })}
     onTempoChange={(newTempo) => send({ type: 'transport/tempo', bpm: newTempo })}
-    onResync={() => send({ type: 'session/request' })}
+    onResync={() => { resyncing = true; send({ type: 'session/resync' }); }}
   />
 
   <main class="main">
-    {#if tracks.length === 0}
+    {#if tracks.length === 0 || resyncing}
       <LoadingState
         {connectionState}
         {abletonConnected}

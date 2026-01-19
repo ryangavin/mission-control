@@ -121,6 +121,7 @@ export type ClientMessage =
   | { type: 'mixer/arm'; trackId: number; armed: boolean }
   | { type: 'device/parameter'; trackId: number; deviceId: number; parameterId: number; value: number }
   | { type: 'session/request' }
+  | { type: 'session/resync' }
   | { type: 'clip/move'; srcTrack: number; srcScene: number; dstTrack: number; dstScene: number }
   | { type: 'clip/delete'; trackId: number; sceneId: number }
   | { type: 'osc'; address: string; args: OSCValue[] };
