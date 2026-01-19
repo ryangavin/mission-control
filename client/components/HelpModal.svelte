@@ -497,4 +497,93 @@
   .manual-install p {
     margin: 8px 0 0 0;
   }
+
+  /* Mobile styles */
+  @media (max-width: 500px) {
+    .modal-header h2 {
+      font-size: 16px;
+    }
+
+    .tabs {
+      padding: 0 8px;
+    }
+
+    .tab {
+      font-size: 12px;
+      padding: 10px 8px;
+    }
+
+    .modal-content {
+      padding: 16px;
+    }
+
+    .section h3 {
+      font-size: 14px;
+    }
+
+    .section h4 {
+      font-size: 13px;
+    }
+
+    .section p,
+    .steps li p,
+    .issue ul {
+      font-size: 12px;
+    }
+
+    .steps li {
+      padding-left: 28px;
+    }
+
+    .steps li::before {
+      width: 20px;
+      height: 20px;
+      font-size: 11px;
+    }
+
+    .nav-path code,
+    .steps li code {
+      font-size: 11px;
+      padding: 1px 4px;
+    }
+
+    .about-left {
+      display: none;
+    }
+
+    .about-section {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .about-right {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .about-section h3 {
+      font-size: 18px;
+    }
+
+    .about-links {
+      gap: var(--gap-md);
+    }
+
+    .about-btn {
+      padding: 8px 14px;
+      font-size: 13px;
+    }
+
+    .nav-path {
+      white-space: normal;
+      line-height: 2;
+    }
+
+    .about-footer {
+      margin-top: 0;
+    }
+  }
 </style>
