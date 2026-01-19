@@ -65,6 +65,28 @@ jobs:
           mkdir -p desktop/dist-bridge
           bun build --compile --target=${{ matrix.bun_target }} --outfile=desktop/dist-bridge/mission-control-bridge-${{ matrix.sidecar_suffix }} ./server/standalone.ts
 
+      - name: Sign sidecar with JIT entitlements (macOS)
+        if: matrix.platform != 'windows-latest'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          # Import certificate
+          echo "$APPLE_CERTIFICATE" | base64 --decode > certificate.p12
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.keychain
+          rm certificate.p12
+
+          # Sign sidecar with JIT entitlements
+          codesign --force --options runtime --entitlements desktop/src-tauri/entitlements.plist --sign "$APPLE_SIGNING_IDENTITY" "desktop/dist-bridge/mission-control-bridge-${{ matrix.sidecar_suffix }}"
+
+          # Verify signature
+          codesign -dv --verbose=4 "desktop/dist-bridge/mission-control-bridge-${{ matrix.sidecar_suffix }}"
+
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
