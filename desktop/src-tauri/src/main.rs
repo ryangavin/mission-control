@@ -21,6 +21,8 @@ use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 #[cfg(not(debug_assertions))]
+use tauri_plugin_dialog::MessageDialogButtons;
+#[cfg(not(debug_assertions))]
 use tauri_plugin_updater::UpdaterExt;
 #[allow(unused_imports)]
 use tauri_plugin_shell::process::CommandChild;
@@ -374,8 +376,7 @@ async fn check_for_updates(app: AppHandle, manual: bool) -> Result<(), Box<dyn s
                     env!("CARGO_PKG_VERSION")
                 ))
                 .title("Update Available")
-                .ok_button_label("Install")
-                .cancel_button_label("Later")
+                .buttons(MessageDialogButtons::OkCancelCustom("Install".into(), "Later".into()))
                 .blocking_show();
 
             if should_update {
