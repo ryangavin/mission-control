@@ -69,6 +69,7 @@ fn generate_qr_code_base64(data: &str) -> Result<String, String> {
 
 struct AppState {
     bridge_process: Mutex<Option<CommandChild>>,
+    quit_requested: Mutex<bool>,
 }
 
 fn main() {
@@ -82,6 +83,7 @@ fn main() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(AppState {
             bridge_process: Mutex::new(None),
+            quit_requested: Mutex::new(false),
         })
         .setup(|app| {
             // Hide from dock, only show in system tray
@@ -158,8 +160,13 @@ fn main() {
         .run(|app, event| {
             match event {
                 RunEvent::ExitRequested { api, .. } => {
-                    // Prevent app from exiting when windows are closed (tray-only app)
-                    api.prevent_exit();
+                    let state = app.state::<AppState>();
+                    let quit_requested = *state.quit_requested.lock().unwrap();
+
+                    if !quit_requested {
+                        // Only prevent exit for window closes, not deliberate quit
+                        api.prevent_exit();
+                    }
                 }
                 RunEvent::Exit => {
                     // Stop bridge on exit
@@ -310,7 +317,11 @@ fn handle_menu_event(app: &AppHandle, id: &str) {
             });
         }
         "quit" => {
-            stop_bridge(app);
+            // Set quit flag so ExitRequested handler allows exit
+            let state = app.state::<AppState>();
+            *state.quit_requested.lock().unwrap() = true;
+
+            // stop_bridge is called in RunEvent::Exit handler
             app.exit(0);
         }
         _ => {}
