@@ -40,13 +40,18 @@ jobs:
 
       - name: Set edge version
         run: |
-          # Set fixed edge version in tauri.conf.json
-          sed -i.bak 's/"version": "[^"]*"/"version": "0.0.0-edge"/' desktop/src-tauri/tauri.conf.json
           # Set fixed edge version in Cargo.toml
           sed -i.bak 's/^version = "[^"]*"/version = "0.0.0-edge"/' desktop/src-tauri/Cargo.toml
-          # Remove updater pubkey to disable signing for edge builds
-          sed -i.bak 's/"pubkey": "[^"]*"/"pubkey": ""/' desktop/src-tauri/tauri.conf.json
         shell: bash
+
+      - name: Configure edge build
+        run: |
+          const fs = require('fs');
+          const config = JSON.parse(fs.readFileSync('desktop/src-tauri/tauri.conf.json', 'utf8'));
+          config.version = '0.0.0-edge';
+          config.plugins.updater.pubkey = '';
+          fs.writeFileSync('desktop/src-tauri/tauri.conf.json', JSON.stringify(config, null, 2));
+        shell: node {0}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
