@@ -20,9 +20,9 @@ Launch clips and control Ableton Live from any browser. Inspired by the legendar
 
 | Platform | Download |
 |----------|----------|
-| **macOS** (Apple Silicon) | [Mission Control.dmg (aarch64)](https://github.com/ryangavin/mission-control/releases/latest/download/Mission.Control_aarch64.dmg) |
-| **macOS** (Intel) | [Mission Control.dmg (x64)](https://github.com/ryangavin/mission-control/releases/latest/download/Mission.Control_x64.dmg) |
-| **Windows** | [Mission Control Setup.exe](https://github.com/ryangavin/mission-control/releases/latest/download/Mission.Control_x64-setup.exe) |
+| **macOS** (Apple Silicon) | [Mission Control.dmg (aarch64)](https://github.com/ryangavin/mission-control/releases/latest/download/Mission.Control.Bridge-aarch64.dmg) |
+| **macOS** (Intel) | [Mission Control.dmg (x64)](https://github.com/ryangavin/mission-control/releases/latest/download/Mission.Control.Bridge-x64.dmg) |
+| **Windows** | [Mission Control Setup.exe](https://github.com/ryangavin/mission-control/releases/latest/download/Mission.Control.Bridge-x64-setup.exe) |
 
 Or try the [edge build](https://github.com/ryangavin/mission-control/releases/tag/edge) for bleeding edge updates on every commit.
 
