@@ -74,11 +74,11 @@
     }
   }
 
-  /* Mobile-specific: safe area padding */
+  /* Mobile-specific: extra padding for rounded corners */
   @media (max-width: 500px) {
     .footer {
-      padding-left: calc(var(--gap-md) + env(safe-area-inset-left, 0px));
-      padding-right: calc(var(--gap-md) + env(safe-area-inset-right, 0px));
+      padding-left: calc(32px + env(safe-area-inset-left, 0px));
+      padding-right: calc(32px + env(safe-area-inset-right, 0px));
     }
   }
 </style>
