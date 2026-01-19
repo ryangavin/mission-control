@@ -45,6 +45,8 @@ In Ableton Live, go to **Preferences → Link, Tempo & MIDI → Control Surface*
 
 Open a Live Set, then click the tray icon:
 
+![Tray menu options](docs/step4.png)
+
 - **Open Mission Control** — Opens the UI in a browser on this computer
 - **Connect on Mobile** — Shows a QR code to connect from a phone or tablet on the same network
 
