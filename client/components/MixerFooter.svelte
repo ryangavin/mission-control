@@ -129,8 +129,13 @@
     const deltaY = dragStartY - clientY;
     const rawHeight = Math.max(0, Math.min(maxFadersHeight, dragStartHeight + deltaY));
 
-    // Snap to collapsed as soon as we go below minimum
-    fadersHeight = rawHeight < minFadersHeight ? 0 : rawHeight;
+    // When expanding from collapsed, immediately show at minimum height
+    if (dragStartHeight === 0 && deltaY > 0) {
+      fadersHeight = Math.max(minFadersHeight, rawHeight);
+    } else {
+      // When collapsing, snap to 0 when below minimum threshold
+      fadersHeight = rawHeight < minFadersHeight ? 0 : rawHeight;
+    }
   }
 
   function handleKeyDown(e: KeyboardEvent) {
@@ -313,6 +318,8 @@
   }
 
   .resize-handle {
+    position: relative;
+    z-index: 100;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -320,6 +327,8 @@
     height: 10px;
     background: var(--bg-medium);
     border: none;
+    border-bottom: 1px solid var(--border-subtle);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
     padding: 0;
     cursor: ns-resize;
     user-select: none;
@@ -354,7 +363,7 @@
     grid-template-columns: repeat(var(--cols), minmax(80px, 1fr));
     gap: var(--gap-sm);
     flex: 1;
-    padding: var(--gap-md) var(--gap-sm) 0 var(--gap-sm);
+    padding: var(--gap-sm) var(--gap-sm) 0 var(--gap-sm);
     overflow-x: auto;
     overflow-y: hidden;
   }
@@ -362,7 +371,7 @@
   .faders-master {
     width: var(--track-width);
     min-width: var(--track-width);
-    padding: var(--gap-md) var(--gap-sm) 0 0;
+    padding: var(--gap-sm) var(--gap-sm) 0 0;
     flex-shrink: 0;
   }
 
