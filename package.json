@@ -14,7 +14,8 @@
     "build:bridge:win": "bun build --compile --target=bun-windows-x64 --outfile=desktop/dist-bridge/mission-control-bridge-x86_64-pc-windows-msvc.exe ./server/standalone.ts",
     "preview": "vite preview",
     "check": "svelte-check && tsc",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "release": "bun scripts/release.ts"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.1.0",
