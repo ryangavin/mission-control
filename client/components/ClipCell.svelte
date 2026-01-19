@@ -86,10 +86,6 @@
     text-overflow: ellipsis;
   }
 
-  .clip:hover {
-    background: color-mix(in srgb, var(--color) 40%, var(--bg-active));
-  }
-
   .clip:active {
     transform: scale(0.97);
   }
@@ -100,12 +96,6 @@
     border: 1px solid color-mix(in srgb, var(--scene-color, var(--text-subtle)) 20%, var(--border-dark));
     box-shadow: none;
     opacity: 0.7;
-  }
-
-  .clip.empty:hover {
-    background: color-mix(in srgb, var(--scene-color, var(--text-subtle)) 15%, var(--bg-active));
-    border-color: color-mix(in srgb, var(--scene-color, var(--text-subtle)) 30%, var(--border-subtle));
-    opacity: 1;
   }
 
   /* Armed empty slot has subtle red tint */
@@ -129,10 +119,6 @@
     border-color: var(--accent-success);
     box-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
     cursor: pointer;
-  }
-
-  .clip.playing:hover {
-    background: color-mix(in srgb, var(--accent-success) 35%, var(--bg-hover));
   }
 
   /* Triggered state */
@@ -237,16 +223,6 @@
     opacity: 0.4;
   }
 
-  .clip.empty:hover .clip-icon.record-ready {
-    color: var(--accent-record);
-    opacity: 1;
-  }
-
-  .clip.empty:hover .clip-icon.stop-ready {
-    color: var(--text-secondary);
-    opacity: 0.8;
-  }
-
   /* Clip name */
   .clip-name {
     position: relative;
@@ -263,5 +239,32 @@
   @keyframes pulse {
     0%, 100% { box-shadow: 0 0 8px rgba(255, 0, 0, 0.4); }
     50% { box-shadow: 0 0 16px rgba(255, 0, 0, 0.8); }
+  }
+
+  /* Hover states only for devices with hover support */
+  @media (hover: hover) {
+    .clip:hover {
+      background: color-mix(in srgb, var(--color) 40%, var(--bg-active));
+    }
+
+    .clip.empty:hover {
+      background: color-mix(in srgb, var(--scene-color, var(--text-subtle)) 15%, var(--bg-active));
+      border-color: color-mix(in srgb, var(--scene-color, var(--text-subtle)) 30%, var(--border-subtle));
+      opacity: 1;
+    }
+
+    .clip.playing:hover {
+      background: color-mix(in srgb, var(--accent-success) 35%, var(--bg-hover));
+    }
+
+    .clip.empty:hover .clip-icon.record-ready {
+      color: var(--accent-record);
+      opacity: 1;
+    }
+
+    .clip.empty:hover .clip-icon.stop-ready {
+      color: var(--text-secondary);
+      opacity: 0.8;
+    }
   }
 </style>
