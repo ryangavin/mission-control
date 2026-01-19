@@ -58,7 +58,7 @@ jobs:
         run: bun install
 
       - name: Build client
-        run: bun run build
+        run: bun run build:vite
 
       - name: Build bridge sidecar
         run: |
