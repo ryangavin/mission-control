@@ -69,9 +69,13 @@ async function main() {
   await $`git commit -m "Bump version to ${nextVersion}" -m "Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"`;
   console.log(`Committed version bump to ${nextVersion}`);
 
+  // Push commits and tag
   console.log();
-  console.log("Done! To push the release:");
-  console.log(`  git push && git push origin ${tag}`);
+  console.log("Pushing to origin...");
+  await $`git push`;
+  await $`git push origin ${tag}`;
+  console.log();
+  console.log(`Done! Release ${tag} pushed and building.`);
 }
 
 main().catch((err) => {
