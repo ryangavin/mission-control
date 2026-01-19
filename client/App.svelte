@@ -468,6 +468,8 @@
     height: 100vh;
     height: 100dvh;
     position: relative;
+    padding-top: env(safe-area-inset-top, 0px);
+    box-sizing: border-box;
   }
 
   .main {

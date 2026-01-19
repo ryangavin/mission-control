@@ -193,7 +193,7 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--gap-md);
-    padding: calc(var(--gap-md) + env(safe-area-inset-top, 0px)) var(--gap-md) var(--gap-md);
+    padding: var(--gap-md);
     background: var(--bg-darkest);
     flex-shrink: 0;
   }
