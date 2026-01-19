@@ -49,6 +49,7 @@ jobs:
           const fs = require('fs');
           const config = JSON.parse(fs.readFileSync('desktop/src-tauri/tauri.conf.json', 'utf8'));
           config.version = '0.0.0-edge';
+          config.bundle.createUpdaterArtifacts = false;
           delete config.plugins.updater;
           fs.writeFileSync('desktop/src-tauri/tauri.conf.json', JSON.stringify(config, null, 2));
         shell: node {0}
