@@ -374,6 +374,17 @@ fn stop_bridge(app: &AppHandle) {
 
 #[cfg(not(debug_assertions))]
 async fn check_for_updates(app: AppHandle, manual: bool) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    // Skip auto-updates for edge builds
+    if env!("CARGO_PKG_VERSION").contains("edge") {
+        if manual {
+            app.dialog()
+                .message("Auto-updates are disabled for edge builds.\n\nDownload the latest edge build from GitHub.")
+                .title("Edge Build")
+                .blocking_show();
+        }
+        return Ok(());
+    }
+
     let updater = app.updater()?;
 
     match updater.check().await {

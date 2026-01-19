@@ -54,6 +54,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set edge version
+        run: |
+          # Append -edge to version in tauri.conf.json
+          sed -i.bak 's/"version": "\([^"]*\)"/"version": "\1-edge"/' desktop/src-tauri/tauri.conf.json
+          # Append -edge to version in Cargo.toml
+          sed -i.bak 's/^version = "\([^"]*\)"/version = "\1-edge"/' desktop/src-tauri/Cargo.toml
+        shell: bash
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
