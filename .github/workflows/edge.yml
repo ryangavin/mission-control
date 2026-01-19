@@ -14,23 +14,7 @@ permissions:
   contents: write
 
 jobs:
-  # Cleanup job runs first - deletes and recreates edge release
-  cleanup:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Delete and recreate edge release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
-        run: |
-          gh release delete edge --yes --cleanup-tag || true
-          gh release create edge \
-            --title "Mission Control Edge" \
-            --notes "🔨 Build in progress..." \
-            --prerelease
-
   build:
-    needs: cleanup
     strategy:
       fail-fast: false
       matrix:
@@ -56,10 +40,10 @@ jobs:
 
       - name: Set edge version
         run: |
-          # Append -edge to version in tauri.conf.json
-          sed -i.bak 's/"version": "\([^"]*\)"/"version": "\1-edge"/' desktop/src-tauri/tauri.conf.json
-          # Append -edge to version in Cargo.toml
-          sed -i.bak 's/^version = "\([^"]*\)"/version = "\1-edge"/' desktop/src-tauri/Cargo.toml
+          # Set fixed edge version in tauri.conf.json
+          sed -i.bak 's/"version": "[^"]*"/"version": "edge"/' desktop/src-tauri/tauri.conf.json
+          # Set fixed edge version in Cargo.toml
+          sed -i.bak 's/^version = "[^"]*"/version = "edge"/' desktop/src-tauri/Cargo.toml
         shell: bash
 
       - name: Setup Bun
@@ -137,3 +121,4 @@ jobs:
             ⚠️ This is a pre-release build and may be unstable.
           releaseDraft: false
           prerelease: true
+          args: --target ${{ matrix.target }}
