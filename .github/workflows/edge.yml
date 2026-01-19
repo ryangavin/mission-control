@@ -81,8 +81,7 @@ jobs:
           mkdir -p desktop/dist-bridge
           bun build --compile --target=${{ matrix.bun_target }} --outfile=desktop/dist-bridge/mission-control-bridge-${{ matrix.sidecar_suffix }} ./server/standalone.ts
 
-      - name: Build Tauri app (macOS)
-        if: runner.os == 'macOS'
+      - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -92,27 +91,6 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        with:
-          projectPath: desktop
-          tagName: edge
-          releaseName: Edge
-          releaseBody: |
-            Automated build from the tip of main.
-
-            **Commit:** ${{ github.sha }}
-            **Date:** ${{ github.event.head_commit.timestamp }}
-
-            ⚠️ This is a pre-release build and may be unstable.
-          releaseDraft: false
-          prerelease: true
-          args: --target ${{ matrix.target }}
-          assetNamePattern: "[name]-edge-[arch][ext]"
-
-      - name: Build Tauri app (Windows)
-        if: runner.os == 'Windows'
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: desktop
           tagName: edge
