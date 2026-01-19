@@ -77,8 +77,8 @@
   /* Mobile-specific: extra padding for rounded corners */
   @media (max-width: 500px) {
     .footer {
-      padding-left: calc(32px + env(safe-area-inset-left, 0px));
-      padding-right: calc(32px + env(safe-area-inset-right, 0px));
+      padding-left: 32px;
+      padding-right: 32px;
     }
   }
 </style>
