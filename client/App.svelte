@@ -430,7 +430,7 @@
     margin: 0;
     padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #1e1e1e;
+    background: var(--bg-darkest);
     color: #fff;
     overflow: hidden;
     overscroll-behavior: none;
@@ -470,6 +470,16 @@
     position: relative;
     padding-top: env(safe-area-inset-top, 0px);
     box-sizing: border-box;
+  }
+
+  /* Landscape safe area for dynamic island */
+  @media (orientation: landscape) and (max-height: 500px) {
+    .app {
+      padding-left: 48px;
+      padding-right: 48px;
+      border-left: 1px solid var(--border-subtle);
+      border-right: 1px solid var(--border-subtle);
+    }
   }
 
   .main {

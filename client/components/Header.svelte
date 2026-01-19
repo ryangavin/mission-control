@@ -439,4 +439,38 @@
     }
   }
 
+  /* Landscape mobile: compact header to fit with safe area padding */
+  @media (orientation: landscape) and (max-height: 500px) {
+    .group-item {
+      padding: 0 6px;
+      font-size: 9px;
+    }
+
+    .tempo-value,
+    .tempo-suffix,
+    .playhead-value {
+      font-size: 11px;
+    }
+
+    .transport-btn {
+      min-width: 26px;
+    }
+
+    .transport-btn .icon {
+      font-size: 10px;
+    }
+
+    .loop-btn {
+      padding: 0 5px;
+    }
+
+    .loop-btn i {
+      font-size: 10px;
+    }
+
+    .metronome-icon {
+      font-size: 9px;
+    }
+  }
+
 </style>
