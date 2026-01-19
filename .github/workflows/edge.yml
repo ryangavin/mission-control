@@ -14,7 +14,23 @@ permissions:
   contents: write
 
 jobs:
+  # Cleanup job runs first - deletes and recreates edge release
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete and recreate edge release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release delete edge --yes --cleanup-tag || true
+          gh release create edge \
+            --title "Mission Control Edge" \
+            --notes "🔨 Build in progress..." \
+            --prerelease
+
   build:
+    needs: cleanup
     strategy:
       fail-fast: false
       matrix:
