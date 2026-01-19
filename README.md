@@ -20,15 +20,17 @@ Launch clips and control Ableton Live from any browser. Inspired by the legendar
 
 | Platform | Download |
 |----------|----------|
-| **macOS** (Apple Silicon) | [Mission Control.dmg (aarch64)](https://github.com/ryangavin/mission-control/releases/latest/download/Mission.Control.Bridge-aarch64.dmg) |
-| **macOS** (Intel) | [Mission Control.dmg (x64)](https://github.com/ryangavin/mission-control/releases/latest/download/Mission.Control.Bridge-x64.dmg) |
-| **Windows** | [Mission Control Setup.exe](https://github.com/ryangavin/mission-control/releases/latest/download/Mission.Control.Bridge-x64-setup.exe) |
+| **macOS** (Apple Silicon) | [Mission.Control.Bridge-aarch64.dmg](https://github.com/ryangavin/mission-control/releases/latest/download/Mission.Control.Bridge-aarch64.dmg) |
+| **macOS** (Intel) | [Mission.Control.Bridge-x64.dmg](https://github.com/ryangavin/mission-control/releases/latest/download/Mission.Control.Bridge-x64.dmg) |
+| **Windows** | [Mission.Control.Bridge-x64-setup.exe](https://github.com/ryangavin/mission-control/releases/latest/download/Mission.Control.Bridge-x64-setup.exe) |
 
 Or try the [edge build](https://github.com/ryangavin/mission-control/releases/tag/edge) for bleeding edge updates on every commit.
 
 ### 2. Install the Remote Script
 
 Launch Mission Control, then click the tray icon → **Install Remote Script**.
+
+![Tray menu options](docs/step2.png)
 
 Or manually: download [AbletonOSC](https://github.com/ideoforms/AbletonOSC) and copy the `AbletonOSC` folder to:
 
@@ -44,8 +46,6 @@ In Ableton Live, go to **Preferences → Link, Tempo & MIDI → Control Surface*
 ### 4. Connect
 
 Open a Live Set, then click the tray icon:
-
-![Tray menu options](docs/step4.png)
 
 - **Open Mission Control** — Opens the UI in a browser on this computer
 - **Connect on Mobile** — Shows a QR code to connect from a phone or tablet on the same network
