@@ -1,5 +1,6 @@
 <script lang="ts">
   import ConnectionStatus from './ConnectionStatus.svelte';
+  import ActionsGroup from './ActionsGroup.svelte';
 
   // Quantization value labels
   const QUANTIZATION_OPTIONS = [
@@ -125,78 +126,65 @@
 </script>
 
 <header class="header hide-scrollbar">
-  <div class="header-left">
-    <div class="app-brand">
-      <i class="fa-solid fa-rocket app-icon"></i>
-      <span class="app-title">Mission Control</span>
-    </div>
+  <div class="app-brand">
+    <i class="fa-solid fa-rocket app-icon"></i>
+    <span class="app-title">Mission Control</span>
   </div>
-  <div class="header-center">
-    <div class="header-box header-group">
-      <button class="group-item" title="Tap Tempo" onclick={onTapTempo}>TAP</button>
-      <span class="group-item tempo-item">
-        <span
-          class="tempo-value"
-          class:dragging={tempoDragState !== null}
-          role="slider"
-          tabindex="0"
-          aria-label="Tempo"
-          aria-valuenow={tempo}
-          aria-valuemin={20}
-          aria-valuemax={999}
-          onmousedown={handleTempoMouseDown}
-        >{tempo.toFixed(2)}</span>
-        <span class="tempo-suffix">BPM</span>
-      </span>
-      <button class="group-item" class:active={metronome} title="Metronome" onclick={onMetronome}>
-        <span class="metronome-icon"><i class="fa-solid fa-circle"></i><i class="fa-regular fa-circle"></i></span>
-      </button>
-      <select class="group-item group-select" title="Clip Trigger Quantization" value={quantization} onchange={handleQuantization}>
-        {#each QUANTIZATION_OPTIONS as opt (opt.value)}
-          <option value={opt.value}>{opt.label}</option>
-        {/each}
-      </select>
-    </div>
-    <div class="header-box header-group">
-      <span class="group-item playhead-item">
-        <span class="playhead-value">{formatBeatTime(beatTime)}</span>
-      </span>
-      <button class="group-item transport-btn" class:active={isPlaying} title="Play" onclick={onPlay}>
-        <i class="fa-solid fa-play icon"></i>
-      </button>
-      <button class="group-item transport-btn" title="Stop" onclick={onStop}>
-        <i class="fa-solid fa-stop icon"></i>
-      </button>
-      <button class="group-item transport-btn record" class:active={isRecording} title="Record" onclick={onRecord}>
-        <i class="fa-solid fa-circle icon"></i>
-      </button>
-    </div>
-    <div class="header-box header-group">
-      <button class="group-item loop-btn" class:active={punchIn} title="Punch In" aria-label="Punch In" onclick={onPunchIn}>
-        <i class="fa-solid fa-chevron-right"></i>
-      </button>
-      <button class="group-item loop-btn" class:active={loop} title="Loop" aria-label="Loop" onclick={onLoop}>
-        <i class="fa-solid fa-repeat"></i>
-      </button>
-      <button class="group-item loop-btn" class:active={punchOut} title="Punch Out" aria-label="Punch Out" onclick={onPunchOut}>
-        <i class="fa-solid fa-chevron-left"></i>
-      </button>
-    </div>
-  </div>
-  <div class="header-right">
-    <div class="status-wrapper">
-      <ConnectionStatus
-        bridgeConnected={connectionState === 'connected'}
-        {abletonConnected}
-      />
-    </div>
-    <button class="btn-icon" title="Resync" onclick={onResync}>
-      <i class="fa-solid fa-arrows-rotate"></i>
+  <div class="header-box header-group">
+    <button class="group-item" title="Tap Tempo" onclick={onTapTempo}>TAP</button>
+    <span class="group-item tempo-item">
+      <span
+        class="tempo-value"
+        class:dragging={tempoDragState !== null}
+        role="slider"
+        tabindex="0"
+        aria-label="Tempo"
+        aria-valuenow={tempo}
+        aria-valuemin={20}
+        aria-valuemax={999}
+        onmousedown={handleTempoMouseDown}
+      >{tempo.toFixed(2)}</span>
+      <span class="tempo-suffix">BPM</span>
+    </span>
+    <button class="group-item" class:active={metronome} title="Metronome" onclick={onMetronome}>
+      <span class="metronome-icon"><i class="fa-solid fa-circle"></i><i class="fa-regular fa-circle"></i></span>
     </button>
-    <button class="btn-icon" title="Help" onclick={onShowHelp}>
-      <i class="fa-solid fa-question"></i>
+    <select class="group-item group-select" title="Clip Trigger Quantization" value={quantization} onchange={handleQuantization}>
+      {#each QUANTIZATION_OPTIONS as opt (opt.value)}
+        <option value={opt.value}>{opt.label}</option>
+      {/each}
+    </select>
+  </div>
+  <div class="header-box header-group">
+    <span class="group-item playhead-item">
+      <span class="playhead-value">{formatBeatTime(beatTime)}</span>
+    </span>
+    <button class="group-item transport-btn" class:active={isPlaying} title="Play" onclick={onPlay}>
+      <i class="fa-solid fa-play icon"></i>
+    </button>
+    <button class="group-item transport-btn" title="Stop" onclick={onStop}>
+      <i class="fa-solid fa-stop icon"></i>
+    </button>
+    <button class="group-item transport-btn record" class:active={isRecording} title="Record" onclick={onRecord}>
+      <i class="fa-solid fa-circle icon"></i>
     </button>
   </div>
+  <div class="header-box header-group">
+    <button class="group-item loop-btn" class:active={punchIn} title="Punch In" aria-label="Punch In" onclick={onPunchIn}>
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+    <button class="group-item loop-btn" class:active={loop} title="Loop" aria-label="Loop" onclick={onLoop}>
+      <i class="fa-solid fa-repeat"></i>
+    </button>
+    <button class="group-item loop-btn" class:active={punchOut} title="Punch Out" aria-label="Punch Out" onclick={onPunchOut}>
+      <i class="fa-solid fa-chevron-left"></i>
+    </button>
+  </div>
+  <ConnectionStatus
+    bridgeConnected={connectionState === 'connected'}
+    {abletonConnected}
+  />
+  <ActionsGroup {onResync} {onShowHelp} />
 </header>
 
 <style>
@@ -210,17 +198,11 @@
     flex-shrink: 0;
   }
 
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: var(--gap-lg);
-    flex: 1;
-  }
-
   .app-brand {
     display: flex;
     align-items: center;
     gap: var(--gap-lg);
+    padding: 0 var(--gap-lg);
   }
 
   .app-icon {
@@ -233,20 +215,6 @@
     font-size: 14px;
     font-weight: 600;
     color: var(--text-muted);
-  }
-
-  .header-center {
-    display: flex;
-    align-items: stretch;
-    gap: var(--gap-xl);
-  }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: var(--gap-lg);
-    flex: 1;
   }
 
   .header-group {
@@ -374,38 +342,60 @@
     pointer-events: none;
   }
 
-  /* Responsive: hide app title at medium widths */
+  /* Hide app title before it wraps */
   @media (max-width: 900px) {
     .app-title {
       display: none;
     }
   }
 
-  /* Responsive: hide status, help, and logo - footer takes over */
-  @media (max-width: 750px) {
+  /* Responsive: compact header at medium widths */
+  @media (max-width: 850px) {
+    .group-item {
+      padding: 0 8px;
+      font-size: 9px;
+    }
+
+    .tempo-value,
+    .tempo-suffix,
+    .playhead-value {
+      font-size: 11px;
+    }
+
+    .transport-btn {
+      min-width: 28px;
+    }
+
+    .transport-btn .icon {
+      font-size: 10px;
+    }
+
+    .loop-btn {
+      padding: 0 6px;
+    }
+
+    .loop-btn i {
+      font-size: 10px;
+    }
+
+    .metronome-icon {
+      font-size: 10px;
+      flex-direction: column;
+    }
+  }
+
+  /* Responsive: hide brand/status/actions, footer takes over */
+  @media (max-width: 680px) {
     .header {
-      gap: 0;
+      gap: var(--gap-sm);
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
     }
 
-    .header-left,
-    .header-right {
+    .app-brand,
+    .header :global(.connection-status),
+    .header :global(.actions-group) {
       display: none;
-    }
-
-    .tempo-suffix {
-      display: none;
-    }
-
-    .header-center {
-      flex: 1;
-      justify-content: space-between;
-      min-width: min-content;
-    }
-
-    .metronome-icon {
-      flex-direction: column;
     }
   }
 

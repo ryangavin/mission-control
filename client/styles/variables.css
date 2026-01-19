@@ -59,3 +59,11 @@
   --gap-lg: 8px;
   --gap-xl: 12px;
 }
+
+/* Compact sizing at narrow widths */
+@media (max-width: 850px) {
+  :root {
+    --header-height: 28px;
+    --button-height-md: 28px;
+  }
+}

@@ -8,6 +8,48 @@
   border-radius: var(--radius-md);
 }
 
+/* Header group - container for grouped buttons */
+.header-group {
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* Group item - button/element inside a header-group */
+.group-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 10px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  border-right: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.group-item:last-child {
+  border-right: none;
+}
+
+button.group-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+button.group-item:active {
+  background: var(--bg-surface);
+}
+
+button.group-item.active {
+  background: var(--accent-primary-dim);
+  color: var(--accent-primary);
+}
+
 /* Square icon button (help, close, resync, etc.) */
 .btn-icon {
   display: flex;

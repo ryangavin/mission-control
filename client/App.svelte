@@ -417,6 +417,7 @@
     bridgeConnected={connectionState === 'connected'}
     {abletonConnected}
     onShowHelp={() => showHelpModal = true}
+    onResync={() => { resyncing = true; send({ type: 'session/resync' }); }}
   />
 </div>
 
