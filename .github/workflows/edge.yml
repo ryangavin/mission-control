@@ -106,6 +106,7 @@ jobs:
           releaseDraft: false
           prerelease: true
           args: --target ${{ matrix.target }}
+          assetNamePattern: "[name]-edge-[arch][ext]"
 
       - name: Build Tauri app (Windows)
         if: runner.os == 'Windows'
@@ -126,3 +127,4 @@ jobs:
           releaseDraft: false
           prerelease: true
           args: --target ${{ matrix.target }}
+          assetNamePattern: "[name]-edge-[arch][ext]"

@@ -62,6 +62,14 @@
         >
           About
         </button>
+        <a
+          class="tab tab-link"
+          href="https://github.com/ryangavin/mission-control/issues"
+          target="_blank"
+          rel="noopener"
+        >
+          Submit an Issue
+        </a>
       </div>
 
       <div class="modal-content">
@@ -214,6 +222,11 @@
   .tab.active {
     color: var(--accent-primary);
     border-bottom-color: var(--accent-primary);
+  }
+
+  .tab-link {
+    margin-left: auto;
+    text-decoration: none;
   }
 
   .modal-content {
