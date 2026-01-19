@@ -81,6 +81,7 @@ jobs:
         with:
           projectPath: desktop
           tagName: ${{ github.ref_name }}
+          releaseName: 'Mission Control ${{ github.ref_name }}'
           args: --target ${{ matrix.target }}
 
       - name: Build Tauri app (Windows)
@@ -93,3 +94,5 @@ jobs:
         with:
           projectPath: desktop
           tagName: ${{ github.ref_name }}
+          releaseName: 'Mission Control ${{ github.ref_name }}'
+          args: --target ${{ matrix.target }}
