@@ -95,7 +95,7 @@ jobs:
         with:
           projectPath: desktop
           tagName: edge
-          releaseName: 'Mission Control Edge'
+          releaseName: Edge
           releaseBody: |
             Automated build from the tip of main.
 
@@ -116,7 +116,7 @@ jobs:
         with:
           projectPath: desktop
           tagName: edge
-          releaseName: 'Mission Control Edge'
+          releaseName: Edge
           releaseBody: |
             Automated build from the tip of main.
 
