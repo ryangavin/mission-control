@@ -41,9 +41,9 @@ jobs:
       - name: Set edge version
         run: |
           # Set fixed edge version in tauri.conf.json
-          sed -i.bak 's/"version": "[^"]*"/"version": "edge"/' desktop/src-tauri/tauri.conf.json
+          sed -i.bak 's/"version": "[^"]*"/"version": "0.0.0-edge"/' desktop/src-tauri/tauri.conf.json
           # Set fixed edge version in Cargo.toml
-          sed -i.bak 's/^version = "[^"]*"/version = "edge"/' desktop/src-tauri/Cargo.toml
+          sed -i.bak 's/^version = "[^"]*"/version = "0.0.0-edge"/' desktop/src-tauri/Cargo.toml
         shell: bash
 
       - name: Setup Bun
