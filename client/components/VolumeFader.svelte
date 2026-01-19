@@ -18,10 +18,27 @@
     return 85 + db * (82 / 60);
   };
 
+  // Priority levels (higher = hides first):
+  // 1: 0dB (always visible)
+  // 2: +6, -6, -12, -18, -36, -60 (stay visible)
+  // 3: -24 (last to hide)
+  // 4: -48
+  // 5: -30
+  // 6: -42
+  // 7: -54
   const volumeTicks = [
-    { db: '6', pct: dbToSliderPct(6), zero: false },    // +6dB = 100%
-    { db: '0', pct: dbToSliderPct(0), zero: true },     // 0dB = 85%
-    { db: '60', pct: dbToSliderPct(-60), zero: false }, // -60dB = 3%
+    { db: '6', pct: dbToSliderPct(6), zero: false, priority: 2 },
+    { db: '0', pct: dbToSliderPct(0), zero: true, priority: 1 },
+    { db: '6', pct: 70, zero: false, priority: 2 },   // measured from Ableton
+    { db: '12', pct: 55, zero: false, priority: 2 },  // measured from Ableton
+    { db: '18', pct: 40, zero: false, priority: 2 },  // measured from Ableton
+    { db: '24', pct: 30, zero: false, priority: 3 },  // measured from Ableton
+    { db: '30', pct: 24, zero: false, priority: 5 },  // measured from Ableton
+    { db: '36', pct: 19, zero: false, priority: 2 },  // measured from Ableton
+    { db: '42', pct: 14, zero: false, priority: 6 },  // measured from Ableton
+    { db: '48', pct: 10, zero: false, priority: 4 },  // measured from Ableton
+    { db: '54', pct: 7, zero: false, priority: 7 },   // measured from Ableton
+    { db: '60', pct: 4, zero: false, priority: 2 },   // measured from Ableton
   ];
 
   function handleInput(e: Event) {
@@ -47,7 +64,7 @@
       {#each volumeTicks as tick}
         {@const offset = 5 * (1 - tick.pct / 50)}
         <div
-          class="tick"
+          class="tick p{tick.priority}"
           class:zero={tick.zero}
           style="bottom: calc({tick.pct}% + {offset}px)"
         ><span>{tick.db}</span></div>
@@ -135,6 +152,28 @@
     width: 30px;
     z-index: 0;
     pointer-events: none;
+    container-type: size;
+  }
+
+  /* Progressive tick hiding as fader gets shorter */
+  @container (height < 220px) {
+    .tick.p7 { display: none; }  /* -54 */
+  }
+
+  @container (height < 180px) {
+    .tick.p6 { display: none; }  /* -42 */
+  }
+
+  @container (height < 140px) {
+    .tick.p5 { display: none; }  /* -30 */
+  }
+
+  @container (height < 100px) {
+    .tick.p4 { display: none; }  /* -48 */
+  }
+
+  @container (height < 60px) {
+    .tick.p3 { display: none; }  /* -24 */
   }
 
   .tick {
@@ -155,7 +194,7 @@
     left: 7px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 9px;
+    font-size: 7px;
     color: var(--text-muted);
     white-space: nowrap;
   }
