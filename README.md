@@ -57,6 +57,26 @@ The connection status indicator will turn green when connected.
 - [Ableton Live](https://www.ableton.com/live/) 10, 11, or 12
 - macOS or Windows
 
+## Troubleshooting
+
+### "Waiting for Ableton Live"
+
+- Ensure Ableton Live is running with a project open
+- Check that AbletonOSC is selected in **Preferences → Link, Tempo & MIDI → Control Surface**
+- Try restarting Ableton after installing the remote script
+
+### AbletonOSC not appearing in Control Surface list
+
+- Make sure the folder is named exactly `AbletonOSC` (no version number)
+- Restart Ableton Live completely after copying the folder
+- Verify the script is in your User Library's `Remote Scripts` folder. Find your User Library location in Ableton: **Preferences → Library → User Library**
+
+### Controls not responding
+
+- Check that AbletonOSC is still selected in Control Surface preferences
+- Try refreshing the browser page
+- Restart Ableton Live
+
 ## Development
 
 ### Setup
