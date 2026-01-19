@@ -118,6 +118,13 @@ Settings with **T** (like 1/4T) use triplet timing.
 
 The **bar.beat.sixteenth** display (e.g., "1.1.1") shows the current playback position in musical time.
 
+### Utility Buttons
+
+| Button | Description |
+|--------|-------------|
+| **↻ Resync** | Force a full state refresh from Ableton. Use this if the UI gets out of sync. |
+| **? Help** | Open the help panel with setup instructions, troubleshooting, and version info. |
+
 ---
 
 ## The Clip Grid
@@ -254,6 +261,17 @@ Move clips between tracks by dragging them.
 | ↻ symbol | Dropping here will replace an existing clip |
 | Dimmed cells | Invalid drop targets |
 
+### Deleting Clips
+
+To delete a clip, drag it to the bottom of the screen. A red **Drop to Delete** zone will appear while dragging.
+
+1. Click and hold on a stopped clip
+2. Drag toward the bottom of the screen
+3. The delete zone appears with a trash icon
+4. Drop the clip in the zone to delete it
+
+**Note:** This permanently removes the clip from your Ableton Live Set.
+
 ---
 
 ## Mobile Access
@@ -289,11 +307,16 @@ Mission Control runs in your system tray (menu bar on macOS, system tray on Wind
 
 | Option | Description |
 |--------|-------------|
+| **Help** | Open the user manual |
 | **Open Mission Control** | Open the controller in your default browser |
-| **Connect on Mobile** | Show QR code for mobile device connection |
+| **Connect Another Device** | Show QR code for mobile device connection |
 | **Install AbletonOSC** | Install or reinstall the Ableton remote script |
-| **Start Automatically** | Launch Mission Control when you log in (release builds only) |
+| **Start Automatically** | Launch Mission Control when you log in |
+| **Check for Updates...** | Check for and install new versions |
+| **Donate ❤️** | Support development via Ko-fi |
 | **Quit** | Close Mission Control completely |
+
+**Note:** Auto-update is not available for edge builds. Download the latest edge build manually from [GitHub Releases](https://github.com/ryangavin/mission-control/releases/tag/edge).
 
 ---
 
@@ -357,6 +380,12 @@ Click the **?** help button in the top right corner, then select the **About** t
 
 - **GitHub Issues**: [Report bugs or request features](https://github.com/ryangavin/mission-control/issues)
 - **AbletonOSC**: [Documentation for the underlying protocol](https://github.com/ideoforms/AbletonOSC)
+
+---
+
+## Disclaimer
+
+Mission Control is **beta software**. While it has been tested extensively, you may encounter bugs or unexpected behavior. Please back up your Live Sets before use and [report any issues](https://github.com/ryangavin/mission-control/issues) you encounter.
 
 ---
 

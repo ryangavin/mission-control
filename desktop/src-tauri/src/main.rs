@@ -91,12 +91,13 @@ fn main() {
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
             // Build tray menu
-            let open_ui = MenuItem::with_id(app, "open_ui", "Open Mission Control", true, None::<&str>)?;
-            let show_qr = MenuItem::with_id(app, "show_qr", "Connect on Mobile", true, None::<&str>)?;
+            let help = MenuItem::with_id(app, "help", "Help", true, None::<&str>)?;
             let separator1 = PredefinedMenuItem::separator(app)?;
-            let install_script = MenuItem::with_id(app, "install_script", "Install AbletonOSC", true, None::<&str>)?;
+            let open_ui = MenuItem::with_id(app, "open_ui", "Open Mission Control", true, None::<&str>)?;
+            let show_qr = MenuItem::with_id(app, "show_qr", "Connect Another Device", true, None::<&str>)?;
             let separator2 = PredefinedMenuItem::separator(app)?;
-
+            let install_script = MenuItem::with_id(app, "install_script", "Install AbletonOSC", true, None::<&str>)?;
+            let donate = MenuItem::with_id(app, "donate", "Donate ❤️", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
 
             // Only show autostart and updates options in release builds
@@ -107,11 +108,14 @@ fn main() {
                 let autostart = CheckMenuItem::with_id(app, "autostart", "Start Automatically", true, autostart_enabled, None::<&str>)?;
                 let check_updates = MenuItem::with_id(app, "check_updates", "Check for Updates...", true, None::<&str>)?;
                 let separator3 = PredefinedMenuItem::separator(app)?;
-                Menu::with_items(app, &[&open_ui, &show_qr, &separator1, &install_script, &separator2, &autostart, &check_updates, &separator3, &quit])?
+                Menu::with_items(app, &[&help, &separator1, &open_ui, &show_qr, &separator2, &install_script, &autostart, &check_updates, &separator3, &donate, &quit])?
             };
 
             #[cfg(debug_assertions)]
-            let menu = Menu::with_items(app, &[&open_ui, &show_qr, &separator1, &install_script, &separator2, &quit])?;
+            let menu = {
+                let separator3 = PredefinedMenuItem::separator(app)?;
+                Menu::with_items(app, &[&help, &separator1, &open_ui, &show_qr, &separator2, &install_script, &separator3, &donate, &quit])?
+            };
 
             // Create tray icon with custom rocket icon
             let _tray = TrayIconBuilder::new()
@@ -206,6 +210,9 @@ fn handle_menu_event(app: &AppHandle, id: &str) {
                         <html>
                         <head>
                             <style>
+                                * {{
+                                    box-sizing: border-box;
+                                }}
                                 body {{
                                     margin: 0;
                                     display: flex;
@@ -213,23 +220,63 @@ fn handle_menu_event(app: &AppHandle, id: &str) {
                                     align-items: center;
                                     justify-content: center;
                                     height: 100vh;
-                                    background: #1a1a1a;
+                                    background: linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%);
                                     color: #fff;
                                     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                                    padding: 24px;
+                                }}
+                                .card {{
+                                    background: linear-gradient(145deg, #242424 0%, #1a1a1a 100%);
+                                    border: 1px solid #333;
+                                    border-radius: 16px;
+                                    padding: 20px;
+                                    display: flex;
+                                    flex-direction: column;
+                                    align-items: center;
+                                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+                                }}
+                                h1 {{
+                                    margin: 0 0 16px 0;
+                                    font-size: 18px;
+                                    font-weight: 600;
+                                    color: #fff;
+                                }}
+                                .qr-container {{
+                                    background: #fff;
+                                    padding: 12px;
+                                    border-radius: 12px;
+                                    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
                                 }}
                                 img {{
-                                    border-radius: 8px;
+                                    display: block;
+                                    border-radius: 4px;
                                 }}
-                                p {{
-                                    margin-top: 16px;
-                                    font-size: 14px;
-                                    color: #888;
+                                .url {{
+                                    margin: 16px 0 0 0;
+                                    font-size: 12px;
+                                    color: #f90;
+                                    font-family: 'SF Mono', Menlo, Monaco, monospace;
+                                    background: rgba(255, 153, 0, 0.1);
+                                    padding: 8px 12px;
+                                    border-radius: 6px;
+                                    border: 1px solid rgba(255, 153, 0, 0.2);
+                                }}
+                                .hint {{
+                                    margin: 8px 0 0 0;
+                                    font-size: 11px;
+                                    color: #666;
                                 }}
                             </style>
                         </head>
                         <body>
-                            <img src="data:image/png;base64,{}" width="300" height="300" />
-                            <p>{}</p>
+                            <div class="card">
+                                <h1>Scan to Connect</h1>
+                                <div class="qr-container">
+                                    <img src="data:image/png;base64,{}" width="180" height="180" />
+                                </div>
+                                <p class="url">{}</p>
+                                <p class="hint">or visit the URL directly</p>
+                            </div>
                         </body>
                         </html>
                     "#, base64_png, url);
@@ -238,8 +285,8 @@ fn handle_menu_event(app: &AppHandle, id: &str) {
                     match data_url.parse() {
                         Ok(parsed_url) => {
                             match WebviewWindowBuilder::new(app, "qr", tauri::WebviewUrl::External(parsed_url))
-                                .title("Connect on Mobile")
-                                .inner_size(350.0, 420.0)
+                                .title("Connect Another Device")
+                                .inner_size(320.0, 400.0)
                                 .resizable(false)
                                 .center()
                                 .build()
@@ -315,6 +362,16 @@ fn handle_menu_event(app: &AppHandle, id: &str) {
                     eprintln!("Update check failed: {}", e);
                 }
             });
+        }
+        "help" => {
+            if let Err(e) = open::that("https://github.com/ryangavin/mission-control/blob/main/docs/MANUAL.md") {
+                eprintln!("Failed to open help link: {}", e);
+            }
+        }
+        "donate" => {
+            if let Err(e) = open::that("https://ko-fi.com/ryangavin") {
+                eprintln!("Failed to open donate link: {}", e);
+            }
         }
         "quit" => {
             // Set quit flag so ExitRequested handler allows exit

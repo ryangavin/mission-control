@@ -154,7 +154,10 @@
 
               <div class="about-footer">
                 <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener" class="license">GPL-3.0</a>
-                <span class="version">v{pkg.version}</span>
+                <span class="version-group">
+                  <span class="version">v{pkg.version}</span>
+                  <span class="beta-badge">BETA</span>
+                </span>
               </div>
             </div>
           </div>
@@ -432,9 +435,25 @@
     color: var(--text-muted);
   }
 
+  .version-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   .version {
     color: var(--border-light);
     font-size: 12px;
+  }
+
+  .beta-badge {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--accent-primary);
+    background: var(--accent-primary-dim);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    letter-spacing: 0.5px;
   }
 
   .nav-path {
