@@ -57,7 +57,14 @@
   .right-controls {
     display: flex;
     align-items: center;
-    gap: var(--gap-md);
+    gap: var(--gap-lg);
+  }
+
+  /* Remove borders for compact footer */
+  .footer :global(.header-box) {
+    background: none;
+    border: none;
+    height: auto;
   }
 
   /* Show footer at narrow widths (when header hides its sides) */

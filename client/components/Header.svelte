@@ -384,6 +384,46 @@
     }
   }
 
+  /* Responsive: hide BPM suffix on narrow screens */
+  @media (max-width: 450px) {
+    .tempo-suffix {
+      display: none;
+    }
+  }
+
+  /* Responsive: extra compact for phones */
+  @media (max-width: 450px) {
+    .group-item {
+      padding: 0 6px;
+      font-size: 8px;
+    }
+
+    .tempo-value,
+    .playhead-value {
+      font-size: 10px;
+    }
+
+    .transport-btn {
+      min-width: 24px;
+    }
+
+    .transport-btn .icon {
+      font-size: 9px;
+    }
+
+    .loop-btn {
+      padding: 0 5px;
+    }
+
+    .loop-btn i {
+      font-size: 9px;
+    }
+
+    .metronome-icon {
+      font-size: 8px;
+    }
+  }
+
   /* Responsive: hide brand/status/actions, footer takes over */
   @media (max-width: 680px) {
     .header {
